@@ -18,5 +18,7 @@ kramdown:
 
 permalink: pretty
 
+color_scheme: dark
+
 search_enabled: true
 search.button: true
