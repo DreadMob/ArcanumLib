@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using ArcanumLib.Actions;
 using Newtonsoft.Json;
 
 namespace ArcanumLib.Items
@@ -31,6 +32,6 @@ namespace ArcanumLib.Items
         /// Actions associated with this mode. When the mode is active, these actions are used in place of the item's default actions.
         /// </summary>
         [JsonProperty("actions")]
-        public List<ItemAction> Actions { get; set; } = new List<ItemAction>();
+        public List<ActionDescriptor> Actions { get; set; } = new List<ActionDescriptor>();
     }
 }

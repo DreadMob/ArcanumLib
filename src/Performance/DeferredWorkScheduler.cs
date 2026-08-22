@@ -16,6 +16,7 @@ public class DeferredWork : ModSystem
     private static ICoreAPI? _api;
     private static long _tickListenerId;
     private static readonly Dictionary<string, ScheduledTask> _tasks = new(StringComparer.Ordinal);
+    private static readonly Dictionary<string, long> _callbacks = new(StringComparer.Ordinal);
     private static readonly Queue<Action> _endOfTickQueue = new();
     private static readonly object _syncLock = new();
 
@@ -66,14 +67,21 @@ public class DeferredWork : ModSystem
         {
             _api.Event.UnregisterGameTickListener(_tickListenerId);
             _tickListenerId = 0;
-            _api = null;
         }
 
         lock (_syncLock)
         {
+            foreach (var callbackId in _callbacks.Values)
+            {
+                _api?.Event.UnregisterCallback(callbackId);
+            }
+            _callbacks.Clear();
+
             _tasks.Clear();
             _endOfTickQueue.Clear();
         }
+
+        _api = null;
     }
 
     /// <summary>
@@ -101,6 +109,106 @@ public class DeferredWork : ModSystem
                 FirstScheduledMs = now,
                 DueTimeMs = now + delayMs,
             };
+        }
+    }
+
+    /// <summary>
+    /// Schedules a one-shot callback via <see cref="ICoreAPI.Event.RegisterCallback"/>,
+    /// which is truly zero-poll: no tick listener runs while the callback is pending.
+    /// Calling again with the same <paramref name="key"/> cancels the previous callback.
+    /// Use this for timed effects where no polling should occur during the wait.
+    /// </summary>
+    /// <param name="key">Unique key for the callback. Re-scheduling with the same key cancels the previous one.</param>
+    /// <param name="action">Action to run after the delay.</param>
+    /// <param name="delayMs">Delay in milliseconds.</param>
+    public static void ScheduleCallback(string key, Action action, int delayMs)
+    {
+        if (string.IsNullOrWhiteSpace(key)) throw new ArgumentException("Key cannot be empty.", nameof(key));
+        if (action is null) throw new ArgumentNullException(nameof(action));
+        if (delayMs < 0) delayMs = 0;
+
+        if (!IsEnabled || _api?.World is null)
+        {
+            action();
+            return;
+        }
+
+        lock (_syncLock)
+        {
+            if (_callbacks.TryGetValue(key, out var existingId))
+            {
+                _api.Event.UnregisterCallback(existingId);
+                _callbacks.Remove(key);
+            }
+
+            long callbackId = _api.Event.RegisterCallback((_) =>
+            {
+                lock (_syncLock)
+                {
+                    _callbacks.Remove(key);
+                }
+                try
+                {
+                    action();
+                }
+                catch (Exception ex)
+                {
+                    _api.Logger?.Warning("[ArcanumLib] Deferred callback '{0}' failed: {1}", key, ex.Message);
+                }
+            }, delayMs);
+
+            _callbacks[key] = callbackId;
+        }
+    }
+
+    /// <summary>
+    /// Cancels a pending <see cref="ScheduleCallback"/> by key.
+    /// </summary>
+    public static void CancelCallback(string key)
+    {
+        if (string.IsNullOrWhiteSpace(key)) return;
+        lock (_syncLock)
+        {
+            if (_callbacks.TryGetValue(key, out var callbackId))
+            {
+                _api?.Event.UnregisterCallback(callbackId);
+                _callbacks.Remove(key);
+            }
+        }
+    }
+
+    /// <summary>
+    /// Returns true when a callback with the given key is pending.
+    /// </summary>
+    public static bool IsCallbackPending(string key)
+    {
+        if (string.IsNullOrWhiteSpace(key)) return false;
+        lock (_syncLock)
+        {
+            return _callbacks.ContainsKey(key);
+        }
+    }
+
+    /// <summary>
+    /// Cancels all callbacks whose key starts with <paramref name="prefix"/>.
+    /// Use this to clean up all effects for a player or entity on disconnect.
+    /// </summary>
+    public static void CancelCallbacksByPrefix(string prefix)
+    {
+        if (string.IsNullOrEmpty(prefix)) return;
+        lock (_syncLock)
+        {
+            var toRemove = new List<string>();
+            foreach (var kvp in _callbacks)
+            {
+                if (kvp.Key.StartsWith(prefix, StringComparison.Ordinal))
+                {
+                    _api?.Event.UnregisterCallback(kvp.Value);
+                    toRemove.Add(kvp.Key);
+                }
+            }
+            foreach (var key in toRemove)
+                _callbacks.Remove(key);
         }
     }
 

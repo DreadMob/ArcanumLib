@@ -139,20 +139,7 @@ public class LootTable<T>
         if (random == null) throw new ArgumentNullException(nameof(random));
         if (Entries.Count == 0) return default;
 
-        float total = TotalEffectiveWeight();
-        if (total <= 0f) return default;
-
-        float roll = (float)(random.NextDouble() * total);
-        float cumulative = 0f;
-
-        for (int i = 0; i < Entries.Count; i++)
-        {
-            float w = EffectiveWeight(Entries[i]);
-            cumulative += w;
-            if (roll < cumulative) return Entries[i].Value;
-        }
-
-        return Entries[Entries.Count - 1].Value;
+        return WeightedRandom.Pick(Entries, e => e.Value, e => EffectiveWeight(e), random);
     }
 
     /// <summary>
@@ -183,42 +170,9 @@ public class LootTable<T>
         if (random == null) throw new ArgumentNullException(nameof(random));
         if (count <= 0) return Array.Empty<T>();
 
-        var pool = Entries.ToList();
-        var result = new List<T>(Math.Min(count, pool.Count));
-
-        for (int i = 0; i < count && pool.Count > 0; i++)
-        {
-            float total = 0f;
-            foreach (var entry in pool)
-                total += EffectiveWeight(entry);
-
-            if (total <= 0f)
-            {
-                result.Add(pool[0].Value);
-                pool.RemoveAt(0);
-                continue;
-            }
-
-            float roll = (float)(random.NextDouble() * total);
-            float cumulative = 0f;
-            int winnerIdx = pool.Count - 1;
-
-            for (int j = 0; j < pool.Count; j++)
-            {
-                float w = EffectiveWeight(pool[j]);
-                cumulative += w;
-                if (roll < cumulative)
-                {
-                    winnerIdx = j;
-                    break;
-                }
-            }
-
-            result.Add(pool[winnerIdx].Value);
-            pool.RemoveAt(winnerIdx);
-        }
-
-        return result;
+        return WeightedRandom.PickDistinct(Entries, e => EffectiveWeight(e), random, count)
+            .Select(e => e.Value)
+            .ToList();
     }
 
     /// <summary>

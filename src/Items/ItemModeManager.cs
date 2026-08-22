@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using ArcanumLib.Actions;
 using Newtonsoft.Json;
 using Vintagestory.API.Client;
 using Vintagestory.API.Common;
@@ -91,9 +92,9 @@ namespace ArcanumLib.Items
         /// <summary>
         /// Tries to get the actions of the active mode. Returns false if there are no modes or the active mode has no actions.
         /// </summary>
-        public static bool TryGetActiveModeActions(ITreeAttribute? attributes, out List<ItemAction> actions, ItemModeConfig? config = null)
+        public static bool TryGetActiveModeActions(ITreeAttribute? attributes, out List<ActionDescriptor> actions, ItemModeConfig? config = null)
         {
-            actions = new List<ItemAction>();
+            actions = new List<ActionDescriptor>();
             if (!TryGetModes(attributes, out var modes, config)) return false;
 
             var mode = GetActiveMode(attributes, modes, config);

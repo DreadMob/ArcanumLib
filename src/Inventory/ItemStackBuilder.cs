@@ -1,0 +1,235 @@
+using System;
+using System.Collections.Generic;
+using Vintagestory.API.Common;
+using Vintagestory.API.Datastructures;
+using Vintagestory.API.MathTools;
+
+namespace ArcanumLib.Inventory;
+
+/// <summary>
+/// Fluent builder for constructing <see cref="ItemStack"/> instances with
+/// attributes, durability, stack size, and custom collectible codes. Useful for
+/// loot tables, quest rewards, and test fixtures.
+/// </summary>
+public sealed class ItemStackBuilder
+{
+    private AssetLocation? _code;
+    private int _stackSize = 1;
+    private int? _durability;
+    private readonly TreeAttribute _attributes = new();
+    private readonly Dictionary<string, IAttribute> _watchedAttributes = new(StringComparer.OrdinalIgnoreCase);
+    private EnumItemClass? _itemClass;
+
+    /// <summary>
+    /// Creates an empty builder.
+    /// </summary>
+    public ItemStackBuilder() { }
+
+    /// <summary>
+    /// Creates a builder seeded from an existing stack. The original stack is not modified.
+    /// </summary>
+    public ItemStackBuilder(ItemStack? source)
+    {
+        if (source == null) return;
+        _code = source.Collectible?.Code;
+        _stackSize = source.StackSize;
+        _durability = source.Attributes?.GetInt("durability");
+        _itemClass = source.Class;
+        if (source.Attributes != null)
+            _attributes = source.Attributes.Clone() as TreeAttribute ?? new TreeAttribute();
+    }
+
+    /// <summary>
+    /// Sets the collectible code (e.g. <c>"game:ingot-iron"</c>).
+    /// </summary>
+    public ItemStackBuilder Code(string code)
+    {
+        _code = AssetLocation.CreateOrNull(code);
+        return this;
+    }
+
+    /// <summary>
+    /// Sets the collectible code.
+    /// </summary>
+    public ItemStackBuilder Code(AssetLocation code)
+    {
+        _code = code;
+        return this;
+    }
+
+    /// <summary>
+    /// Sets the stack size.
+    /// </summary>
+    public ItemStackBuilder Count(int size)
+    {
+        _stackSize = Math.Max(1, size);
+        return this;
+    }
+
+    /// <summary>
+    /// Sets the durability attribute.
+    /// </summary>
+    public ItemStackBuilder Durability(int durability)
+    {
+        _durability = durability;
+        return this;
+    }
+
+    /// <summary>
+    /// Sets the item class (Item or Block).
+    /// </summary>
+    public ItemStackBuilder ItemClass(EnumItemClass itemClass)
+    {
+        _itemClass = itemClass;
+        return this;
+    }
+
+    /// <summary>
+    /// Sets a string attribute.
+    /// </summary>
+    public ItemStackBuilder Attribute(string key, string value)
+    {
+        _attributes.SetString(key, value);
+        return this;
+    }
+
+    /// <summary>
+    /// Sets an integer attribute.
+    /// </summary>
+    public ItemStackBuilder Attribute(string key, int value)
+    {
+        _attributes.SetInt(key, value);
+        return this;
+    }
+
+    /// <summary>
+    /// Sets a float attribute.
+    /// </summary>
+    public ItemStackBuilder Attribute(string key, float value)
+    {
+        _attributes.SetFloat(key, value);
+        return this;
+    }
+
+    /// <summary>
+    /// Sets a boolean attribute.
+    /// </summary>
+    public ItemStackBuilder Attribute(string key, bool value)
+    {
+        _attributes.SetBool(key, value);
+        return this;
+    }
+
+    /// <summary>
+    /// Sets a generic attribute value.
+    /// </summary>
+    public ItemStackBuilder Attribute(string key, IAttribute value)
+    {
+        _attributes[key] = value;
+        return this;
+    }
+
+    /// <summary>
+    /// Sets a watched attribute (synced to clients).
+    /// </summary>
+    public ItemStackBuilder WatchedAttribute(string key, IAttribute value)
+    {
+        _watchedAttributes[key] = value;
+        return this;
+    }
+
+    /// <summary>
+    /// Sets a watched string attribute.
+    /// </summary>
+    public ItemStackBuilder WatchedAttribute(string key, string value)
+    {
+        _watchedAttributes[key] = new StringAttribute(value);
+        return this;
+    }
+
+    /// <summary>
+    /// Sets a watched integer attribute.
+    /// </summary>
+    public ItemStackBuilder WatchedAttribute(string key, int value)
+    {
+        _watchedAttributes[key] = new IntAttribute(value);
+        return this;
+    }
+
+    /// <summary>
+    /// Removes an attribute if present.
+    /// </summary>
+    public ItemStackBuilder RemoveAttribute(string key)
+    {
+        _attributes.RemoveAttribute(key);
+        return this;
+    }
+
+    /// <summary>
+    /// Builds the <see cref="ItemStack"/> using the configured values.
+    /// Returns null if no code was set or the collectible is not found.
+    /// </summary>
+    /// <param name="api">The core API for registry lookups.</param>
+    public ItemStack? Build(ICoreAPI api)
+    {
+        if (api == null || _code == null) return null;
+
+        CollectibleObject? collectible = _itemClass == EnumItemClass.Block
+            ? (CollectibleObject?)api.World.GetBlock(_code)
+            : _itemClass == EnumItemClass.Item
+                ? api.World.GetItem(_code)
+                : (CollectibleObject?)api.World.GetItem(_code) ?? api.World.GetBlock(_code);
+
+        if (collectible == null) return null;
+
+        var stack = new ItemStack(collectible)
+        {
+            StackSize = _stackSize
+        };
+
+        if (_attributes.Count > 0)
+        {
+            stack.Attributes ??= new TreeAttribute();
+            foreach (var attr in _attributes)
+                stack.Attributes[attr.Key] = attr.Value;
+        }
+
+        if (_durability.HasValue)
+        {
+            stack.Attributes ??= new TreeAttribute();
+            stack.Attributes.SetInt("durability", _durability.Value);
+        }
+
+        if (_watchedAttributes.Count > 0)
+        {
+            stack.Attributes ??= new TreeAttribute();
+            foreach (var kvp in _watchedAttributes)
+                stack.Attributes[kvp.Key] = kvp.Value;
+        }
+
+        return stack;
+    }
+
+    /// <summary>
+    /// Builds the stack and returns it, throwing if the collectible is not found.
+    /// </summary>
+    public ItemStack BuildOrThrow(ICoreAPI api)
+    {
+        return Build(api)
+            ?? throw new InvalidOperationException($"Collectible '{_code}' not found in registry.");
+    }
+
+    /// <summary>
+    /// Resets the builder to an empty state.
+    /// </summary>
+    public ItemStackBuilder Clear()
+    {
+        _code = null;
+        _stackSize = 1;
+        _durability = null;
+        _attributes.Clear();
+        _watchedAttributes.Clear();
+        _itemClass = null;
+        return this;
+    }
+}
