@@ -1,9 +1,28 @@
-// Additional ArcanumLib site customisations
+// ArcanumLib site customisations
 
-// Soften headings and links
+// Typography
+body {
+  font-size: 16px;
+  line-height: 1.7;
+}
+
 h1, h2, h3, h4, h5, h6 {
   font-weight: 500;
   letter-spacing: 0.02em;
+  margin-top: 2rem;
+  margin-bottom: 1rem;
+}
+
+h1 {
+  font-size: 2.2rem;
+  font-weight: 600;
+  margin-bottom: 1.5rem;
+}
+
+h2 {
+  font-size: 1.6rem;
+  border-bottom: 1px solid $border-color;
+  padding-bottom: 0.4rem;
 }
 
 a {
@@ -18,24 +37,40 @@ a {
 div.highlighter-rouge,
 figure.highlight {
   border-radius: 6px;
-  border: 1px solid #2c2c2c;
+  border: 1px solid $border-color;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.25);
+  margin: 1.2rem 0;
 }
 
 code {
   font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, Courier, monospace;
-  font-size: 0.9em;
+  font-size: 0.85em;
+  padding: 0.15em 0.3em;
+  border-radius: 3px;
+  background-color: $code-background-color;
+}
+
+div.highlighter-rouge code,
+figure.highlight code {
+  background-color: transparent;
+  padding: 0;
 }
 
 // Tables
 table {
   border-radius: 6px;
   overflow: hidden;
-  border: 1px solid #2c2c2c;
+  border: 1px solid $border-color;
+  margin: 1.2rem 0;
 
   th {
-    background-color: #1a1a1a;
+    background-color: $sidebar-color;
     font-weight: 600;
+    padding: 0.6rem 0.8rem;
+  }
+
+  td {
+    padding: 0.6rem 0.8rem;
   }
 
   tr:nth-child(even) {
@@ -43,14 +78,47 @@ table {
   }
 }
 
+// Sidebar
+.side-bar {
+  border-right: 1px solid $border-color;
+}
+
+.site-nav,
+.nav-list .nav-list-item .nav-list-link {
+  font-size: 14px;
+}
+
+.nav-list .nav-list-item .nav-list-link:hover,
+.nav-list .nav-list-item .nav-list-link.active {
+  background-image: none;
+  background-color: rgba(255, 255, 255, 0.05);
+  border-radius: 4px;
+}
+
+.nav-list .nav-list-item .nav-list-link.active {
+  color: $link-color;
+}
+
 // Search input
 .search-input {
-  background-color: #1e1e1e;
-  border-color: #2c2c2c;
-  color: #e0e0e0;
+  background-color: $code-background-color;
+  border-color: $border-color;
+  color: $body-text-color;
 
   &:focus {
-    border-color: #80cbc4;
+    border-color: $link-color;
     box-shadow: 0 0 0 2px rgba(128, 203, 196, 0.2);
   }
+}
+
+// Main content spacing
+.main-content-wrap {
+  max-width: 900px;
+  padding: 2rem 3rem;
+}
+
+// Footer
+.site-footer {
+  color: $grey-dk-200;
+  font-size: 0.85rem;
 }

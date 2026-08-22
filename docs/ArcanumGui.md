@@ -54,6 +54,8 @@ SingleComposer = ArcanumComposer
 
 ## API overview
 
+The toolkit is organised into the following namespaces. The snippets below show common tasks.
+
 ### Namespaces
 
 | Namespace | Purpose |
@@ -184,8 +186,6 @@ list.SetItems(newItems);
 list.ScrollTo(120f);
 list.Select(3);
 ```
-
-### ArcanumList features
 
 - Built-in selection, hover, and zebra-row rendering.
 - Mouse wheel and draggable scrollbar.

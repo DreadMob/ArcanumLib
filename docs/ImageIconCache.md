@@ -5,38 +5,57 @@ title: ImageIconCache
 
 # ImageIconCache
 
-`ArcanumLib.Gui.Icons.ImageIconCache` loads and caches icon `ImageSurface` instances from the Vintage Story asset pipeline. It supports PNG, JPEG, GIF, BMP, ICO, WBMP, WebP, HEIF, DNG, KTX, PKM and ASTC through `GuiElement.getImageSurfaceFromAsset` / `SkiaSharp.SKCodec`.
+## What is it for?
 
-AVIF and JPEG XL are **not** compiled into the Vintage Story `libSkiaSharp.dll` and will not decode (the loader falls back to an orange 1×1 placeholder).
+`ImageIconCache` loads and caches icon `ImageSurface` instances from the Vintage Story asset pipeline. It supports PNG, JPEG, GIF, BMP, ICO, WBMP, WebP, HEIF, DNG, KTX, PKM and ASTC through `GuiElement.getImageSurfaceFromAsset` / `SkiaSharp.SKCodec`. It converts decoded images into a Cairo-compatible ARGB32 surface, applies alpha pre-multiplication, and removes near-transparent noise pixels so icons render correctly with `Context.Paint`.
 
-Because the cache uses Vintage Story's existing image loader, you can ship `.webp`, `.png`, `.jpg` and the other listed formats directly in your mod's asset tree and draw them through the same API. No manual conversion and no changes to the texture atlas are needed.
+## When to use it
 
-The cache performs two important tasks:
+- Display PNG, JPEG, GIF, BMP, ICO, WebP, HEIF, and other `SKCodec` formats in a GUI without converting them to the texture atlas.
+- Clip an icon to a circle, hexagon, or diamond.
+- Avoid first-render stalls by preloading frequently shown icons.
+- Safely release cached surfaces when the client world is unloaded.
 
-1. Converts decoded images into a Cairo-compatible ARGB32 surface.
-2. Applies alpha pre-multiplication and removes near-transparent noise pixels, which makes icons from any of the supported formats render correctly with `Context.Paint`.
-
-## Initialization
-
-Call `Init` once during client startup (for example in a `ModSystem` that runs on the client side).
-
-```csharp
-using ArcanumLib.Gui.Icons;
-
-public override void StartClientSide(ICoreClientAPI capi)
-{
-    ImageIconCache.Init(capi);
-}
-```
-
-## Drawing an icon
+## Quick example
 
 ```csharp
 using ArcanumLib.Gui.Icons;
 using ArcanumLib.Gui.Theme;
 using Cairo;
 
-Context ctx = ...; // obtain a Cairo context from a GUI element
+public override void StartClientSide(ICoreClientAPI capi)
+{
+    ImageIconCache.Init(capi);
+}
+
+// In a GUI element's draw method:
+Context ctx = ...;
+ImageIconCache.TryDrawIcon(
+    ctx: ctx,
+    assetPath: "mydomain:textures/icons/myicon.webp",
+    cx: 50.0,
+    cy: 50.0,
+    radius: 32.0,
+    color: new RGBA(1.0, 1.0, 1.0, 1.0),
+    fit: IconFit.Circle,
+    tint: false);
+```
+
+## API overview
+
+Call `Init` once during client startup:
+
+```csharp
+public override void StartClientSide(ICoreClientAPI capi)
+{
+    ImageIconCache.Init(capi);
+}
+```
+
+Draw an icon with `TryDrawIcon`:
+
+```csharp
+Context ctx = ...; // Cairo context from a GUI element
 
 bool drawn = ImageIconCache.TryDrawIcon(
     ctx: ctx,
@@ -49,8 +68,6 @@ bool drawn = ImageIconCache.TryDrawIcon(
     tint: false);
 ```
 
-### Parameters of `TryDrawIcon`
-
 | Parameter | Type | Description |
 |-----------|------|-------------|
 | `ctx` | `Cairo.Context` | The Cairo context to draw into. |
@@ -62,27 +79,21 @@ bool drawn = ImageIconCache.TryDrawIcon(
 | `fit` | `IconFit` | `None`, `Circle`, `Hexagon` or `Diamond` clipping shape. |
 | `tint` | `bool` | If `true`, the image is masked with the given color. If `false`, the image is painted directly and alpha is applied. |
 
-### Return value
-
 `TryDrawIcon` returns `true` if the icon was loaded and drawn. If the asset cannot be loaded, the failure is logged and `false` is returned. Missing assets are not retried for 60 seconds.
 
-## Preloading
-
-To avoid stalling the first render, preload an asset during GUI setup:
+Preload an asset to avoid first-render stalls:
 
 ```csharp
 ImageIconCache.Preload("mydomain:textures/icons/myicon.webp");
 ```
 
-## Disposing the cache
-
-When the client world is unloaded or the mod is disabled, release cached surfaces:
+Release cached surfaces when the client world is unloaded:
 
 ```csharp
 ImageIconCache.Dispose();
 ```
 
-## IconFit
+### `IconFit`
 
 ```csharp
 public enum IconFit
@@ -93,3 +104,9 @@ public enum IconFit
     Diamond  // clip to a diamond (square rotated 45 degrees)
 }
 ```
+
+## Notes
+
+- AVIF and JPEG XL are **not** compiled into the Vintage Story `libSkiaSharp.dll` and will not decode; the loader falls back to an orange 1x1 placeholder.
+- Because `ImageIconCache` uses Vintage Story's existing image loader, you can ship `.webp`, `.png`, `.jpg` and the other listed formats directly in your mod's asset tree and draw them through the same API. No manual conversion or texture atlas changes are needed.
+- Call `Init` once during client startup and `Dispose` when the client world is unloaded.

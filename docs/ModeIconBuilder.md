@@ -5,11 +5,19 @@ title: ModeIconBuilder
 
 # ModeIconBuilder
 
-Factory methods for creating `SkillItem` tool-mode and skill-bar icons without
-repeating boilerplate. Supports in-game icon codes, letter icons, and live
-`ItemStack` rendering.
+## What is it for?
 
-## Usage
+`ModeIconBuilder` provides factory methods for creating `SkillItem` tool-mode and skill-bar icons without repeating boilerplate. It supports existing in-game icon codes, letter icons, and live `ItemStack` rendering.
+
+## When to use it
+
+- Building a tool-mode or skill selection bar.
+- Reusing an existing in-game icon by its icon code.
+- Showing a single letter or symbol as a mode icon.
+- Displaying the rendered image of an `ItemStack`.
+- Cycling through several stacks as a single animated icon.
+
+## Quick example
 
 ```csharp
 using ArcanumLib.Gui;
@@ -24,7 +32,7 @@ var modes = new SkillItem[]
 };
 ```
 
-## API
+## API overview
 
 ```csharp
 public static class ModeIconBuilder
@@ -38,6 +46,18 @@ public static class ModeIconBuilder
 }
 ```
 
-All methods accept `description`, `linebreak`, and `enabled` parameters and a
-`fallbackIcon` / `fallbackLetter` for the `ItemStack` variants when the stack is
-`null`.
+| Method | Use it to... |
+|--------|--------------|
+| `WithIcon` | Create a mode using an existing icon code. |
+| `WithCustomIcon` | Create a mode that draws its icon through a custom delegate. |
+| `WithLetter` | Create a mode that displays a single letter or symbol. |
+| `WithItemStack` | Create a mode that renders a specific `ItemStack`. |
+| `WithItemSlot` | Create a mode that renders the stack currently in an `ItemSlot`. |
+| `WithItemStackCycle` | Create a mode that cycles through several stacks. |
+
+All methods accept `description`, `linebreak`, and `enabled` parameters. The `ItemStack` and `ItemSlot` variants also accept a `fallbackIcon` / `fallbackLetter` that is used when the stack is `null`.
+
+## Notes
+
+- The `...` in the signatures above stands for shared optional parameters such as `description`, `linebreak`, and `enabled`. The `ItemStack` and `ItemSlot` variants additionally accept `fallbackIcon` / `fallbackLetter`. Refer to the source or IntelliSense for the full signature.
+- `WithItemStackCycle` defaults to a 1000ms cycle; change `cycleMs` to speed up or slow down the animation.
