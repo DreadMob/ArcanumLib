@@ -26,6 +26,12 @@ The library is currently used by the **[Alegacy Quest Framework](https://gitlab.
 |--------|-------------|
 | **ImageIconCache** | Load, cache and draw icon image surfaces with circle, hexagon, and diamond clipping plus optional tinting. |
 | **RGBA** | Lightweight Cairo-friendly color struct with hex parsing, ARGB conversion, lerping, and alpha overrides. |
+| **ArcanumGuiTheme** | Shared colour palette, radii, spacing and Cairo drawing helpers for consistent GUI styling. |
+| **ArcanumFont / ArcanumLayout** | Font presets and vertical/horizontal layout helpers to reduce manual `ElementBounds` math. |
+| **ArcanumCard / ArcanumIcon / ArcanumButton / ArcanumScrollbar** | Ready-to-use, themed Vintage Story `GuiElement` controls. |
+| **Pretty** | Converts raw asset codes into readable, title-cased display strings and sanitizes names. |
+| **CollectibleNameResolver** | Resolves item, block and entity display names, wildcard matches and icon codes with caching. |
+| **Wildcard** | Fast case-insensitive wildcard matching for asset codes. |
 
 More cross-mod utilities will be added as they are extracted from the consuming mods.
 
@@ -38,8 +44,11 @@ ArcanumLib/
 ├── ArcanumLibModSystem.cs    — Vintage Story entry point
 ├── src/
 │   ├── Gui/
-│   │   ├── Icons/            — ImageIconCache and IconFit
-│   │   └── Theme/             — RGBA and other shared theme helpers
+│   │   ├── Controls/          — ArcanumButton, ArcanumCard, ArcanumIcon, ArcanumScrollbar, ArcanumDialogBackground
+│   │   ├── Dialogs/           — ArcanumGuiDialog base
+│   │   ├── Icons/             — ImageIconCache and IconFit
+│   │   ├── Layout/            — ArcanumLayout helpers
+│   │   └── Theme/             — ArcanumGuiTheme, ArcanumFont, RGBA
 ├── docs/                      — API documentation
 ├── resources/
 │   └── modinfo.json           — mod metadata

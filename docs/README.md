@@ -6,6 +6,7 @@ This folder contains API documentation for `ArcanumLib` — a shared Vintage Sto
 
 - [ImageIconCache](ImageIconCache.md) — load, cache and draw icon image surfaces with clipping and tinting.
 - [RGBA](RGBA.md) — lightweight Cairo-friendly color struct.
+- [Arcanum GUI Toolkit](ArcanumGui.md) — `ArcanumGuiTheme`, controls, layout helpers and dialog base.
 
 ## Target Framework
 
