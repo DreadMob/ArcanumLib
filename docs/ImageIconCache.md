@@ -7,7 +7,7 @@ title: ImageIconCache
 
 ## What is it for?
 
-`ImageIconCache` loads and caches icon `ImageSurface` instances from the Vintage Story asset pipeline. It supports PNG, JPEG, GIF, BMP, ICO, WBMP, WebP, HEIF, DNG, KTX, PKM and ASTC through `GuiElement.getImageSurfaceFromAsset` / `SkiaSharp.SKCodec`. It converts decoded images into a Cairo-compatible ARGB32 surface, applies alpha pre-multiplication, and removes near-transparent noise pixels so icons render correctly with `Context.Paint`.
+`ImageIconCache` loads and caches icon `ImageSurface` instances from the Vintage Story asset pipeline. It supports PNG, JPEG, GIF, BMP, ICO, WBMP, WebP, HEIF, DNG, KTX, PKM and ASTC through `SkiaSharp.SKCodec`. It converts decoded images into a Cairo-compatible ARGB32 surface, applies alpha pre-multiplication, and removes near-transparent noise pixels so icons render correctly with `Context.Paint`.
 
 ## When to use it
 
@@ -107,5 +107,5 @@ public enum IconFit
 
 ## Notes
 
-- Because `ImageIconCache` uses Vintage Story's existing image loader, you can ship `.webp`, `.png`, `.jpg` and the other listed formats directly in your mod's asset tree and draw them through the same API. No manual conversion or texture atlas changes are needed.
+- `ImageIconCache` uses `SkiaSharp.SKCodec` directly, so you can ship `.png`, `.jpg`, `.webp` and the other listed formats directly in your mod's asset tree and draw them through the same API. No manual conversion or texture atlas changes are needed.
 - Call `Init` once during client startup and `Dispose` when the client world is unloaded.

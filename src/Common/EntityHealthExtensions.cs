@@ -77,6 +77,7 @@ namespace ArcanumLib.Common
             float newMax = maxHealth * mult;
             healthTree.SetFloat("maxhealth", newMax);
             healthTree.SetFloat("currenthealth", newMax);
+            wa.MarkPathDirty("health");
 
             return true;
         }

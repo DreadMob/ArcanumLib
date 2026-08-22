@@ -207,7 +207,7 @@ namespace ArcanumLib.Randomization
         /// </summary>
         public static T? PickOrDefault<T>(IEnumerable<T> items, System.Func<T, float> weightSelector, Random random)
         {
-            if (items == null || random == null) return default;
+            if (items == null || weightSelector == null || random == null) return default;
             var list = items as IReadOnlyList<T> ?? items.ToList();
             if (list.Count == 0) return default;
 

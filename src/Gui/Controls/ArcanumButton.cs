@@ -81,7 +81,7 @@ public class ArcanumButton : GuiElement
         : base(capi, bounds)
     {
         this.text = text ?? "";
-        this.onClick = () => { onClick?.Invoke(); return false; };
+        this.onClick = () => { onClick?.Invoke(); return true; };
         this.style = ArcanumButtonStyle.Default;
         this.customStyle = true;
         this.customFont = font;

@@ -40,6 +40,11 @@ namespace ArcanumLib.Effects
         public bool PersistThroughDeath { get; set; } = false;
 
         /// <summary>
+        /// Stat modifier effects have no per-tick behavior.
+        /// </summary>
+        public bool HasTick => false;
+
+        /// <summary>
         /// Creates a new stat modifier effect.
         /// </summary>
         /// <param name="code">Unique effect code.</param>

@@ -27,10 +27,9 @@ Everything you need for custom in-game UI without fighting the low-level API.
 | Page | Purpose |
 |------|---------|
 | [Arcanum GUI Toolkit]({{ site.baseurl }}{% link ArcanumGui.md %}) | Themed colour palette, layout helpers, composer, and reusable controls. |
-| [ImageIconCache]({{ site.baseurl }}{% link ImageIconCache.md %}) | Load and draw `.webp`/`.png`/`.jpg` icons with clipping and tinting. |
+| [ImageIconCache]({{ site.baseurl }}{% link ImageIconCache.md %}) | Load and draw `.png`/`.jpg`/`.webp` icons with clipping and tinting. |
 | [ModeIconBuilder]({{ site.baseurl }}{% link ModeIconBuilder.md %}) | Build tool-mode and skill-bar icon entries with image, letter, or item stack rendering. |
 | [RGBA]({{ site.baseurl }}{% link RGBA.md %}) | Cairo-friendly color struct with parsing, conversion, and lerping. |
-| [ShapeCloner]({{ site.baseurl }}{% link ShapeCloner.md %}) | Deep-clone `Shape` objects for safe runtime mutation. |
 
 ## Items & Equipment
 
@@ -75,15 +74,15 @@ Keep the server/client responsive.
 
 ## Common & Utility
 
-Small helpers that remove boilerplate.
+Small helpers that remove boilerplate. Some are thin syntactic sugar over existing Vintage Story APIs.
 
 | Page | Purpose |
 |------|---------|
-| [ApiExtensions]({{ site.baseurl }}{% link ApiExtensions.md %}) | `IsClient` / `IsServer` checks for API objects. |
+| [ApiExtensions]({{ site.baseurl }}{% link ApiExtensions.md %}) | `IsClient` / `IsServer` checks for `ICoreAPI` and `IWorldAccessor` (sugar for `api.Side`). |
 | [CooldownTracker]({{ site.baseurl }}{% link CooldownTracker.md %}) | Per-entity cooldowns in `WatchedAttributes`. |
 | [EntityHealthExtensions]({{ site.baseurl }}{% link EntityHealthExtensions.md %}) | Read and scale entity health. |
 | [EventScope]({{ site.baseurl }}{% link EventScope.md %}) | Disposable event subscription scope. |
-| [LoggerExtensions]({{ site.baseurl }}{% link LoggerExtensions.md %}) | Safe logging and non-critical warning helpers. |
+| [LoggerExtensions]({{ site.baseurl }}{% link LoggerExtensions.md %}) | `SafeExecute` wrapper and non-critical warning helpers. |
 | [PlayerExtensions]({{ site.baseurl }}{% link PlayerExtensions.md %}) | Player entity iteration and position checks. |
 | [WatchedAttributes]({{ site.baseurl }}{% link WatchedAttributes.md %}) | Get-or-create and set helpers for `ITreeAttribute`. |
 

@@ -12,7 +12,7 @@ Versioned per-savegame data persistence.
 Use `ModDataStore` when your mod needs to save data that belongs to the current world/save, not to a global config:
 
 - Player progression counters.
-- World state, POI ownership, city treasuries.
+- World state, territorial ownership, faction treasuries.
 - Item/effect cooldowns and status state.
 - Any data that must survive server restarts but is tied to a save.
 

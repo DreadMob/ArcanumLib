@@ -20,6 +20,13 @@ public static class CollectibleNameResolver
     private static string? _iconCacheLanguage;
     private static readonly Dictionary<string, string?> _iconCodeCache = new(StringComparer.OrdinalIgnoreCase);
 
+    // Prefix index built lazily from the world registry. Maps a code prefix
+    // (e.g. "game:item-sword-") to all collectible codes that start with it.
+    // This avoids scanning every block/item/entity on each wildcard lookup.
+    private static ICoreAPI? _indexApi;
+    private static Dictionary<string, List<string>>? _prefixIndex;
+    private static string? _prefixIndexLanguage;
+
     /// <summary>
     /// Resolves a readable display name for an item, block or entity code.
     /// Wildcards are accepted. Falls back to a pretty-printed code string.
@@ -71,33 +78,37 @@ public static class CollectibleNameResolver
     /// <summary>
     /// Resolves the first collectible that matches a wildcard prefix and has a
     /// valid display name. Scans blocks, then items, then entity types.
+    /// Uses a lazily-built prefix index to avoid full registry scans on every call.
     /// </summary>
     public static string? ResolveFirstMatchingName(ICoreAPI api, string prefix, System.Func<string?, string?>? mobNameResolver = null)
     {
         if (string.IsNullOrWhiteSpace(prefix)) return null;
 
         string pattern = prefix.EndsWith("*", StringComparison.Ordinal) ? prefix : prefix + "*";
+        var candidates = GetPrefixCandidates(api, pattern);
 
-        foreach (var bl in api.World.Blocks)
+        foreach (var c in candidates)
         {
-            var c = bl.Code?.ToString();
-            if (c != null && MatchesPattern(c, pattern))
+            var loc = AssetLocation.CreateOrNull(c);
+            if (loc == null) continue;
+
+            var bl = api.World.GetBlock(loc);
+            if (bl != null)
             {
                 string name = GetCollectibleDisplayName(bl, tryItemStackName: true, api);
                 if (IsValidDisplayName(bl, name)) return name;
+                continue;
             }
-        }
 
-        foreach (var it in api.World.Items)
-        {
-            var c = it.Code?.ToString();
-            if (c != null && MatchesPattern(c, pattern))
+            var it = api.World.GetItem(loc);
+            if (it != null)
             {
                 string name = GetCollectibleDisplayName(it, tryItemStackName: true, api);
                 if (IsValidDisplayName(it, name)) return name;
             }
         }
 
+        // Entity types are not in the prefix index; scan them directly.
         foreach (var et in api.World.EntityTypes)
         {
             var c = et.Code?.ToString();
@@ -282,24 +293,10 @@ public static class CollectibleNameResolver
             return null;
         }
 
-        foreach (var it in api.World.Items)
+        foreach (var c in GetPrefixCandidates(api, code))
         {
-            var c = it.Code?.ToString();
-            if (c != null && MatchesPattern(c, code))
-            {
-                _iconCodeCache[code] = c;
-                return c;
-            }
-        }
-
-        foreach (var bl in api.World.Blocks)
-        {
-            var c = bl.Code?.ToString();
-            if (c != null && MatchesPattern(c, code))
-            {
-                _iconCodeCache[code] = c;
-                return c;
-            }
+            _iconCodeCache[code] = c;
+            return c;
         }
 
         _iconCodeCache[code] = null;
@@ -324,5 +321,123 @@ public static class CollectibleNameResolver
             _iconCacheLanguage = lang;
             _iconCodeCache.Clear();
         }
+    }
+
+    /// <summary>
+    /// Returns candidate collectible codes that match the given wildcard pattern,
+    /// using a lazily-built prefix index. Falls back to a full scan if the index
+    /// is not available or the pattern is not a simple prefix.
+    /// </summary>
+    private static IEnumerable<string> GetPrefixCandidates(ICoreAPI api, string pattern)
+    {
+        if (Wildcard.IsSimplePrefix(pattern))
+        {
+            string prefix = pattern.Substring(0, pattern.Length - 1);
+            EnsurePrefixIndex(api);
+            if (_prefixIndex != null)
+            {
+                // Try exact prefix first, then progressively shorter prefixes.
+                // The index stores codes grouped by their full code prefix up to
+                // the last dash, so we try the exact prefix and then trim.
+                if (_prefixIndex.TryGetValue(prefix, out var exact))
+                    return exact;
+
+                // Try progressively shorter dash-separated prefixes.
+                string trimmed = prefix;
+                int dashIdx;
+                while ((dashIdx = trimmed.LastIndexOf('-')) > 0)
+                {
+                    trimmed = trimmed.Substring(0, dashIdx);
+                    if (_prefixIndex.TryGetValue(trimmed, out var shorter))
+                    {
+                        // Filter to only those that actually start with the full prefix.
+                        return shorter.Where(c => c.StartsWith(prefix, StringComparison.OrdinalIgnoreCase));
+                    }
+                }
+
+                return Enumerable.Empty<string>();
+            }
+        }
+
+        // Fallback: full scan.
+        var result = new List<string>();
+        foreach (var bl in api.World.Blocks)
+        {
+            var c = bl.Code?.ToString();
+            if (c != null && MatchesPattern(c, pattern))
+                result.Add(c);
+        }
+        foreach (var it in api.World.Items)
+        {
+            var c = it.Code?.ToString();
+            if (c != null && MatchesPattern(c, pattern))
+                result.Add(c);
+        }
+        return result;
+    }
+
+    /// <summary>
+    /// Builds a prefix index from the world's blocks and items. The index maps
+    /// progressively shorter dash-separated prefixes of each code to the list of
+    /// full codes that share that prefix. This allows wildcard lookups to skip
+    /// scanning the entire registry.
+    /// </summary>
+    private static void EnsurePrefixIndex(ICoreAPI api)
+    {
+        string lang = Lang.CurrentLocale ?? "en";
+        if (_prefixIndex != null && ReferenceEquals(_indexApi, api) &&
+            string.Equals(_prefixIndexLanguage, lang, StringComparison.OrdinalIgnoreCase))
+            return;
+
+        _indexApi = api;
+        _prefixIndexLanguage = lang;
+        var index = new Dictionary<string, List<string>>(StringComparer.OrdinalIgnoreCase);
+        _prefixIndex = index;
+
+        void IndexCode(string code)
+        {
+            // Index all dash-prefixes of the code.
+            int idx = code.Length;
+            while (idx > 0)
+            {
+                int dash = code.LastIndexOf('-', idx - 1, idx);
+                if (dash <= 0) break;
+                string prefix = code.Substring(0, dash);
+                if (!index.TryGetValue(prefix, out var list))
+                {
+                    list = new List<string>();
+                    index[prefix] = list;
+                }
+                list.Add(code);
+                idx = dash;
+            }
+        }
+
+        foreach (var bl in api.World.Blocks)
+        {
+            var c = bl.Code?.ToString();
+            if (c != null) IndexCode(c);
+        }
+        foreach (var it in api.World.Items)
+        {
+            var c = it.Code?.ToString();
+            if (c != null) IndexCode(c);
+        }
+    }
+
+    /// <summary>
+    /// Clears all cached names, icon codes, and the prefix index, including the
+    /// stored language. Intended for world unload or hot-reload scenarios so stale
+    /// entries from a previous session do not leak into the next one.
+    /// </summary>
+    public static void Clear()
+    {
+        _nameCacheLanguage = null;
+        _nameCache.Clear();
+        _iconCacheLanguage = null;
+        _iconCodeCache.Clear();
+        _indexApi = null;
+        _prefixIndex = null;
+        _prefixIndexLanguage = null;
     }
 }

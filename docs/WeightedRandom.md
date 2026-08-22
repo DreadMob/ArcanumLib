@@ -25,7 +25,7 @@ var chosen = WeightedRandom.Pick(
     sapi.World.Rand);
 ```
 
-`chosen` is `null` if the list is empty or all weights are zero.
+`chosen` is `default` if the list is empty, or the first item if all weights are zero.
 
 ## API overview
 
@@ -33,9 +33,9 @@ var chosen = WeightedRandom.Pick(
 
 | Method | Returns | Description |
 |--------|---------|-------------|
-| `WeightedRandom.Pick(items, weightSelector, random)` | `T?` | Returns the winning item, or `null` if nothing can be picked. |
-| `WeightedRandom.PickOrDefault(items, weightSelector, random)` | `T?` | Returns `default(T)` when nothing is pickable. |
-| `WeightedRandom.PickDistinct(items, weightSelector, random, count)` | `IEnumerable<T>` | Returns `count` distinct winners without replacement. |
+| `WeightedRandom.Pick(items, weightSelector, random)` | `T` | Returns the winning item, `default` when the list is empty, or the first item when all weights are zero. |
+| `WeightedRandom.PickOrDefault(items, weightSelector, random)` | `T?` | Returns `default(T)` when the list is empty or all weights are zero. |
+| `WeightedRandom.PickDistinct(items, weightSelector, random, count)` | `IReadOnlyList<T>` | Returns `count` distinct winners without replacement. |
 | `WeightedRandom.GetPercentages(items, weightSelector)` | percentages | Returns the percentage share for each item, useful for UI tooltips and info text. |
 
 ### Reusable tables

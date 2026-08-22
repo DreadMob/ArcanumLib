@@ -246,7 +246,8 @@ namespace ArcanumLib.Effects
 
                 foreach (var instance in result.Alive)
                 {
-                    SafeTick(entity, instance, dt);
+                    if (instance.Effect.HasTick)
+                        SafeTick(entity, instance, dt);
                 }
 
                 if (container.IsEmpty)

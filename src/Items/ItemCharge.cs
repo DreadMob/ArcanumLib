@@ -103,6 +103,16 @@ namespace ArcanumLib.Items
             => GetMetaFloat(stack, "chargemax", config?.DefaultChargeMax ?? DefaultConfig.DefaultChargeMax, config);
 
         /// <summary>
+        /// Returns the current charge as a percentage of the maximum (0..100).
+        /// </summary>
+        public static float GetChargePercentage(ItemStack? stack, ItemChargeConfig? config = null)
+        {
+            float max = GetChargeMax(stack, config);
+            if (max <= 0f) return 0f;
+            return GetChargeValue(stack, config) / max * 100f;
+        }
+
+        /// <summary>
         /// Charge restored per unit of refuel material.
         /// </summary>
         public static float GetChargePerUnit(ItemStack? stack, ItemChargeConfig? config = null)

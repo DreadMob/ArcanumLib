@@ -31,16 +31,6 @@ namespace ArcanumLib.Common
         public static bool IsServer(this ICoreClientAPI capi) => capi?.Side == EnumAppSide.Server;
 
         /// <summary>
-        /// Returns true if the server API is running on the client side.
-        /// </summary>
-        public static bool IsClient(this ICoreServerAPI sapi) => sapi?.Side == EnumAppSide.Client;
-
-        /// <summary>
-        /// Returns true if the server API is running on the server side.
-        /// </summary>
-        public static bool IsServer(this ICoreServerAPI sapi) => sapi?.Side == EnumAppSide.Server;
-
-        /// <summary>
         /// Returns true if the world accessor is running on the client side.
         /// </summary>
         public static bool IsClient(this IWorldAccessor? world) => world?.Side == EnumAppSide.Client;

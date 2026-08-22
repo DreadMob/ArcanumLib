@@ -5,7 +5,7 @@
     "authors": [
         "Alegacy"
     ],
-    "description": "Shared client and utility library for Alegacy mods. Provides icon rendering, color helpers, and other reusable Vintage Story helpers.",
+    "description": "Shared client/server utility library for Vintage Story mods. Provides icon rendering, color helpers, GUI toolkit, persistence, scheduling, and other reusable helpers.",
     "version": "1.0.0",
     "side": "universal",
     "requiredOnClient": true,

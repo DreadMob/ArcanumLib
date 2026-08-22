@@ -17,6 +17,7 @@ public class DeferredWork : ModSystem
     private static long _tickListenerId;
     private static readonly Dictionary<string, ScheduledTask> _tasks = new(StringComparer.Ordinal);
     private static readonly Queue<Action> _endOfTickQueue = new();
+    private static readonly object _syncLock = new();
 
     /// <summary>
     /// Enables or disables the scheduler. When disabled, pending work is executed immediately.
@@ -48,8 +49,15 @@ public class DeferredWork : ModSystem
 
     private static void Setup(ICoreAPI api)
     {
-        _api = api;
-        _tickListenerId = api.Event.RegisterGameTickListener(OnGameTick, 0);
+        if (_api is not ICoreServerAPI)
+        {
+            _api = api;
+        }
+
+        if (_tickListenerId == 0)
+        {
+            _tickListenerId = api.Event.RegisterGameTickListener(OnGameTick, 0);
+        }
     }
 
     public override void Dispose()
@@ -61,8 +69,11 @@ public class DeferredWork : ModSystem
             _api = null;
         }
 
-        _tasks.Clear();
-        _endOfTickQueue.Clear();
+        lock (_syncLock)
+        {
+            _tasks.Clear();
+            _endOfTickQueue.Clear();
+        }
     }
 
     /// <summary>
@@ -83,11 +94,14 @@ public class DeferredWork : ModSystem
         }
 
         long now = _api.World.ElapsedMilliseconds;
-        _tasks[key] = new ScheduledTask(key, action)
+        lock (_syncLock)
         {
-            FirstScheduledMs = now,
-            DueTimeMs = now + delayMs,
-        };
+            _tasks[key] = new ScheduledTask(key, action)
+            {
+                FirstScheduledMs = now,
+                DueTimeMs = now + delayMs,
+            };
+        }
     }
 
     /// <summary>
@@ -108,19 +122,22 @@ public class DeferredWork : ModSystem
         }
 
         long now = _api.World.ElapsedMilliseconds;
-        if (_tasks.TryGetValue(key, out var existing))
+        lock (_syncLock)
         {
-            existing.Action = action;
-            existing.DueTimeMs = now + windowMs;
-            return;
-        }
+            if (_tasks.TryGetValue(key, out var existing))
+            {
+                existing.Action = action;
+                existing.DueTimeMs = now + windowMs;
+                return;
+            }
 
-        _tasks[key] = new ScheduledTask(key, action)
-        {
-            FirstScheduledMs = now,
-            DueTimeMs = now + windowMs,
-            MaxDelayMs = maxDelayMs > 0 ? now + maxDelayMs : null,
-        };
+            _tasks[key] = new ScheduledTask(key, action)
+            {
+                FirstScheduledMs = now,
+                DueTimeMs = now + windowMs,
+                MaxDelayMs = maxDelayMs > 0 ? now + maxDelayMs : null,
+            };
+        }
     }
 
     /// <summary>
@@ -130,7 +147,10 @@ public class DeferredWork : ModSystem
     public static void AtEndOfTick(Action action)
     {
         if (action is null) throw new ArgumentNullException(nameof(action));
-        _endOfTickQueue.Enqueue(action);
+        lock (_syncLock)
+        {
+            _endOfTickQueue.Enqueue(action);
+        }
     }
 
     /// <summary>
@@ -139,7 +159,10 @@ public class DeferredWork : ModSystem
     public static void Cancel(string key)
     {
         if (string.IsNullOrWhiteSpace(key)) return;
-        _tasks.Remove(key);
+        lock (_syncLock)
+        {
+            _tasks.Remove(key);
+        }
     }
 
     /// <summary>
@@ -148,7 +171,10 @@ public class DeferredWork : ModSystem
     public static bool IsPending(string key)
     {
         if (string.IsNullOrWhiteSpace(key)) return false;
-        return _tasks.ContainsKey(key);
+        lock (_syncLock)
+        {
+            return _tasks.ContainsKey(key);
+        }
     }
 
     private static void OnGameTick(float dt)
@@ -159,19 +185,22 @@ public class DeferredWork : ModSystem
         var toRun = new List<ScheduledTask>(_tasks.Count);
         var toRemove = new List<string>(_tasks.Count);
 
-        foreach (var kvp in _tasks)
+        lock (_syncLock)
         {
-            var task = kvp.Value;
-            if (now >= task.DueTimeMs ||
-                (task.MaxDelayMs.HasValue && now >= task.MaxDelayMs.Value))
+            foreach (var kvp in _tasks)
             {
-                toRun.Add(task);
-                toRemove.Add(kvp.Key);
+                var task = kvp.Value;
+                if (now >= task.DueTimeMs ||
+                    (task.MaxDelayMs.HasValue && now >= task.MaxDelayMs.Value))
+                {
+                    toRun.Add(task);
+                    toRemove.Add(kvp.Key);
+                }
             }
-        }
 
-        foreach (var key in toRemove)
-            _tasks.Remove(key);
+            foreach (var key in toRemove)
+                _tasks.Remove(key);
+        }
 
         foreach (var task in toRun)
         {
@@ -186,20 +215,21 @@ public class DeferredWork : ModSystem
         }
 
         // End-of-tick work, capped to avoid infinite cascading.
-        int safety = 0;
-        while (_endOfTickQueue.Count > 0 && safety < 100)
+        // Drain the queue under lock, then run actions outside the lock so
+        // handlers can safely schedule new end-of-tick work.
+        var endOfTickBatch = new List<Action>();
+        lock (_syncLock)
         {
-            safety++;
-            Action current;
-            try
+            int safety = 0;
+            while (_endOfTickQueue.Count > 0 && safety < 100)
             {
-                current = _endOfTickQueue.Dequeue();
+                safety++;
+                endOfTickBatch.Add(_endOfTickQueue.Dequeue());
             }
-            catch
-            {
-                break;
-            }
+        }
 
+        foreach (var current in endOfTickBatch)
+        {
             try
             {
                 current();

@@ -73,11 +73,18 @@ namespace ArcanumLib.Network
         }
 
         /// <summary>
-        /// Sends a packet from the current side.
+        /// Sends a packet from the current side. On the server, no-op if no players are connected.
         /// </summary>
         public void Send<T>(T message)
         {
-            _serverChannel?.SendPacket(message);
+            if (_serverChannel != null)
+            {
+                if (_api is ICoreServerAPI sapi && sapi.World?.AllOnlinePlayers?.Length > 0)
+                {
+                    _serverChannel.SendPacket(message);
+                }
+            }
+
             _clientChannel?.SendPacket(message);
         }
 
@@ -86,6 +93,7 @@ namespace ArcanumLib.Network
         /// </summary>
         public void SendToPlayer<T>(T message, IServerPlayer player)
         {
+            if (player == null) return;
             _serverChannel?.SendPacket(message, player);
         }
 

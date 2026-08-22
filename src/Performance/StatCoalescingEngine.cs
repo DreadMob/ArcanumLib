@@ -50,6 +50,7 @@ public class StatCoalescingEngine : ModSystem
     }
 
     private static readonly Dictionary<long, CoalescedUpdate> PendingUpdates = new();
+    private static readonly object _syncLock = new();
 
     public override bool ShouldLoad(EnumAppSide forSide) => forSide == EnumAppSide.Server;
 
@@ -66,11 +67,19 @@ public class StatCoalescingEngine : ModSystem
         {
             _sapi.Event.PlayerDisconnect -= OnPlayerDisconnect;
 
-            foreach (var kvp in PendingUpdates)
+            List<long> keys;
+            lock (_syncLock)
             {
-                DeferredWork.Cancel(StatKey(kvp.Key));
+                keys = PendingUpdates.Keys.ToList();
             }
-            PendingUpdates.Clear();
+            foreach (var key in keys)
+            {
+                DeferredWork.Cancel(StatKey(key));
+            }
+            lock (_syncLock)
+            {
+                PendingUpdates.Clear();
+            }
         }
         base.Dispose();
     }
@@ -97,13 +106,24 @@ public class StatCoalescingEngine : ModSystem
 
         long entityId = player.EntityId;
 
-        if (!PendingUpdates.TryGetValue(entityId, out var update))
+        CoalescedUpdate update;
+        bool needsSchedule;
+        lock (_syncLock)
         {
-            update = new CoalescedUpdate();
-            PendingUpdates[entityId] = update;
+            if (!PendingUpdates.TryGetValue(entityId, out var existing))
+            {
+                update = new CoalescedUpdate();
+                PendingUpdates[entityId] = update;
+            }
+            else
+            {
+                update = existing;
+            }
+
+            needsSchedule = update.Stats.Count == 0 && !update.IsFlushing;
         }
 
-        if (update.Stats.Count == 0 && !update.IsFlushing)
+        if (needsSchedule)
         {
             DeferredWork.Coalesce(
                 StatKey(entityId),
@@ -113,7 +133,10 @@ public class StatCoalescingEngine : ModSystem
         }
 
         string statKey = string.IsNullOrEmpty(category) ? stat : $"{category}:{stat}";
-        update.Stats[statKey] = value;
+        lock (_syncLock)
+        {
+            update.Stats[statKey] = value;
+        }
     }
 
     /// <summary>
@@ -131,13 +154,24 @@ public class StatCoalescingEngine : ModSystem
 
         long entityId = player.EntityId;
 
-        if (!PendingUpdates.TryGetValue(entityId, out var update))
+        CoalescedUpdate update;
+        bool needsSchedule;
+        lock (_syncLock)
         {
-            update = new CoalescedUpdate();
-            PendingUpdates[entityId] = update;
+            if (!PendingUpdates.TryGetValue(entityId, out var existing))
+            {
+                update = new CoalescedUpdate();
+                PendingUpdates[entityId] = update;
+            }
+            else
+            {
+                update = existing;
+            }
+
+            needsSchedule = update.Stats.Count == 0 && !update.IsFlushing;
         }
 
-        if (update.Stats.Count == 0 && !update.IsFlushing)
+        if (needsSchedule)
         {
             DeferredWork.Coalesce(
                 StatKey(entityId),
@@ -146,10 +180,13 @@ public class StatCoalescingEngine : ModSystem
                 MaxDelayMs);
         }
 
-        foreach (var stat in stats)
+        lock (_syncLock)
         {
-            string statKey = string.IsNullOrEmpty(category) ? stat.Key : $"{category}:{stat.Key}";
-            update.Stats[statKey] = stat.Value;
+            foreach (var stat in stats)
+            {
+                string statKey = string.IsNullOrEmpty(category) ? stat.Key : $"{category}:{stat.Key}";
+                update.Stats[statKey] = stat.Value;
+            }
         }
     }
 
@@ -160,8 +197,11 @@ public class StatCoalescingEngine : ModSystem
     {
         if (!IsEnabled) return;
 
-        if (!PendingUpdates.TryGetValue(entityId, out var update)) return;
-        if (update.IsFlushing) return;
+        lock (_syncLock)
+        {
+            if (!PendingUpdates.TryGetValue(entityId, out var update)) return;
+            if (update.IsFlushing) return;
+        }
 
         DeferredWork.Cancel(StatKey(entityId));
         FlushUpdates(api, entityId);
@@ -185,7 +225,10 @@ public class StatCoalescingEngine : ModSystem
     /// </summary>
     public static bool HasPendingUpdates(long entityId)
     {
-        return PendingUpdates.TryGetValue(entityId, out var update) && update.Stats.Count > 0;
+        lock (_syncLock)
+        {
+            return PendingUpdates.TryGetValue(entityId, out var update) && update.Stats.Count > 0;
+        }
     }
 
     /// <summary>
@@ -193,7 +236,10 @@ public class StatCoalescingEngine : ModSystem
     /// </summary>
     public static int GetPendingUpdateCount()
     {
-        return PendingUpdates.Values.Sum(u => u.Stats.Count);
+        lock (_syncLock)
+        {
+            return PendingUpdates.Values.Sum(u => u.Stats.Count);
+        }
     }
 
     /// <summary>
@@ -201,30 +247,49 @@ public class StatCoalescingEngine : ModSystem
     /// </summary>
     public static void ClearAllPending(ICoreServerAPI api)
     {
-        foreach (var kvp in PendingUpdates)
+        List<long> keys;
+        lock (_syncLock)
         {
-            DeferredWork.Cancel(StatKey(kvp.Key));
+            keys = PendingUpdates.Keys.ToList();
         }
-        PendingUpdates.Clear();
+        foreach (var key in keys)
+        {
+            DeferredWork.Cancel(StatKey(key));
+        }
+        lock (_syncLock)
+        {
+            PendingUpdates.Clear();
+        }
     }
 
     private static string StatKey(long entityId) => $"stat-coalesce-{entityId}";
 
     private static void FlushUpdates(ICoreServerAPI api, long entityId)
     {
-        if (!PendingUpdates.TryGetValue(entityId, out var update)) return;
-        if (update.IsFlushing) return;
-
-        update.IsFlushing = true;
+        CoalescedUpdate? update;
+        lock (_syncLock)
+        {
+            if (!PendingUpdates.TryGetValue(entityId, out update)) return;
+            if (update.IsFlushing) return;
+            update.IsFlushing = true;
+        }
 
         var entity = api.World.GetEntityById(entityId) as EntityPlayer;
         if (entity?.EntityId == null)
         {
-            PendingUpdates.Remove(entityId);
+            lock (_syncLock)
+            {
+                PendingUpdates.Remove(entityId);
+            }
             return;
         }
 
-        var stats = update.Stats.ToList();
+        List<KeyValuePair<string, float>> stats;
+        lock (_syncLock)
+        {
+            stats = update.Stats.ToList();
+        }
+
         for (int i = 0; i < stats.Count; i++)
         {
             var kv = stats[i];
@@ -238,7 +303,10 @@ public class StatCoalescingEngine : ModSystem
             entity.WatchedAttributes.MarkPathDirty(MarkDirtyAttributePath);
         }
 
-        PendingUpdates.Remove(entityId);
+        lock (_syncLock)
+        {
+            PendingUpdates.Remove(entityId);
+        }
     }
 
     private static (string category, string statName) ParseStatKey(string statKey)
@@ -257,6 +325,9 @@ public class StatCoalescingEngine : ModSystem
         long entityId = player.Entity.EntityId;
 
         DeferredWork.Cancel(StatKey(entityId));
-        PendingUpdates.Remove(entityId);
+        lock (_syncLock)
+        {
+            PendingUpdates.Remove(entityId);
+        }
     }
 }

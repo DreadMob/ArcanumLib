@@ -75,7 +75,7 @@ public enum MergeStrategy
 }
 
 /// <summary>
-/// Loads assets from all loaded mods. Allows multiple mods (or quest packs) to
+/// Loads assets from all loaded mods. Allows multiple mods to
 /// contribute JSON definitions under the same asset path.
 /// </summary>
 public static class ModAssetLoader

@@ -9,11 +9,12 @@ namespace ArcanumLib.Inventory
     {
         /// <summary>
         /// Returns true when the stack's collectible code equals the given code.
+        /// Comparison is case-insensitive, matching Vintage Story asset code conventions.
         /// </summary>
         public static bool HasCollectibleCode(this ItemStack? stack, string code)
         {
             if (stack?.Collectible?.Code == null || string.IsNullOrWhiteSpace(code)) return false;
-            return stack.Collectible.Code.ToString().Equals(code);
+            return stack.Collectible.Code.ToString().Equals(code, StringComparison.OrdinalIgnoreCase);
         }
 
         /// <summary>

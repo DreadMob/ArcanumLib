@@ -155,8 +155,4 @@ public static class TagSetExtensions
     /// </summary>
     public static bool SetEquals(this TagSet first, TagSet second) => first == second;
 
-    /// <summary>
-    /// Returns true if <paramref name="first"/> and <paramref name="second"/> share at least one tag.
-    /// </summary>
-    public static bool Overlaps(this TagSet first, TagSet second) => first.Overlaps(second);
 }

@@ -25,12 +25,14 @@ using ArcanumLib.Inventory;
 // Give a stack, dropping it at the player if the inventory is full.
 player.TryGiveOrDrop(stack);
 
+var inventory = player.InventoryManager.GetOwnInventory("character");
+
 // Count and consume items.
-bool hasEnough = player.Inventory.HasAtLeast("game:ingot-iron", 4);
-int consumed = player.Inventory.ConsumeItems("game:ingot-iron", 4);
+bool hasEnough = inventory.HasAtLeast("game:ingot-iron", 4);
+int consumed = inventory.ConsumeItems("game:ingot-iron", 4);
 
 // Find the first matching slot.
-var slot = player.Inventory.FindFirst(s => s?.Itemstack?.HasCollectibleCode("game:gear-temporal") == true);
+var slot = inventory.FindFirst(s => s?.Itemstack?.HasCollectibleCode("game:gear-temporal") == true);
 ```
 
 ## API overview

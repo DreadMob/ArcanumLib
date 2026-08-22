@@ -57,7 +57,7 @@ public sealed class TimedCache<TKey, TValue> : IDisposable
             _mapping[key] = new CacheEntry
             {
                 Value = value,
-                LastAccess = _api?.World?.ElapsedMilliseconds ?? Environment.TickCount64
+                LastAccess = Environment.TickCount64
             };
 
             if (_maxSize.HasValue)
@@ -81,7 +81,7 @@ public sealed class TimedCache<TKey, TValue> : IDisposable
         {
             if (_mapping.TryGetValue(key, out var entry))
             {
-                long now = _api?.World?.ElapsedMilliseconds ?? Environment.TickCount64;
+                long now = Environment.TickCount64;
                 if (now - entry.LastAccess <= _ttlMs)
                 {
                     _lock.EnterWriteLock();
@@ -157,7 +157,7 @@ public sealed class TimedCache<TKey, TValue> : IDisposable
         _lock.EnterWriteLock();
         try
         {
-            long now = _api?.World?.ElapsedMilliseconds ?? Environment.TickCount64;
+            long now = Environment.TickCount64;
             var stale = new List<TKey>();
             foreach (var kvp in _mapping)
             {

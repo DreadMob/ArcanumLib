@@ -18,15 +18,52 @@ public static class Pretty
     {
         if (string.IsNullOrWhiteSpace(value)) return "";
 
-        value = value.Replace("\r", " ")
-                     .Replace("\n", " ")
-                     .Replace("<br>", " ")
-                     .Replace("\\n", " ");
+        // Replace newline markers in one pass, then collapse runs of spaces
+        // without the O(n²) while-Replace loop.
+        var sb = new System.Text.StringBuilder(value.Length);
+        bool prevSpace = false;
 
-        while (value.Contains("  "))
-            value = value.Replace("  ", " ");
+        for (int i = 0; i < value.Length; i++)
+        {
+            char c = value[i];
 
-        return value.Trim();
+            // Treat \r, \n as spaces.
+            if (c == '\r' || c == '\n')
+            {
+                c = ' ';
+            }
+
+            // Treat literal "<br>" as a space (case-insensitive, 4 chars).
+            if (c == '<' && i + 3 < value.Length
+                && (value[i + 1] == 'b' || value[i + 1] == 'B')
+                && (value[i + 2] == 'r' || value[i + 2] == 'R')
+                && value[i + 3] == '>')
+            {
+                c = ' ';
+                i += 3;
+            }
+
+            // Treat literal "\n" (backslash-n) as a space.
+            if (c == '\\' && i + 1 < value.Length && value[i + 1] == 'n')
+            {
+                c = ' ';
+                i += 1;
+            }
+
+            if (c == ' ')
+            {
+                if (!prevSpace)
+                    sb.Append(' ');
+                prevSpace = true;
+            }
+            else
+            {
+                sb.Append(c);
+                prevSpace = false;
+            }
+        }
+
+        return sb.ToString().Trim();
     }
 
     /// <summary>
@@ -49,7 +86,7 @@ public static class Pretty
 
     /// <summary>
     /// Returns the last <c>:</c>-separated segment of a code, pretty-printed.
-    /// Example: <c>"albase:encounter:hollowtrials"</c> → <c>"Hollowtrials"</c>.
+    /// Example: <c>"game:creature:bear"</c> → <c>"Bear"</c>.
     /// </summary>
     public static string LastSegment(string? value)
     {
@@ -82,8 +119,28 @@ public static class Pretty
                            .TrimEnd('-', '*')
                            .TrimStart('-');
 
-        while (stripped.Contains("--"))
-            stripped = stripped.Replace("--", "-");
+        // Collapse runs of dashes in one pass instead of O(n²) while-Replace.
+        if (stripped.Contains("--"))
+        {
+            var dashSb = new System.Text.StringBuilder(stripped.Length);
+            bool prevDash = false;
+            for (int i = 0; i < stripped.Length; i++)
+            {
+                char c = stripped[i];
+                if (c == '-')
+                {
+                    if (!prevDash)
+                        dashSb.Append(c);
+                    prevDash = true;
+                }
+                else
+                {
+                    dashSb.Append(c);
+                    prevDash = false;
+                }
+            }
+            stripped = dashSb.ToString();
+        }
 
         if (string.IsNullOrWhiteSpace(stripped))
             stripped = code.TrimEnd('-', '*');

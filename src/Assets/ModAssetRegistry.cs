@@ -25,6 +25,7 @@ public sealed class ModAssetRegistry<TKey, TValue> where TKey : notnull
     private readonly System.Func<ICoreAPI, string, string?, IEnumerable<ModAsset<TValue>>> _loader;
 
     private Dictionary<TKey, ModAsset<TValue>> _entries;
+    private Dictionary<TKey, TValue>? _valuesCache;
 
     /// <summary>
     /// All loaded entries keyed by the selected key. Includes source mod and asset location metadata.
@@ -32,12 +33,21 @@ public sealed class ModAssetRegistry<TKey, TValue> where TKey : notnull
     public IReadOnlyDictionary<TKey, ModAsset<TValue>> Entries => _entries;
 
     /// <summary>
-    /// Values only, keyed by the selected key.
+    /// Values only, keyed by the selected key. Cached and rebuilt on <see cref="Reload"/>.
     /// </summary>
-    public IReadOnlyDictionary<TKey, TValue> Values => _entries.ToDictionary(
-        kvp => kvp.Key,
-        kvp => kvp.Value.Value,
-        _comparer);
+    public IReadOnlyDictionary<TKey, TValue> Values
+    {
+        get
+        {
+            if (_valuesCache == null)
+            {
+                _valuesCache = new Dictionary<TKey, TValue>(_entries.Count, _comparer);
+                foreach (var kvp in _entries)
+                    _valuesCache[kvp.Key] = kvp.Value.Value;
+            }
+            return _valuesCache;
+        }
+    }
 
     /// <summary>
     /// Number of loaded entries.
@@ -140,6 +150,7 @@ public sealed class ModAssetRegistry<TKey, TValue> where TKey : notnull
         }
 
         _entries = next;
+        _valuesCache = null;
     }
 
     /// <summary>

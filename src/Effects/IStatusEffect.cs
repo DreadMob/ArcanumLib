@@ -29,6 +29,15 @@ namespace ArcanumLib.Effects
         bool PersistThroughDeath { get; }
 
         /// <summary>
+        /// Whether <see cref="OnTick"/> does meaningful work. When false, the manager
+        /// skips per-tick calls for this effect to avoid unnecessary overhead.
+        /// Default implementations should return false when <see cref="OnTick"/> is empty.
+        /// Defaults to <c>true</c> for backwards compatibility with effects that do not
+        /// declare this property explicitly.
+        /// </summary>
+        bool HasTick => true;
+
+        /// <summary>
         /// Called once when the effect is applied or re-stacked.
         /// </summary>
         /// <param name="entity">The affected entity.</param>

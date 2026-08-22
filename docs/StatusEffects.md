@@ -64,7 +64,7 @@ var instance = StatusEffectManager.Apply(entity, myEffect, durationMs: 10000, da
 Call this from a client/server tick handler:
 
 ```csharp
-StatusEffectManager.Update(dt); // dt in seconds
+StatusEffectManager.Tick(dt); // dt in seconds
 ```
 
 ### Remove
@@ -102,15 +102,14 @@ public class SlowEffect : IStatusEffect
 For simple stat changes, inherit from `StatModifierEffect`:
 
 ```csharp
-public class SpeedBuff : StatModifierEffect
+var speedBuff = new StatModifierEffect(
+    code: "mymod:speedbuff",
+    statCategory: "walkspeed",
+    value: 0.2f)
 {
-    public override string Code => "mymod:speedbuff";
-    public override string Category => "walkspeed";
-    public override string StatKey => "mymodSpeedBuff";
-    public override float Value => 0.2f;
-    public override bool PersistThroughDeath => false;
-    public override EnumStackMode StackMode => EnumStackMode.Refresh;
-}
+    StackMode = EnumStackMode.Refresh,
+    PersistThroughDeath = false
+};
 ```
 
 ### Events

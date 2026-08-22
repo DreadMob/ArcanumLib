@@ -103,9 +103,9 @@ namespace ArcanumLib.Progression
         /// <summary>
         /// Convenience helper to register tiered pity definitions.
         /// </summary>
-        public void RegisterPityDefinitions(string prefix, int radiantCap, int abyssalCap, string? radiantNameKey = null, string? abyssalNameKey = null)
+        public void RegisterPityDefinitions(string prefix, int tier3Cap, int tier4Cap, string? tier3NameKey = null, string? tier4NameKey = null)
         {
-            if (radiantCap <= 0 && abyssalCap <= 0) return;
+            if (tier3Cap <= 0 && tier4Cap <= 0) return;
             if (string.IsNullOrWhiteSpace(prefix)) return;
 
             for (int tier = 1; tier <= 4; tier++)
@@ -115,8 +115,8 @@ namespace ArcanumLib.Progression
                     definitionId = $"{prefix}{tier}",
                     rules = new List<PityTierRule>
                     {
-                        new PityTierRule { qualityTierIndex = 3, opensUntilGuarantee = radiantCap, displayNameKey = radiantNameKey },
-                        new PityTierRule { qualityTierIndex = 4, opensUntilGuarantee = abyssalCap, displayNameKey = abyssalNameKey }
+                        new PityTierRule { qualityTierIndex = 3, opensUntilGuarantee = tier3Cap, displayNameKey = tier3NameKey },
+                        new PityTierRule { qualityTierIndex = 4, opensUntilGuarantee = tier4Cap, displayNameKey = tier4NameKey }
                     }
                 });
             }
@@ -165,7 +165,9 @@ namespace ArcanumLib.Progression
             if (string.IsNullOrWhiteSpace(playerUid) || string.IsNullOrWhiteSpace(definitionId)) return 0;
             if (!TryGetDefinition(definitionId, out var def) || def == null) return 0;
 
-            var data = GetOrCreatePlayerData(playerUid);
+            var data = TryGetPlayerData(playerUid);
+            if (data == null) return 0;
+
             var key = MakeKey(playerUid, definitionId);
             if (!data.counters.TryGetValue(key, out var counters)) return 0;
 
@@ -179,7 +181,9 @@ namespace ArcanumLib.Progression
         {
             if (string.IsNullOrWhiteSpace(playerUid) || string.IsNullOrWhiteSpace(definitionId)) return null;
 
-            var data = GetOrCreatePlayerData(playerUid);
+            var data = TryGetPlayerData(playerUid);
+            if (data == null) return null;
+
             var key = MakeKey(playerUid, definitionId);
             return data.counters.TryGetValue(key, out var counters) ? counters : null;
         }
@@ -196,6 +200,12 @@ namespace ArcanumLib.Progression
         {
             if (string.IsNullOrWhiteSpace(playerUid)) return;
             _store.Data.Remove(playerUid);
+        }
+
+        private PityPlayerData? TryGetPlayerData(string playerUid)
+        {
+            _store.Data.TryGetValue(playerUid, out var data);
+            return data;
         }
 
         private PityPlayerData GetOrCreatePlayerData(string playerUid)

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Runtime.InteropServices;
 using ArcanumLib.Gui.Theme;
 using Cairo;
+using SkiaSharp;
 using Vintagestory.API.Client;
 using Vintagestory.API.Common;
 
@@ -19,10 +20,8 @@ public enum IconFit
 /// <summary>
 /// Caches and renders icon image surfaces from the Vintage Story asset pipeline.
 /// Supports PNG, JPEG, GIF, BMP, ICO, WBMP, WebP, HEIF, DNG, KTX, PKM and ASTC
-/// through Skia's <see cref="GuiElement.getImageSurfaceFromAsset"/> / <see cref="SkiaSharp.SKCodec"/>,
-/// including alpha and premultiplied color conversion for Cairo ARGB32.
-/// AVIF and JPEG XL are not compiled into the Vintage Story libSkiaSharp native library
-/// and will fall back to the orange 1x1 placeholder.
+/// through <see cref="SkiaSharp.SKCodec"/>, then converts decoded pixels to a
+/// Cairo ARGB32 surface with alpha pre-multiplication and near-transparent noise removal.
 /// </summary>
 public static class ImageIconCache
 {
@@ -136,14 +135,15 @@ public static class ImageIconCache
         try
         {
             var loc = new AssetLocation(assetPath.ToLowerInvariant());
-            var surface = GuiElement.getImageSurfaceFromAsset(_capi, loc, 255);
+            var surface = LoadSurface(loc);
             if (surface != null)
             {
-                PremultiplyAndCleanSurface(surface);
                 _surfaces[assetPath] = surface;
             }
             else
+            {
                 RecordMissing(assetPath);
+            }
 
             return surface;
         }
@@ -152,6 +152,52 @@ public static class ImageIconCache
             _capi?.Logger.Warning("[ImageIconCache] failed to load icon '{0}': {1}", assetPath, ex.Message);
             RecordMissing(assetPath);
             return null;
+        }
+    }
+
+    private static ImageSurface? LoadSurface(AssetLocation loc)
+    {
+        if (_capi == null) return null;
+
+        var fullLoc = loc.Clone().WithPathPrefixOnce("textures/");
+        IAsset asset;
+        try { asset = _capi.Assets.Get(fullLoc); }
+        catch (Exception ex) { _capi?.Logger?.Warning("[ImageIconCache] asset lookup failed for '{0}': {1}", fullLoc, ex.Message); return null; }
+
+        byte[]? data = asset?.Data;
+        if (data == null || data.Length == 0) return null;
+
+        using var skData = SKData.CreateCopy(data);
+        using var codec = SKCodec.Create(skData);
+        if (codec == null) return null;
+
+        var info = new SKImageInfo(codec.Info.Width, codec.Info.Height, SKColorType.Bgra8888, SKAlphaType.Unpremul);
+        using var bitmap = new SKBitmap(info);
+        if (bitmap.GetPixels() == IntPtr.Zero) return null;
+
+        if (codec.GetPixels(info, bitmap.GetPixels(out _)) != SKCodecResult.Success)
+            return null;
+
+        var surface = new ImageSurface(Format.Argb32, info.Width, info.Height);
+        CopyBitmapToSurface(bitmap, surface);
+        PremultiplyAndCleanSurface(surface);
+        return surface;
+    }
+
+    private static void CopyBitmapToSurface(SKBitmap bitmap, ImageSurface surface)
+    {
+        int width = Math.Min(bitmap.Width, surface.Width);
+        int height = Math.Min(bitmap.Height, surface.Height);
+        int srcRowBytes = bitmap.RowBytes;
+        int dstStride = surface.Stride;
+
+        var row = new int[width];
+        for (int y = 0; y < height; y++)
+        {
+            IntPtr srcRow = IntPtr.Add(bitmap.GetPixels(out _), y * srcRowBytes);
+            IntPtr dstRow = IntPtr.Add(surface.DataPtr, y * dstStride);
+            Marshal.Copy(srcRow, row, 0, width);
+            Marshal.Copy(row, 0, dstRow, width);
         }
     }
 

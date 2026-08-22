@@ -202,7 +202,9 @@ public class ArcanumList<T> : GuiElement
         int width = Math.Max(1, (int)Bounds.OuterWidth);
         int height = Math.Max(1, (int)Bounds.OuterHeight);
 
-        string newKey = $"{width}|{height}|{_scrollY:F2}|{_hoveredIndex}|{_selectedIndex}|{RowCount}";
+        // Round scrollY to whole pixels so smooth wheel scrolling does not regenerate
+        // the texture on every fractional change (was :F2, causing ~100 regen/s).
+        string newKey = $"{width}|{height}|{(int)Math.Round(_scrollY)}|{_hoveredIndex}|{_selectedIndex}|{RowCount}";
         if (!_dirty && string.Equals(_textureKey, newKey, StringComparison.Ordinal) && _texture.TextureId > 0)
             return;
 

@@ -437,8 +437,9 @@ public class ArcanumComposer
             var ext = ctx.TextExtents(text);
             return ext.Width / RuntimeEnv.GUIScale;
         }
-        catch
+        catch (Exception ex)
         {
+            Api?.Logger?.Warning("[ArcanumLib] [ArcanumComposer] MeasureTextWidth failed for '{0}': {1}", text, ex.Message);
             return 0;
         }
     }
@@ -454,8 +455,9 @@ public class ArcanumComposer
             double pixelHeight = util.GetMultilineTextHeight(font, text, boxW);
             return Math.Max(DefaultTextHeight, pixelHeight / RuntimeEnv.GUIScale);
         }
-        catch
+        catch (Exception ex)
         {
+            Api?.Logger?.Warning("[ArcanumLib] [ArcanumComposer] ComputeTextHeight failed for '{0}': {1}", text, ex.Message);
             return DefaultTextHeight;
         }
     }

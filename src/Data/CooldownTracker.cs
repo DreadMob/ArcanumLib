@@ -88,8 +88,17 @@ namespace ArcanumLib.Data
             long lastStartMs = entity.WatchedAttributes?.GetLong(key, 0) ?? 0;
             if (lastStartMs == 0) return 0;
 
-            double multiplier = multiplierFactory?.Invoke(entity) ?? fallbackMultiplier;
             long now = entity.Api.World.ElapsedMilliseconds;
+
+            // Server restart: ElapsedMilliseconds resets to 0, but WatchedAttributes persist.
+            if (lastStartMs > now && now >= 0)
+            {
+                entity.WatchedAttributes?.SetLong(key, 0);
+                entity.WatchedAttributes?.MarkPathDirty(key);
+                return 0;
+            }
+
+            double multiplier = multiplierFactory?.Invoke(entity) ?? fallbackMultiplier;
             long cooldownMs = (long)(durationSeconds * 1000.0 * multiplier);
             long elapsed = now - lastStartMs;
 
@@ -110,7 +119,7 @@ namespace ArcanumLib.Data
 
         private static float GetCooldownProgress(this Entity entity, string key, double durationSeconds, CooldownMultiplier? multiplierFactory, double fallbackMultiplier)
         {
-            if (durationSeconds <= 0) return 1f;
+            if (entity?.Api?.World is null || durationSeconds <= 0) return 1f;
 
             double multiplier = multiplierFactory?.Invoke(entity) ?? fallbackMultiplier;
             long totalMs = (long)(durationSeconds * 1000.0 * multiplier);

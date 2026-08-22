@@ -34,7 +34,6 @@ TagSet without = registry.Except(a, b);
 
 bool sub = a.IsSubsetOf(b);
 bool super = a.IsSupersetOf(b);
-bool overlap = a.Overlaps(b);
 bool equal = a.SetEquals(b);
 
 IEnumerable<string> names = registry.GetNames(a);
@@ -70,7 +69,6 @@ public static class TagSetExtensions
     public static bool IsProperSubsetOf(this TagSet first, TagSet second);
     public static bool IsProperSupersetOf(this TagSet first, TagSet second);
     public static bool SetEquals(this TagSet first, TagSet second);
-    public static bool Overlaps(this TagSet first, TagSet second);
 }
 ```
 
@@ -85,7 +83,7 @@ public static class TagSetExtensions
 | `IsSubsetOf` / `IsSupersetOf` | Subset and superset checks. |
 | `IsProperSubsetOf` / `IsProperSupersetOf` | Strict subset and superset checks. |
 | `SetEquals` | Returns `true` when both sets contain the same tags. |
-| `Overlaps` | Returns `true` when the sets share at least one tag. |
+
 
 ## Notes
 

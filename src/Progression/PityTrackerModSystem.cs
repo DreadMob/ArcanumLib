@@ -1,4 +1,3 @@
-using Vintagestory.API.Client;
 using Vintagestory.API.Common;
 using Vintagestory.API.Server;
 
@@ -6,6 +5,7 @@ namespace ArcanumLib.Progression
 {
     /// <summary>
     /// ModSystem that initializes and exposes the global <see cref="PityTracker"/>.
+    /// Pity tracking is server-side only; this system does not register any client logic.
     /// </summary>
     public class PityTrackerModSystem : ModSystem
     {
@@ -16,14 +16,6 @@ namespace ArcanumLib.Progression
         public override void StartServerSide(ICoreServerAPI sapi)
         {
             PityTracker.Current ??= new PityTracker(sapi);
-        }
-
-        /// <summary>
-        /// Saves the tracker state on the client.
-        /// </summary>
-        public override void StartClientSide(ICoreClientAPI capi)
-        {
-            // Pity tracking is server-side only.
         }
 
         /// <summary>
