@@ -43,6 +43,7 @@ The library is currently used by the **[Alegacy Quest Framework](https://gitlab.
 | **TagSetExtensions** | Set operations and readable aliases for `Vintagestory.API.Datastructures.TagSet`. |
 | **WatchedAttributesExtensions** | Get-or-create, set-if-missing, and set-and-mark-dirty helpers for `ITreeAttribute`. |
 || **CooldownTracker** | Per-entity cooldown state in `WatchedAttributes` with readiness, remaining, and progress checks. |
+| **ModDataStore** | Versioned per-savegame data persistence with JSON migrations. |
 | **ValidationResult** | Immutable result object that accumulates errors and warnings from validation pipelines. |
 
 ### Caching & Performance
@@ -70,6 +71,13 @@ The library is currently used by the **[Alegacy Quest Framework](https://gitlab.
 | **PlayerExtensions** | `HasValidPosition`, `GetAliveEntities`, and `GetAliveServerEntities`. |
 | **LoggerExtensions** | `LogNonCriticalWarning`, `LogGuiWarning`, and `SafeExecute` wrappers. |
 
+### Status & Effects
+
+| Module | Description |
+|--------|-------------|
+| **StatusEffectManager** | Apply, tick, and remove timed status effects with refresh, stack, override, and independent modes. |
+| **StatModifierEffect** | Reusable effect that adds or removes values from an `EntityStats` category. |
+
 ### Networking & Inventory
 
 | Module | Description |
@@ -96,7 +104,9 @@ ArcanumLib/
 │   ├── Random/                — WeightedRandom, WeightedTable
 │   ├── Text/                  — Pretty, Wildcard
 │   ├── Network/               — TypedNetworkChannel
-│   └── Helpers/               — CollectibleNameResolver
+│   ├── Helpers/               — CollectibleNameResolver
+│   ├── Persistence/           — ModDataStore
+│   └── Effects/               — StatusEffectManager
 ├── docs/                      — API documentation
 ├── resources/
 │   └── modinfo.json           — mod metadata
