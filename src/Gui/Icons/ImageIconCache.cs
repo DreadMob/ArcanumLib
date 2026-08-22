@@ -18,8 +18,11 @@ public enum IconFit
 
 /// <summary>
 /// Caches and renders icon image surfaces from the Vintage Story asset pipeline.
-/// Supports PNG/WebP/any format that Skia's <see cref="GuiElement.getImageSurfaceFromAsset"/> can decode,
+/// Supports PNG, JPEG, GIF, BMP, ICO, WBMP, WebP, HEIF, DNG, KTX, PKM and ASTC
+/// through Skia's <see cref="GuiElement.getImageSurfaceFromAsset"/> / <see cref="SkiaSharp.SKCodec"/>,
 /// including alpha and premultiplied color conversion for Cairo ARGB32.
+/// AVIF and JPEG XL are not compiled into the Vintage Story libSkiaSharp native library
+/// and will fall back to the orange 1x1 placeholder.
 /// </summary>
 public static class ImageIconCache
 {
@@ -153,7 +156,7 @@ public static class ImageIconCache
     }
 
     /// <summary>
-    /// Fixes PNGs/WebPs that contain un-multiplied alpha or colored transparent pixels.
+    /// Fixes decoded icons that contain un-multiplied alpha or colored transparent pixels.
     /// Cairo ARGB32 expects pre-multiplied color, so we pre-multiply RGB by alpha
     /// and drop isolated nearly-transparent noise pixels.
     /// </summary>

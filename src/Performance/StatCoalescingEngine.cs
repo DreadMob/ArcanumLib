@@ -46,8 +46,6 @@ public class StatCoalescingEngine : ModSystem
     private class CoalescedUpdate
     {
         public Dictionary<string, float> Stats = new();
-        public long FirstUpdateTime;
-        public long CallbackId;
         public bool IsFlushing;
     }
 
@@ -68,12 +66,9 @@ public class StatCoalescingEngine : ModSystem
         {
             _sapi.Event.PlayerDisconnect -= OnPlayerDisconnect;
 
-            foreach (var update in PendingUpdates.Values)
+            foreach (var kvp in PendingUpdates)
             {
-                if (update.CallbackId != 0)
-                {
-                    _sapi.Event.UnregisterCallback(update.CallbackId);
-                }
+                DeferredWork.Cancel(StatKey(kvp.Key));
             }
             PendingUpdates.Clear();
         }
@@ -110,22 +105,15 @@ public class StatCoalescingEngine : ModSystem
 
         if (update.Stats.Count == 0 && !update.IsFlushing)
         {
-            update.FirstUpdateTime = api.World.ElapsedMilliseconds;
-            update.CallbackId = api.Event.RegisterCallback(
-                _ => FlushUpdates(api, entityId),
-                CoalesceWindowMs
-            );
+            DeferredWork.Coalesce(
+                StatKey(entityId),
+                () => FlushUpdates(api, entityId),
+                CoalesceWindowMs,
+                MaxDelayMs);
         }
 
         string statKey = string.IsNullOrEmpty(category) ? stat : $"{category}:{stat}";
         update.Stats[statKey] = value;
-
-        long elapsed = api.World.ElapsedMilliseconds - update.FirstUpdateTime;
-        if (elapsed > MaxDelayMs && !update.IsFlushing)
-        {
-            api.Event.UnregisterCallback(update.CallbackId);
-            FlushUpdates(api, entityId);
-        }
     }
 
     /// <summary>
@@ -141,9 +129,27 @@ public class StatCoalescingEngine : ModSystem
 
         category ??= DefaultCategory;
 
+        long entityId = player.EntityId;
+
+        if (!PendingUpdates.TryGetValue(entityId, out var update))
+        {
+            update = new CoalescedUpdate();
+            PendingUpdates[entityId] = update;
+        }
+
+        if (update.Stats.Count == 0 && !update.IsFlushing)
+        {
+            DeferredWork.Coalesce(
+                StatKey(entityId),
+                () => FlushUpdates(api, entityId),
+                CoalesceWindowMs,
+                MaxDelayMs);
+        }
+
         foreach (var stat in stats)
         {
-            QueueStatUpdate(api, player, stat.Key, stat.Value, category);
+            string statKey = string.IsNullOrEmpty(category) ? stat.Key : $"{category}:{stat.Key}";
+            update.Stats[statKey] = stat.Value;
         }
     }
 
@@ -157,7 +163,7 @@ public class StatCoalescingEngine : ModSystem
         if (!PendingUpdates.TryGetValue(entityId, out var update)) return;
         if (update.IsFlushing) return;
 
-        api.Event.UnregisterCallback(update.CallbackId);
+        DeferredWork.Cancel(StatKey(entityId));
         FlushUpdates(api, entityId);
     }
 
@@ -191,16 +197,18 @@ public class StatCoalescingEngine : ModSystem
     }
 
     /// <summary>
-    /// Clears all pending updates and unregisters scheduled callbacks.
+    /// Clears all pending updates and cancels scheduled flushes.
     /// </summary>
     public static void ClearAllPending(ICoreServerAPI api)
     {
         foreach (var kvp in PendingUpdates)
         {
-            api.Event.UnregisterCallback(kvp.Value.CallbackId);
+            DeferredWork.Cancel(StatKey(kvp.Key));
         }
         PendingUpdates.Clear();
     }
+
+    private static string StatKey(long entityId) => $"stat-coalesce-{entityId}";
 
     private static void FlushUpdates(ICoreServerAPI api, long entityId)
     {
@@ -248,10 +256,7 @@ public class StatCoalescingEngine : ModSystem
     {
         long entityId = player.Entity.EntityId;
 
-        if (PendingUpdates.TryGetValue(entityId, out var update))
-        {
-            _sapi?.Event.UnregisterCallback(update.CallbackId);
-            PendingUpdates.Remove(entityId);
-        }
+        DeferredWork.Cancel(StatKey(entityId));
+        PendingUpdates.Remove(entityId);
     }
 }

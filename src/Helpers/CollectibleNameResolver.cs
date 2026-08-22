@@ -172,10 +172,11 @@ public static class CollectibleNameResolver
             }
         }
 
+        string fallback = Pretty.Readable(path);
         if (result == null)
-            result = Pretty.Readable(path);
+            result = fallback;
 
-        if (tryItemStackName || !string.Equals(result, path, StringComparison.OrdinalIgnoreCase))
+        if (tryItemStackName || !string.Equals(result, fallback, StringComparison.OrdinalIgnoreCase))
             _nameCache[code] = result;
 
         return result;

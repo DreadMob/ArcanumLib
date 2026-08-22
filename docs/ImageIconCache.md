@@ -1,13 +1,15 @@
 # ImageIconCache
 
-`ArcanumLib.Gui.Icons.ImageIconCache` loads and caches icon `ImageSurface` instances from the Vintage Story asset pipeline. It supports PNG, WebP, and any other format that `GuiElement.getImageSurfaceFromAsset` can decode through Skia.
+`ArcanumLib.Gui.Icons.ImageIconCache` loads and caches icon `ImageSurface` instances from the Vintage Story asset pipeline. It supports PNG, JPEG, GIF, BMP, ICO, WBMP, WebP, HEIF, DNG, KTX, PKM and ASTC through `GuiElement.getImageSurfaceFromAsset` / `SkiaSharp.SKCodec`.
 
-Because the cache uses Vintage Story's existing image loader, you can ship `.webp` icons directly in your mod's asset tree and draw them through the same API used for PNG. No manual PNG conversion and no changes to the texture atlas are needed.
+AVIF and JPEG XL are **not** compiled into the Vintage Story `libSkiaSharp.dll` and will not decode (the loader falls back to an orange 1×1 placeholder).
+
+Because the cache uses Vintage Story's existing image loader, you can ship `.webp`, `.png`, `.jpg` and the other listed formats directly in your mod's asset tree and draw them through the same API. No manual conversion and no changes to the texture atlas are needed.
 
 The cache performs two important tasks:
 
 1. Converts decoded images into a Cairo-compatible ARGB32 surface.
-2. Applies alpha pre-multiplication and removes near-transparent noise pixels, which makes PNG/WebP icons render correctly with `Context.Paint`.
+2. Applies alpha pre-multiplication and removes near-transparent noise pixels, which makes icons from any of the supported formats render correctly with `Context.Paint`.
 
 ## Initialization
 
