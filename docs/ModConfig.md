@@ -1,6 +1,8 @@
----
+﻿---
 layout: default
 title: ModConfig
+parent: "ModDataStore"
+nav_order: 1
 ---
 
 # ModConfig

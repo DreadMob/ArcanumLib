@@ -1,6 +1,8 @@
----
+﻿---
 layout: default
 title: Inventory / ItemStack helpers
+parent: "ItemCharge"
+nav_order: 3
 ---
 
 # Inventory / ItemStack helpers

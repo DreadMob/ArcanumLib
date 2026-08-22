@@ -1,6 +1,8 @@
----
+﻿---
 layout: default
 title: PlayerExtensions
+parent: "ApiExtensions"
+nav_order: 5
 ---
 
 # PlayerExtensions

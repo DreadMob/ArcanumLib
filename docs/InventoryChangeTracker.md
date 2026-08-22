@@ -1,6 +1,8 @@
----
+﻿---
 layout: default
 title: InventoryChangeTracker
+parent: "ItemCharge"
+nav_order: 4
 ---
 
 # InventoryChangeTracker

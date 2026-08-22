@@ -1,6 +1,8 @@
----
+﻿---
 layout: default
 title: TypedNetworkChannel
+nav_order: 110
+has_children: true
 ---
 
 # TypedNetworkChannel

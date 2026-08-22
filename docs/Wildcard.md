@@ -1,6 +1,8 @@
----
+﻿---
 layout: default
 title: Wildcard
+parent: "Pretty"
+nav_order: 1
 ---
 
 # Wildcard

@@ -1,6 +1,8 @@
----
+﻿---
 layout: default
 title: ValidationResult
+parent: "ModAssetLoader"
+nav_order: 3
 ---
 
 # ValidationResult

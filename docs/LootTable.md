@@ -1,6 +1,8 @@
----
+﻿---
 layout: default
 title: LootTable
+parent: "WeightedRandom"
+nav_order: 1
 ---
 
 # LootTable

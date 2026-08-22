@@ -1,6 +1,8 @@
----
+﻿---
 layout: default
 title: EventScope
+parent: "ApiExtensions"
+nav_order: 4
 ---
 
 # EventScope

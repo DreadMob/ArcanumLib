@@ -1,6 +1,8 @@
----
+﻿---
 layout: default
 title: PityTracker
+parent: "ModDataStore"
+nav_order: 2
 ---
 
 # PityTracker

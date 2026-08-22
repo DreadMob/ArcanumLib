@@ -1,6 +1,7 @@
----
+﻿---
 layout: default
 title: ActionRegistry
+nav_order: 30
 ---
 
 # ActionRegistry

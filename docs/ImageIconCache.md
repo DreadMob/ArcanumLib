@@ -1,6 +1,8 @@
----
+﻿---
 layout: default
 title: ImageIconCache
+parent: "Arcanum GUI Toolkit"
+nav_order: 2
 ---
 
 # ImageIconCache

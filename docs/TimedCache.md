@@ -1,6 +1,8 @@
----
+﻿---
 layout: default
 title: TimedCache<TKey, TValue>
+parent: "DeferredWork"
+nav_order: 3
 ---
 
 # TimedCache<TKey, TValue>

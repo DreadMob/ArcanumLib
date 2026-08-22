@@ -1,6 +1,8 @@
----
+﻿---
 layout: default
 title: ShapeCloner
+parent: "WeightedRandom"
+nav_order: 2
 ---
 
 # ShapeCloner

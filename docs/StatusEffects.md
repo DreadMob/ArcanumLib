@@ -1,6 +1,8 @@
----
+﻿---
 layout: default
 title: Status Effects
+parent: "ModDataStore"
+nav_order: 3
 ---
 
 # Status Effects

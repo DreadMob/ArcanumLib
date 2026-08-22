@@ -1,6 +1,8 @@
----
+﻿---
 layout: default
 title: CollectibleNameResolver
+parent: "ApiExtensions"
+nav_order: 1
 ---
 
 # CollectibleNameResolver

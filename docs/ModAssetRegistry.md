@@ -1,6 +1,8 @@
----
+﻿---
 layout: default
 title: ModAssetRegistry
+parent: "ModAssetLoader"
+nav_order: 1
 ---
 
 # ModAssetRegistry

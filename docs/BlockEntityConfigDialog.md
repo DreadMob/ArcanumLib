@@ -1,6 +1,8 @@
----
+﻿---
 layout: default
 title: BlockEntityConfigDialog
+parent: "Arcanum GUI Toolkit"
+nav_order: 1
 ---
 
 # BlockEntityConfigDialog

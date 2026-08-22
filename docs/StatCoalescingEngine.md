@@ -1,6 +1,8 @@
----
+﻿---
 layout: default
 title: StatCoalescingEngine
+parent: "DeferredWork"
+nav_order: 1
 ---
 
 # StatCoalescingEngine

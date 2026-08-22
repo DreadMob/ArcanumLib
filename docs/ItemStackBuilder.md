@@ -1,6 +1,8 @@
----
+﻿---
 layout: default
 title: ItemStackBuilder
+parent: "ItemCharge"
+nav_order: 2
 ---
 
 # ItemStackBuilder

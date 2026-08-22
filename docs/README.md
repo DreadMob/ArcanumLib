@@ -1,3 +1,10 @@
+---
+layout: default
+title: README
+search_exclude: true
+nav_exclude: true
+---
+
 # ArcanumLib Documentation
 
 This folder contains API documentation for `ArcanumLib` — a shared Vintage Story modding library for client-side GUI rendering, color manipulation, geometry, caching, persistence, and other cross-mod utilities.

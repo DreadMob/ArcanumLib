@@ -1,6 +1,8 @@
----
+﻿---
 layout: default
 title: GameTimeScheduler
+parent: "DeferredWork"
+nav_order: 2
 ---
 
 # GameTimeScheduler

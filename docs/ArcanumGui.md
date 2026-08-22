@@ -1,6 +1,8 @@
----
+﻿---
 layout: default
 title: Arcanum GUI Toolkit
+nav_order: 10
+has_children: true
 ---
 
 # Arcanum GUI Toolkit

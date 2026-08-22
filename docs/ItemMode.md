@@ -1,6 +1,8 @@
----
+﻿---
 layout: default
 title: ItemMode
+parent: "ItemCharge"
+nav_order: 1
 ---
 
 # ItemMode

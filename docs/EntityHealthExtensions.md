@@ -1,6 +1,8 @@
----
+﻿---
 layout: default
 title: EntityHealthExtensions
+parent: "ApiExtensions"
+nav_order: 3
 ---
 
 # EntityHealthExtensions

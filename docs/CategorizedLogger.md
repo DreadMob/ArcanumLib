@@ -1,3 +1,9 @@
+---
+layout: default
+title: CategorizedLogger
+nav_order: 70
+---
+
 # CategorizedLogger
 
 Categorized file logger for Vintage Story mods. Writes structured logs to

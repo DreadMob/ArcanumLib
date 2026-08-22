@@ -1,6 +1,8 @@
----
+﻿---
 layout: default
 title: RGBA
+parent: "Arcanum GUI Toolkit"
+nav_order: 3
 ---
 
 # RGBA

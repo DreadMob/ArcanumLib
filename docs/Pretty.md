@@ -1,6 +1,8 @@
----
+﻿---
 layout: default
 title: Pretty
+nav_order: 90
+has_children: true
 ---
 
 # Pretty
