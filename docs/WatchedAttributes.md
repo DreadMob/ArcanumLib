@@ -19,5 +19,6 @@ player.Entity.WatchedAttributes.SetBoolIfMissing("mod:tutorial_seen", true);
 - `GetOrCreateTreeAttribute(key)`
 - `GetOrCreateInt/Long/Float/Double/Bool/String(key, defaultValue)`
 - `SetIntIfMissing/LongIfMissing/FloatIfMissing/DoubleIfMissing/BoolIfMissing/StringIfMissing`
+- `SetAndMarkDirty(key, value)` for `bool/int/long/float/double/string`
 
 All helpers are also available directly on `Entity` (they forward to `Entity.WatchedAttributes`).

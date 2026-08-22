@@ -12,38 +12,70 @@
 
 ## About
 
-Arcanum Lib is a shared library mod for [Vintage Story](https://www.vintagestory.at/). It provides reusable GUI, rendering, and color helpers that can be consumed by other mods without each mod duplicating the same infrastructure.
+Arcanum Lib is a shared library mod for [Vintage Story](https://www.vintagestory.at/). It provides reusable GUI, rendering, color, asset, and scheduling helpers that can be consumed by other mods without each mod duplicating the same infrastructure.
 
 One of its main goals is making compressed icon assets practical: you can use `.webp`, `.png`, `.jpg` and other Skia-decoded formats in the asset tree and draw them through the normal GUI pipeline. No manual conversion and no texture-atlas changes are required, because `ImageIconCache` routes the load through Vintage Story's built-in SkiaSharp image loader. AVIF and JPEG XL are not included in the Vintage Story `libSkiaSharp.dll`.
 
-The library is currently used by the **[Alegacy Quest Framework](https://gitlab.com/DreadMob/Alegacy-Quest-Framework)**.
+The library is currently used by the **[Alegacy Quest Framework](https://gitlab.com/DreadMob/Alegacy-Quest-Framework)** and is designed to be reusable by any Vintage Story mod that wants the same infrastructure.
 
 ---
 
 ## Key Features
 
+### GUI & Rendering
+
 | Module | Description |
 |--------|-------------|
+| **Arcanum GUI Toolkit** | Themed colour palette, `ArcanumGuiTheme`, `ArcanumComposer`, layout helpers, `ArcanumFont`, and controls (`ArcanumCard`, `ArcanumIcon`, `ArcanumButton`, `ArcanumScrollbar`, `ArcanumList<T>`). |
 | **ImageIconCache** | Load, cache and draw icon image surfaces with circle, hexagon, and diamond clipping plus optional tinting. |
 | **RGBA** | Lightweight Cairo-friendly color struct with hex parsing, ARGB conversion, lerping, and alpha overrides. |
-| **ArcanumGuiTheme** | Shared colour palette, radii, spacing and Cairo drawing helpers for consistent GUI styling. |
-| **ArcanumComposer / ArcanumList<T>** | Fluent GUI builder and reusable scrollable list with selection and scrollbar. |
-| **ArcanumFont / ArcanumLayout** | Font presets and vertical/horizontal layout helpers to reduce manual `ElementBounds` math. |
-| **ArcanumCard / ArcanumIcon / ArcanumButton / ArcanumScrollbar / ArcanumList<T>** | Ready-to-use, themed Vintage Story `GuiElement` controls. |
 | **ModeIconBuilder** | Factory for `SkillItem` tool-mode icons (in-game icon, letter, or live `ItemStack` rendering). |
-| **ShapeCloner** | Deep-clones Vintage Story `Shape` objects (textures, faces, attachment points) for safe mutation. |
-| **TimedCache<TKey, TValue>** | Thread-safe cache with TTL eviction and optional size limit. |
-| **TagSetExtensions** | Set operations and readable aliases for `Vintagestory.API.Datastructures.TagSet`. |
-| **ValidationResult** | Immutable result object that accumulates errors and warnings from validation pipelines. |
+
+### Assets & Data
+
+| Module | Description |
+|--------|-------------|
+| **ModAssetLoader** | Loads and merges typed JSON assets from all loaded mods, supporting multi-pack content definitions. |
+| **ModAssetRegistry** | Builds validated, keyed, source-tracked registries from `ModAssetLoader` output. |
 | **Pretty** | Converts raw asset codes into readable, title-cased display strings and sanitizes names. |
 | **CollectibleNameResolver** | Resolves item, block and entity display names, wildcard matches and icon codes with caching. |
 | **Wildcard** | Fast case-insensitive wildcard matching for asset codes. |
-| **ModAssetLoader** | Loads and merges typed JSON assets from all loaded mods, supporting multi-pack content definitions. |
-| **ModAssetRegistry** | Builds validated, keyed, source-tracked registries from `ModAssetLoader` output. |
-| **WeightedRandom / WeightedTable** | Weighted random picks and reusable weighted tables with merge strategies. |
-| **DeferredWork** | Game-tick scheduler for one-shot, coalesced and end-of-tick work. |
+| **TagSetExtensions** | Set operations and readable aliases for `Vintagestory.API.Datastructures.TagSet`. |
+| **WatchedAttributesExtensions** | Get-or-create, set-if-missing, and set-and-mark-dirty helpers for `ITreeAttribute`. |
+|| **CooldownTracker** | Per-entity cooldown state in `WatchedAttributes` with readiness, remaining, and progress checks. |
+| **ValidationResult** | Immutable result object that accumulates errors and warnings from validation pipelines. |
 
-More cross-mod utilities will be added as they are extracted from the consuming mods.
+### Caching & Performance
+
+| Module | Description |
+|--------|-------------|
+| **TimedCache<TKey, TValue>** | Thread-safe cache with TTL eviction and optional size limit. |
+| **DeferredWork** | Game-tick scheduler for one-shot, coalesced and end-of-tick work. |
+|| **CleanupScope** | Cancels `DeferredWork` keys, tick listeners, and nested disposables in one `Dispose()`. |
+| **StatCoalescingEngine** | Batches rapid value changes into a single delayed update. |
+
+### Randomization & Geometry
+
+| Module | Description |
+|--------|-------------|
+| **WeightedRandom / WeightedTable** | Weighted random picks and reusable weighted tables with merge strategies. |
+| **ShapeCloner** | Deep-clones Vintage Story `Shape` objects (textures, faces, attachment points) for safe mutation. |
+
+### Common & Utility
+
+| Module | Description |
+|--------|-------------|
+| **ApiExtensions** | `IsClient` / `IsServer` helpers for `ICoreAPI`, `IWorldAccessor`. |
+| **EntityHealthExtensions** | Read and scale entity health through `WatchedAttributes` or `EntityBehaviorHealth`. |
+| **PlayerExtensions** | `HasValidPosition`, `GetAliveEntities`, and `GetAliveServerEntities`. |
+| **LoggerExtensions** | `LogNonCriticalWarning`, `LogGuiWarning`, and `SafeExecute` wrappers. |
+
+### Networking & Inventory
+
+| Module | Description |
+|--------|-------------|
+| **TypedNetworkChannel** | Typed network channel wrapper for send/receive. |
+| **Inventory / ItemStack helpers** | Give, count, find, and consume items. |
 
 ---
 
@@ -53,21 +85,17 @@ More cross-mod utilities will be added as they are extracted from the consuming 
 ArcanumLib/
 ├── ArcanumLibModSystem.cs    — Vintage Story entry point
 ├── src/
-│   ├── Gui/
-│   │   ├── Controls/          — ArcanumButton, ArcanumCard, ArcanumIcon, ArcanumScrollbar, ArcanumDialogBackground, ArcanumList<T>
-│   │   ├── Dialogs/           — ArcanumGuiDialog base
-│   │   ├── Icons/             — ImageIconCache and IconFit
-│   │   ├── Layout/            — ArcanumLayout helpers
-│   │   ├── ModeIconBuilder.cs — tool-mode icon factory
-│   │   └── Theme/             — ArcanumGuiTheme, ArcanumFont, RGBA
+│   ├── Gui/                   — theme, composer, controls, layout, icons
 │   ├── Geometry/              — ShapeCloner
-│   ├── Caching/               — SimpleLRUCache and TimedCache<TKey, TValue>
-│   ├── Data/                  — TagSetExtensions, WatchedAttributesExtensions
+│   ├── Caching/               — TimedCache and SimpleLRUCache
+│   ├── Common/                — EventScope and CleanupScope
+│   ├── Data/                  — TagSet, WatchedAttributes, and CooldownTracker
 │   ├── Validation/            — ValidationResult
 │   ├── Assets/                — ModAssetLoader, ModAssetRegistry
 │   ├── Performance/           — DeferredWork, StatCoalescingEngine
 │   ├── Random/                — WeightedRandom, WeightedTable
 │   ├── Text/                  — Pretty, Wildcard
+│   ├── Network/               — TypedNetworkChannel
 │   └── Helpers/               — CollectibleNameResolver
 ├── docs/                      — API documentation
 ├── resources/
@@ -95,10 +123,13 @@ Requires:
 
 API documentation lives in the [`docs/`](docs) folder:
 
-- [ImageIconCache](docs/ImageIconCache.md)
-- [RGBA](docs/RGBA.md)
 - [Arcanum GUI Toolkit](docs/ArcanumGui.md)
+- [ImageIconCache](docs/ImageIconCache.md)
 - [ModAssetLoader](docs/ModAssetLoader.md)
+- [ModAssetRegistry](docs/ModAssetRegistry.md)
+- [DeferredWork](docs/DeferredWork.md)
+- [CooldownTracker](docs/CooldownTracker.md)
+- [CleanupScope](docs/CleanupScope.md)
 - [WeightedRandom](docs/WeightedRandom.md)
 - [WatchedAttributes](docs/WatchedAttributes.md)
 - [EventScope](docs/EventScope.md)
@@ -109,7 +140,7 @@ API documentation lives in the [`docs/`](docs) folder:
 
 ## Authors
 
-- **[DreadMob](https://gitlab.com/DreadMob)** — Lead developer
+- **[DreadMob](https://gitlab.com/DreadMob)**
 
 ---
 

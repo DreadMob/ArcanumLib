@@ -16,8 +16,14 @@ This folder contains API documentation for `ArcanumLib` — a shared Vintage Sto
 - [ModAssetRegistry](ModAssetRegistry.md) — build validated, keyed, source-tracked registries from JSON assets.
 - [WeightedRandom](WeightedRandom.md) — weighted random picks and reusable weighted tables.
 - [DeferredWork](DeferredWork.md) — game-tick scheduler for one-shot, coalesced and end-of-tick work.
-- [WatchedAttributes](WatchedAttributes.md) — get-or-create and set-if-missing helpers for `ITreeAttribute`.
+- [CooldownTracker](CooldownTracker.md) — per-entity cooldown timestamps in `WatchedAttributes`.
+- [WatchedAttributes](WatchedAttributes.md) — get-or-create, set-if-missing, and set-and-mark-dirty helpers for `ITreeAttribute`.
 - [EventScope](EventScope.md) — disposable event subscription scope with automatic unsubscription.
+- [ApiExtensions](ApiExtensions.md) — `IsClient` / `IsServer` helpers for `ICoreAPI` and `IWorldAccessor`.
+- [EntityHealthExtensions](EntityHealthExtensions.md) — read and scale entity health.
+- [PlayerExtensions](PlayerExtensions.md) — `IPlayer` / `IServerPlayer` helpers.
+- [LoggerExtensions](LoggerExtensions.md) — non-critical warning logging and `SafeExecute`.
+- [CleanupScope](CleanupScope.md) — cancel deferred work, listeners, and nested disposables in one place.
 - [Inventory / ItemStack helpers](InventoryHelpers.md) — give, count, find, and consume items.
 - [TypedNetworkChannel](TypedNetworkChannel.md) — typed network channel wrapper for send/receive.
 
