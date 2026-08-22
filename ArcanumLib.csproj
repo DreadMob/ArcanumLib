@@ -1,0 +1,50 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <TargetFramework>net10.0</TargetFramework>
+        <AssemblyName>ArcanumLib</AssemblyName>
+        <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
+        <OutputPath>bin\$(Configuration)\Mods\mod</OutputPath>
+        <ModReleaseDir>$(MSBuildThisFileDirectory)..\Releases</ModReleaseDir>
+        <Nullable>enable</Nullable>
+        <ImplicitUsings>enable</ImplicitUsings>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <Reference Include="VintagestoryAPI">
+            <HintPath>$(VINTAGE_STORY)/VintagestoryAPI.dll</HintPath>
+            <Private>false</Private>
+        </Reference>
+        <Reference Include="cairo-sharp">
+            <HintPath>$(VINTAGE_STORY)/Lib/cairo-sharp.dll</HintPath>
+            <Private>false</Private>
+        </Reference>
+        <Reference Include="SkiaSharp">
+            <HintPath>$(VINTAGE_STORY)/Lib/SkiaSharp.dll</HintPath>
+            <Private>false</Private>
+        </Reference>
+    </ItemGroup>
+
+    <ItemGroup>
+        <Content Include="resources\**">
+            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </Content>
+        <Content Include="modicon.png">
+            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </Content>
+    </ItemGroup>
+
+    <Target Name="CopyModInfo" AfterTargets="Build">
+        <Copy SourceFiles="$(ProjectDir)resources\modinfo.json" DestinationFiles="$(OutputPath)modinfo.json" />
+    </Target>
+
+    <Target Name="CreateModZip" AfterTargets="Build">
+        <PropertyGroup>
+            <ZipOutputPath>$(ModReleaseDir)\ArcanumLib.zip</ZipOutputPath>
+        </PropertyGroup>
+        <MakeDir Directories="$(ModReleaseDir)" />
+        <Delete Files="$(ZipOutputPath)" Condition="Exists('$(ZipOutputPath)')" />
+        <ZipDirectory SourceDirectory="$(OutputPath)" DestinationFile="$(ZipOutputPath)" />
+    </Target>
+
+</Project>

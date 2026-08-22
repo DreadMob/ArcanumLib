@@ -1,0 +1,8 @@
+AGENTS.md
+
+bin/
+obj/
+*.zip
+*.user
+.vs/
+.vscode/

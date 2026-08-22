@@ -1,0 +1,16 @@
+{
+    "type": "code",
+    "modid": "arcanumlib",
+    "name": "Arcanum Lib",
+    "authors": [
+        "Alegacy"
+    ],
+    "description": "Shared client and utility library for Alegacy mods. Provides icon rendering, color helpers, and other reusable Vintage Story helpers.",
+    "version": "1.0.0",
+    "side": "universal",
+    "requiredOnClient": true,
+    "requiredOnServer": true,
+    "dependencies": {
+        "game": "1.22.1"
+    }
+}
