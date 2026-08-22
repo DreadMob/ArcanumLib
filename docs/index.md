@@ -41,6 +41,7 @@ State and behaviour for items that need extra data on the stack.
 | [ItemMode]({{ site.baseurl }}{% link ItemMode.md %}) | Multi-mode items with F-key tool mode integration. |
 | [ItemStackBuilder]({{ site.baseurl }}{% link ItemStackBuilder.md %}) | Fluent builder for constructing `ItemStack` instances with attributes and durability. |
 | [Inventory / ItemStack helpers]({{ site.baseurl }}{% link InventoryHelpers.md %}) | Give, count, find, and consume items. |
+| [InventoryChangeTracker]({{ site.baseurl }}{% link InventoryChangeTracker.md %}) | Throttled inventory fingerprinting to skip expensive recalculations when nothing changed. |
 
 ## Actions
 
@@ -78,7 +79,8 @@ Keep the server/client responsive.
 
 | Page | Purpose |
 |------|---------|
-| [DeferredWork]({{ site.baseurl }}{% link DeferredWork.md %}) | Game-tick scheduler for one-shot and coalesced work. |
+| [DeferredWork]({{ site.baseurl }}{% link DeferredWork.md %}) | Game-tick scheduler for one-shot, callback, and coalesced work. |
+| [StatCoalescingEngine]({{ site.baseurl }}{% link StatCoalescingEngine.md %}) | Batch `EntityStats.Set` calls into a single network sync. |
 | [GameTimeScheduler]({{ site.baseurl }}{% link GameTimeScheduler.md %}) | Schedule recurring actions by in-game time (daily, hourly, after N hours). |
 | [TimedCache]({{ site.baseurl }}{% link TimedCache.md %}) | Thread-safe cache with TTL eviction. |
 | [CleanupScope]({{ site.baseurl }}{% link CleanupScope.md %}) | Cancel listeners, work, and nested disposables in one call. |
@@ -98,12 +100,21 @@ Small helpers that remove boilerplate. Some are thin syntactic sugar over existi
 | Page | Purpose |
 |------|---------|
 | [ApiExtensions]({{ site.baseurl }}{% link ApiExtensions.md %}) | `IsClient` / `IsServer` checks for `ICoreAPI` and `IWorldAccessor` (sugar for `api.Side`). |
+| [CollectibleNameResolver]({{ site.baseurl }}{% link CollectibleNameResolver.md %}) | Resolve item/block/entity codes to localized display names with wildcard support. |
 | [CooldownTracker]({{ site.baseurl }}{% link CooldownTracker.md %}) | Per-entity cooldowns in `WatchedAttributes`. |
 | [EntityHealthExtensions]({{ site.baseurl }}{% link EntityHealthExtensions.md %}) | Read and scale entity health. |
 | [EventScope]({{ site.baseurl }}{% link EventScope.md %}) | Disposable event subscription scope. |
-| [LoggerExtensions]({{ site.baseurl }}{% link LoggerExtensions.md %}) | `SafeExecute` wrapper and non-critical warning helpers. |
 | [PlayerExtensions]({{ site.baseurl }}{% link PlayerExtensions.md %}) | Player entity iteration and position checks. |
 | [WatchedAttributes]({{ site.baseurl }}{% link WatchedAttributes.md %}) | Get-or-create and set helpers for `ITreeAttribute`. |
+
+## Text & Matching
+
+Small helpers for formatting and pattern matching.
+
+| Page | Purpose |
+|------|---------|
+| [Pretty]({{ site.baseurl }}{% link Pretty.md %}) | Convert raw asset codes into human-readable, title-cased strings. |
+| [Wildcard]({{ site.baseurl }}{% link Wildcard.md %}) | Case-insensitive `*` / `?` wildcard matching for asset codes. |
 
 ## Randomization & Geometry
 
