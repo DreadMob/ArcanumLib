@@ -5,16 +5,18 @@ title: Status Effects
 
 # Status Effects
 
-`ArcanumLib.Effects.StatusEffectManager` is a static manager for applying, ticking, and removing status effects on `Vintagestory.API.Common.Entities.Entity` instances. It supports refresh, stack, override, and independent modes.
+Apply, tick, and remove timed status effects on entities.
 
-## When to use it
+## What is it for?
 
-Use `StatusEffectManager` when your mod has timed buffs, debuffs, or any temporary state that:
+Use `StatusEffectManager` when your mod has temporary buffs, debuffs, or states:
 
-- Needs a duration and a per-tick callback.
-- Stacks or refreshes when re-applied.
-- Should be removed on death (or persist through it).
-- Needs safe apply/remove hooks even if the entity is invalid.
+- A speed potion that lasts 30 seconds.
+- A poison effect that ticks damage over time.
+- A stacking armor buff.
+- A status that should be removed on death.
+
+It handles duration, refresh, stacking, overriding, and per-tick callbacks.
 
 ## Core interfaces
 
@@ -30,61 +32,48 @@ public interface IStatusEffect
     void OnRemove(Entity entity, IStatusEffectInstance instance);
     void OnTick(Entity entity, IStatusEffectInstance instance, float dt);
 }
-
-public interface IStatusEffectInstance
-{
-    long InstanceId { get; }
-    IStatusEffect Effect { get; }
-    float RemainingMs { get; }
-    float MaxDurationMs { get; }
-    int StackCount { get; }
-    object? Data { get; }
-    bool IsExpired { get; }
-}
 ```
 
 ## Stack modes
 
-| Mode | Behavior |
-|------|----------|
-| `Independent` | A new, separate instance is created every time. |
-| `Refresh` | The existing instance's duration is reset. |
-| `Stack` | The stack count increases up to `MaxStacks`; duration is reset. |
-| `Override` | The new instance replaces the old one. |
+| Mode | Behaviour |
+|------|-----------|
+| `Independent` | New, separate instance every time. |
+| `Refresh` | Resets the existing instance's duration. |
+| `Stack` | Increases stack count up to `MaxStacks`. |
+| `Override` | Replaces the old instance. |
 
-## Applying an effect
+## Quick example
+
+```csharp
+using ArcanumLib.Effects;
+
+var instance = StatusEffectManager.Apply(entity, new SlowEffect(), durationMs: 10000);
+```
+
+## Usage
+
+### Apply
 
 ```csharp
 var instance = StatusEffectManager.Apply(entity, myEffect, durationMs: 10000, data: null);
 ```
 
-The returned `IStatusEffectInstance` is the active or updated instance. Events are raised for `New`, `Refreshed`, `Stacked`, and so on.
+### Tick
 
-## Ticking
-
-Call `Update` from a server/client tick handler:
+Call this from a client/server tick handler:
 
 ```csharp
-StatusEffectManager.Update(dt);
+StatusEffectManager.Update(dt); // dt in seconds
 ```
 
-`dt` is in seconds. Effects whose duration reaches zero are removed and `OnRemove` is called.
-
-## Removing effects
-
-Remove all effects on an entity:
+### Remove
 
 ```csharp
 StatusEffectManager.RemoveAll(entity);
 ```
 
-Remove all effects from dead entities:
-
-```csharp
-StatusEffectManager.CleanupDead();
-```
-
-## Example effect
+### Example effect
 
 ```csharp
 public class SlowEffect : IStatusEffect
@@ -104,19 +93,16 @@ public class SlowEffect : IStatusEffect
         entity.Stats.Remove("walkspeed", "mymodSlow");
     }
 
-    public void OnTick(Entity entity, IStatusEffectInstance instance, float dt)
-    {
-        // optional per-tick logic
-    }
+    public void OnTick(Entity entity, IStatusEffectInstance instance, float dt) { }
 }
 ```
 
-## Stat modifier effects
+### Stat modifier effect
 
-`StatModifierEffect` is a reusable effect that adds or removes a flat value from an `EntityStats` category. Useful for simple buffs/debuffs.
+For simple stat changes, inherit from `StatModifierEffect`:
 
 ```csharp
-public class MySpeedBuff : StatModifierEffect
+public class SpeedBuff : StatModifierEffect
 {
     public override string Code => "mymod:speedbuff";
     public override string Category => "walkspeed";
@@ -127,14 +113,11 @@ public class MySpeedBuff : StatModifierEffect
 }
 ```
 
-## Events
+### Events
 
-`StatusEffectManager` exposes events for monitoring:
+```csharp
+StatusEffectManager.OnEffectApplied += (entity, instance) => { /* ... */ };
+StatusEffectManager.OnEffectExpired += (entity, instance) => { /* ... */ };
+```
 
-- `OnEffectApplied`
-- `OnEffectRefreshed`
-- `OnEffectStacked`
-- `OnEffectExpired`
-- `OnEffectRemoved`
-
-Use these to drive UI, logging, or side effects without modifying the effect classes.
+Use events to drive UI, logging, or side effects without touching effect classes.

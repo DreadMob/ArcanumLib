@@ -5,84 +5,97 @@ title: PityTracker
 
 # PityTracker
 
-`ArcanumLib.Progression.PityTracker` is a reusable per-player pity (guarantee) counter for any loot-quality or gacha-style system. It tracks how many "opens" a player has made since last receiving each quality tier and can force a guaranteed drop.
+Per-player pity/guarantee counters for loot, rewards, or any quality-tier system.
 
-## When to use it
+## What is it for?
 
-Use `PityTracker` when your mod has:
+Use `PityTracker` when your mod has random drops with quality tiers and you want to guarantee a high-tier result after a streak of bad luck:
 
-- Loot boxes, reward caches, or chests with multiple quality tiers.
-- A desire to guarantee a high-tier drop after a configurable number of unlucky opens.
-- A need to migrate old save data without losing player progress.
+- Loot caches with Common / Rare / Epic / Legendary tiers.
+- Reward chests that should not be frustrating forever.
+- Gacha-like systems where the player eventually gets a top-tier item.
 
-## Basic concepts
+It persists via `ModDataStore` and can import legacy save data.
 
-- **Definition** (`PityDefinition`) — a group of tier rules. Usually one per loot source (e.g. `mymod:rewards:common`).
-- **Rule** (`PityTierRule`) — a quality tier and the maximum number of opens until it is guaranteed.
-- **Counter** (`PityCounters`) — per-player, per-definition counters of `opensSinceQuality` for each tier and `totalOpens`.
-- **Guaranteed quality** — the highest tier whose counter has reached its `opensUntilGuarantee` threshold.
+## Core concepts
 
-## Setup
+| Term | Meaning |
+|------|---------|
+| `PityDefinition` | A loot source and its guarantee rules. |
+| `PityTierRule` | A quality tier and the maximum opens until it is guaranteed. |
+| `PityCounters` | Per-player, per-definition counters. |
+| `guaranteedQuality` | The highest tier whose counter has reached its threshold. |
+
+## Quick example
 
 ```csharp
-var tracker = new PityTracker(sapi, "oldmod:pity:data"); // sapi may be null in tests
+using ArcanumLib.Progression;
 
-// Register a definition with two guaranteed tiers
+var tracker = new PityTracker(sapi, "oldmod:pity:data");
+
 tracker.RegisterDefinition(new PityDefinition
 {
     definitionId = "mymod:rewards:common",
     rules = new List<PityTierRule>
     {
-        new() { qualityTierIndex = 3, opensUntilGuarantee = 30, displayNameKey = "mymod:quality-radiant" },
-        new() { qualityTierIndex = 4, opensUntilGuarantee = 60, displayNameKey = "mymod:quality-abyssal" }
+        new() { qualityTierIndex = 3, opensUntilGuarantee = 30 },
+        new() { qualityTierIndex = 4, opensUntilGuarantee = 60 }
+    }
+});
+
+int guaranteed = tracker.GetGuaranteedQuality(playerUid, "mymod:rewards:common");
+```
+
+## Usage
+
+### Register a definition
+
+```csharp
+tracker.RegisterDefinition(new PityDefinition
+{
+    definitionId = "mymod:rewards:common",
+    rules = new List<PityTierRule>
+    {
+        new() { qualityTierIndex = 3, opensUntilGuarantee = 30, displayNameKey = "mymod:rare" },
+        new() { qualityTierIndex = 4, opensUntilGuarantee = 60, displayNameKey = "mymod:legendary" }
     }
 });
 ```
 
-## Recording opens
-
-When a player opens a loot source, call `RecordOpen` with the rolled quality. The tracker resets the counter for all tiers `<= rolledQuality` and increments the others.
+### Record an open
 
 ```csharp
-tracker.RecordOpen(playerUid, "mymod:rewards:common", rolledQuality);
+// player opened a "common" reward cache and rolled quality 2 (Uncommon)
+tracker.RecordOpen(playerUid, "mymod:rewards:common", 2);
 ```
 
-## Getting the guaranteed quality
+The tracker resets the counter for tiers `<= 2` and increments tiers `> 2`.
 
-Before rolling, ask the tracker which tier is currently guaranteed.
+### Enforce the guarantee
 
 ```csharp
 int guaranteed = tracker.GetGuaranteedQuality(playerUid, "mymod:rewards:common");
-if (guaranteed > 0)
-{
-    // force this tier as the result, then record it
-}
+int finalQuality = Math.Max(guaranteed, rolledQuality);
+
+tracker.RecordOpen(playerUid, "mymod:rewards:common", finalQuality);
 ```
 
-## Legacy migration
-
-`PityTracker` reads from the `arcanumlib:pity` `ModDataStore`. If that store is empty on load, it tries to import from each registered `LegacyFallbackKey`.
-
-Register legacy keys either in the constructor or later:
+### Legacy migration
 
 ```csharp
 var tracker = new PityTracker(sapi, "oldmod:pity:data");
 tracker.AddLegacyFallbackKey("anothermod:oldpity");
 ```
 
-The migration is idempotent: it only runs when the new store is empty, so reloading does not overwrite already-migrated data.
+If the new `arcanumlib:pity` store is empty, the tracker tries each registered legacy key once and imports the old counters.
 
-## Persistence
-
-`PityTracker` uses `ModDataStore` for per-savegame persistence. Call `Save` when appropriate (e.g. `ModSystem.OnSave`):
+### Save
 
 ```csharp
 tracker.Save();
 ```
 
 ## ModSystem integration
-
-Create a `ModSystem` to keep a global `PityTracker` and set `PityTracker.Current`:
 
 ```csharp
 public class MyPityModSystem : ModSystem
@@ -100,21 +113,5 @@ public class MyPityModSystem : ModSystem
     {
         tracker?.Save();
     }
-}
-```
-
-## Integration with a quest or loot framework
-
-If your mod already has its own definitions, implement `IPityProvider` and forward calls to `PityTracker`:
-
-```csharp
-public class MyPityProvider : IPityProvider
-{
-    private readonly PityTracker tracker;
-    // ...
-    public int GetGuaranteedQuality(string playerUid, string definitionId) => tracker.GetGuaranteedQuality(playerUid, definitionId);
-    public void RecordOpen(string playerUid, string definitionId, int rolledQuality) => tracker.RecordOpen(playerUid, definitionId, rolledQuality);
-    public PityCounters? GetCounters(string playerUid, string definitionId) => tracker.GetCounters(playerUid, definitionId);
-    public bool TryGetDefinition(string definitionId, out PityDefinition? definition) => tracker.TryGetDefinition(definitionId, out definition);
 }
 ```

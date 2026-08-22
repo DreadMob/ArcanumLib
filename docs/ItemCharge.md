@@ -5,82 +5,121 @@ title: ItemCharge
 
 # ItemCharge
 
-`ArcanumLib.Items.ItemCharge` provides generic helpers for item charge, drain, refuel and stat gating. It works directly on `Vintagestory.API.Common.ItemStack.Attributes` and is fully data-driven.
+Generic helpers for item charge, drain, refuel, and stat gating.
 
-## When to use it
+## What is it for?
 
-Use `ItemCharge` when your mod needs:
+Use `ItemCharge` when an item has a limited resource that is consumed over time or per use:
 
-- A numeric charge value on an item (time-based, use-based, or generic).
-- Maximum charge capacity and configurable recharge amount per material.
-- Refueling by matching the source item code/path against a list of patterns.
-- Draining time-based charges over in-game hours.
-- Gating other item stats behind the current charge level.
+- A sword that loses charge with each hit.
+- A ring that consumes hours of magical energy.
+- Armor whose protection drops as its charge depletes.
+- A lantern that can be refueled with specific materials.
+
+It supports generic `charge` attributes and legacy time/use suffixes, with configurable metadata for max charge, refuel materials, charge-per-unit, and charge-gated stats.
 
 ## Configuration
 
-Create an `ItemChargeConfig` to set your attribute key namespace and resolvers.
+Most consumers only need `ItemChargeConfig` once:
 
 ```csharp
 var config = new ItemChargeConfig
 {
-    AttributePrefix = "mymod:attr:",
-    LegacyAttributePrefixes = new List<string>(),
+    AttributePrefix = "mymod:",
     MetaPrefix = "mymod:",
-    LegacyMetaPrefixes = new List<string>(),
-    DisplayNameResolver = shortKey => Lang.Get($"mymod:charge-{shortKey}"),
-    UnitResolver = shortKey => shortKey.EndsWith("chargehours") ? "h" : ""
+    Logger = api.Logger,
+    DisplayNameResolver = shortKey => $"{shortKey} charge"
 };
 ```
 
+| Property | What it controls |
+|----------|-----------------|
+| `AttributePrefix` | Namespace for the current charge value (`mymod:charge`). |
+| `MetaPrefix` | Namespace for max-charge, material, and gating metadata. |
+| `LegacyAttributePrefixes` | Optional old namespaces to still read from. |
+| `DisplayNameResolver` | How the charge name appears to the player. |
+| `Logger` | Where parse warnings go. |
+
 ## Attribute keys
 
-The following metadata keys are read in priority order: generic key first, then legacy keys.
-
-| Concept | Generic key | Example legacy key |
-|---------|-------------|-------------------|
-| Charge value | `{AttributePrefix}charge` | `*chargehours`, `*chargeuses`, unprefixed `charge` |
+| Concept | Generic key | Legacy example |
+|---------|-------------|----------------|
+| Current charge | `{AttributePrefix}charge` | `chargehours`, `chargeuses` |
 | Maximum charge | `{MetaPrefix}chargemax` | `oldmod:chargemax` |
 | Charge per material unit | `{MetaPrefix}chargeperunit` | `oldmod:chargeperunit` |
 | Accepted refuel patterns (JSON) | `{MetaPrefix}chargematerials` | `oldmod:chargematerials` |
-| Charge mode (`all`/`partial`) | `{MetaPrefix}chargemode` | `oldmod:chargemode` |
-| Gated attributes (JSON array) | `{MetaPrefix}chargegatedattrs` | `oldmod:chargegatedattrs` |
+| Charge mode (`all` / `partial`) | `{MetaPrefix}chargemode` | `oldmod:chargemode` |
+| Gated attributes (JSON) | `{MetaPrefix}chargegatedattrs` | `oldmod:chargegatedattrs` |
 | Depleted multiplier | `{MetaPrefix}chargedepletedmult` | `oldmod:chargedepletedmult` |
+
+## Quick example
+
+```csharp
+using ArcanumLib.Items;
+
+float charge = ItemCharge.GetChargeValue(stack, config);
+
+// Consume one "use"
+if (ItemCharge.TryConsumeCharge(stack, 1f, config))
+{
+    // do the charged action
+}
+```
 
 ## Usage
 
+### Read current charge
+
 ```csharp
-// Read current charge
 float charge = ItemCharge.GetChargeValue(stack, config);
+float max    = ItemCharge.GetChargeMax(stack, config);
+float pct    = ItemCharge.GetChargePercentage(stack, config);
+```
 
-// Consume one "use" of charge
-ItemCharge.TryConsumeCharge(stack, 1f, config);
+### Consume charge
 
-// Refuel with a source item if it matches chargematerials
-if (ItemCharge.CanRechargeWith(stack, sourceStack, config))
+```csharp
+if (ItemCharge.TryConsumeCharge(stack, 1f, config))
 {
-    ItemCharge.TryRecharge(stack, out int consumed, config);
+    // one use consumed
 }
+```
 
-// Drain time-based charge by elapsed hours
+### Refuel
+
+```csharp
+if (ItemCharge.CanRechargeWith(stack, fuelStack, config))
+{
+    ItemCharge.TryRecharge(stack, out int consumedUnits, config);
+    slot.MarkDirty();
+}
+```
+
+### Drain time-based charge
+
+```csharp
+// elapsedHours is the number of in-game hours since the last tick
 ItemCharge.TryDrainTimeCharge(stack, elapsedHours, config);
+```
 
-// Get stat multiplier if an attribute is charge-gated
+### Gate a stat by charge
+
+Only time-based charges gate stats by default.
+
+```csharp
 if (ItemCharge.TryGetChargeGatingMultiplier(stack, "walkspeed", out float mult, config))
 {
-    // scale the stat by mult
+    entity.Stats.Set("walkspeed", "mymodChargeGate", mult, false);
 }
 ```
 
 ## Charge gating
 
-Only **time-based** charges (keys ending with `chargehours`) gate other stats by default.
-
-- `chargemode = "all"` — every stat is gated.
-- `chargemode = "partial"` — only attributes listed in `chargegatedattrs` are gated.
-- The curve is linear from `MinActiveMultiplier` to `MaxActiveMultiplier` over `FullChargeThreshold` hours.
-- When charge is below `DepletedThreshold`, the `chargedepletedmult` is used.
+- `chargemode = "all"` gates every stat.
+- `chargemode = "partial"` only gates attributes listed in `chargegatedattrs`.
+- The multiplier is linear from `MinActiveMultiplier` to `MaxActiveMultiplier` over `FullChargeThreshold` hours.
+- Below `DepletedThreshold`, `chargedepletedmult` is used.
 
 ## Error handling
 
-All JSON parsing is wrapped with logging. Invalid `chargematerials` or `chargegatedattrs` JSON falls back to an empty list and a warning is emitted through `config.Logger`.
+Malformed `chargematerials` or `chargegatedattrs` JSON does not throw. The helper returns a safe default and logs a warning through `config.Logger`.

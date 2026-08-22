@@ -1,0 +1,59 @@
+// ArcanumLib color scheme for Just the Docs
+// A muted dark theme with teal and gold accents.
+
+// Base palette
+$white: #ffffff !default;
+$grey-dk-000: #e0e0e0 !default;
+$grey-dk-100: #bdbdbd !default;
+$grey-dk-200: #6e6e6e !default;
+$grey-dk-250: #4a4a4a !default;
+$grey-dk-300: #1f1f1f !default;
+$grey-lt-000: #f5f5f5 !default;
+$grey-lt-100: #e5e5e5 !default;
+$grey-lt-200: #c2c2c2 !default;
+$grey-lt-300: #a3a3a3 !default;
+$purple-000: #7c9fc7 !default;
+$purple-100: #5f85b3 !default;
+$purple-200: #4a6d9a !default;
+$purple-300: #39567d !default;
+$blue-000: #80cbc4 !default;
+$blue-100: #5fb3ab !default;
+$blue-200: #4a9d96 !default;
+$blue-300: #3a7f79 !default;
+$green-000: #a5d6a7 !default;
+$green-100: #81c784 !default;
+$green-200: #66bb6a !default;
+$green-300: #4caf50 !default;
+$yellow-000: #ffe082 !default;
+$yellow-100: #ffd54f !default;
+$yellow-200: #ffca28 !default;
+$yellow-300: #ffc107 !default;
+$red-000: #ef9a9a !default;
+$red-100: #e57373 !default;
+$red-200: #ef5350 !default;
+$red-300: #f44336 !default;
+
+// Body
+$body-background-color: #121212 !default;
+$body-heading-color: $white !default;
+$body-text-color: $grey-dk-000 !default;
+$link-color: $blue-000 !default;
+$link-color-hover: $blue-100 !default;
+$nav-child-link-color: $grey-dk-100 !default;
+$sidebar-color: #181818 !default;
+$base-button-color: #1e1e1e !default;
+$btn-primary-color: $blue-100 !default;
+$code-background-color: #1e1e1e !default;
+$code-linenumber-color: $grey-dk-200 !default;
+$feedback-color: darken($sidebar-color, 3%) !default;
+$table-background-color: #181818 !default;
+$search-background-color: #1e1e1e !default;
+$search-result-preview-color: $grey-dk-100 !default;
+$border-color: #2c2c2c !default;
+
+// Accent colors for labels/callouts
+$accent-purple: $purple-000 !default;
+$accent-blue: $blue-000 !default;
+$accent-green: $green-100 !default;
+$accent-yellow: $yellow-100 !default;
+$accent-red: $red-100 !default;

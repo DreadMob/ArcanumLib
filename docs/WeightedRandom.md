@@ -5,7 +5,16 @@ title: WeightedRandom
 
 # WeightedRandom
 
+## What is it for?
+
 `ArcanumLib.Randomization` provides reusable weighted random selection. It removes the common boilerplate of summing weights, rolling, and walking a cumulative list.
+
+## When to use it
+
+- You need to pick one item from a list where each entry has a different chance.
+- You want to roll multiple distinct winners without replacement.
+- You need to display percentage chances in UI tooltips or info text.
+- You are rolling from the same set repeatedly and want a cached table for performance.
 
 ## Quick example
 
@@ -18,7 +27,18 @@ var chosen = WeightedRandom.Pick(
 
 `chosen` is `null` if the list is empty or all weights are zero.
 
-## WeightedTable
+## API overview
+
+### One-off picks
+
+| Method | Returns | Description |
+|--------|---------|-------------|
+| `WeightedRandom.Pick(items, weightSelector, random)` | `T?` | Returns the winning item, or `null` if nothing can be picked. |
+| `WeightedRandom.PickOrDefault(items, weightSelector, random)` | `T?` | Returns `default(T)` when nothing is pickable. |
+| `WeightedRandom.PickDistinct(items, weightSelector, random, count)` | `IEnumerable<T>` | Returns `count` distinct winners without replacement. |
+| `WeightedRandom.GetPercentages(items, weightSelector)` | percentages | Returns the percentage share for each item, useful for UI tooltips and info text. |
+
+### Reusable tables
 
 For repeated rolls, use `WeightedTable<T>`:
 
@@ -30,15 +50,7 @@ foreach (var def in defs)
 var def = table.PickOrDefault(sapi.World.Rand);
 ```
 
-`WeightedTable` tracks the total weight and updates it when entries are added or cleared.
-
-## Methods
-
-- `WeightedRandom.Pick(items, weightSelector, random)` — one pick.
-- `WeightedRandom.PickOrDefault(...)` — returns `default(T)` when nothing is pickable.
-- `WeightedRandom.PickDistinct(items, weightSelector, random, count)` — `count` distinct winners without replacement.
-- `WeightedRandom.GetPercentages(items, weightSelector)` — percentage share for each item, useful for UI tooltips and info text.
-- `WeightedTable<T>` — reusable table supporting `Add`, `AddRange`, `Clear`, `Pick`, `PickOrDefault`.
+`WeightedTable<T>` tracks the total weight and updates it when entries are added or cleared. It supports `Add`, `AddRange`, `Clear`, `Pick`, and `PickOrDefault`.
 
 ## Notes
 

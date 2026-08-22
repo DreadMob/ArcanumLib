@@ -5,7 +5,15 @@ title: TypedNetworkChannel
 
 # TypedNetworkChannel
 
+## What is it for?
+
 `ArcanumLib.Network.TypedNetworkChannel` wraps a Vintage Story `IClientNetworkChannel` or `IServerNetworkChannel` to reduce the boilerplate of registering message types, sending packets, and handling them.
+
+## When to use it
+
+- You need a server-to-client or client-to-server channel and want to avoid manual packet serialization setup.
+- You want strongly-typed message handlers instead of raw byte arrays.
+- You are sending small POCO messages that have a public parameterless constructor.
 
 ## Quick example
 
@@ -31,9 +39,19 @@ public override void StartClientSide(ICoreClientAPI capi)
 }
 ```
 
+## API overview
+
+`TypedNetworkChannel` automatically detects whether the passed `ICoreAPI` is a client or server API and creates the correct underlying channel.
+
+| Method | Side | Description |
+|--------|------|-------------|
+| `On<T>(Action<T> handler)` | Client | Register a handler for incoming messages of type `T`. |
+| `OnServer<T>(Action<IServerPlayer, T> handler)` | Server | Register a handler for incoming messages of type `T` from a player. |
+| `Send<T>(T message)` | Both | Send a message over the channel. |
+| `SendToPlayer<T>(IServerPlayer player, T message)` | Server | Send a message to one specific player. |
+
 ## Notes
 
-- The wrapper detects whether the passed `ICoreAPI` is a client or server API.
 - `OnServer<T>` requires `Action<IServerPlayer, T>`.
 - `On<T>` is client-side and requires `Action<T>`.
 - `SendToPlayer<T>` only works on a server channel.

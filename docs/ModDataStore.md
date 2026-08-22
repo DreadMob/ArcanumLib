@@ -5,63 +5,80 @@ title: ModDataStore
 
 # ModDataStore
 
-`ArcanumLib.Persistence.ModDataStore` provides versioned per-savegame storage for arbitrary C# objects. Data is serialized to JSON and saved into the current Vintage Story savegame.
+Versioned per-savegame data persistence.
 
-## When to use it
+## What is it for?
 
-Use `ModDataStore` when your mod needs:
+Use `ModDataStore` when your mod needs to save data that belongs to the current world/save, not to a global config:
 
-- Persistent data tied to a specific savegame (not global config).
-- Schema versioning so old data can be migrated when the data shape changes.
-- Shared access across multiple `ModSystem` instances or consumers.
-- A simple key/value store without writing custom save/load code.
+- Player progression counters.
+- World state, POI ownership, city treasuries.
+- Item/effect cooldowns and status state.
+- Any data that must survive server restarts but is tied to a save.
 
-## Creating a store
+It is server-side only and serializes to JSON inside the savegame.
 
-```csharp
-var store = ModDataStore.GetOrCreate<MyData>(sapi, "mymod", "progress", dataVersion: 1);
-```
-
-The `dataVersion` argument starts at `1`. When the shape of `MyData` changes, increment the version and load code can detect/upgrade the old data.
-
-## Reading and writing
+## Quick example
 
 ```csharp
-store.Load();     // load from disk if not already loaded
-store.Data.X = 5; // mutate the typed data
-store.Save();     // write to disk
+using ArcanumLib.Persistence;
+
+var store = ModDataStore.GetOrCreate<MySaveData>(sapi, "mymod", "state", 1);
+store.Data.Counter++;
+store.Save();
 ```
 
-`Data` is lazily allocated. If no save exists, the factory creates a fresh instance.
+## Usage
 
-## Custom factory
-
-Use the overload with a factory when the type needs non-default construction or when you want a `Dictionary<TKey, TValue>` as the root object:
+### Create a store
 
 ```csharp
-var store = ModDataStore.GetOrCreate(sapi, "mymod", "counters", 1, () => new Dictionary<string, int>());
+var store = ModDataStore.GetOrCreate<MySaveData>(sapi, "mymod", "state", dataVersion: 1);
 ```
 
-## Global API
+`MySaveData` must have a parameterless constructor. `dataVersion` starts at `1` and is incremented when the data shape changes.
 
-If `ModDataStoreModSystem` is loaded, you can omit the `sapi` argument after startup:
+### Read and write
 
 ```csharp
-var store = ModDataStore.GetOrCreate<MyData>("mymod", "progress", 1);
+store.Load();
+store.Data.Counter++;
+store.Save();
 ```
 
-This is useful for consumers that do not have direct access to `ICoreServerAPI`.
+`Data` is created lazily. If no save exists, a fresh instance is returned.
 
-## Integration in a ModSystem
+### Use a custom root type
+
+Useful when the root object is a dictionary:
+
+```csharp
+var store = ModDataStore.GetOrCreate(
+    sapi, "mymod", "counters", 1,
+    () => new Dictionary<string, int>());
+
+store.Data["players"]++;
+store.Save();
+```
+
+### Global API
+
+If `ModDataStoreModSystem` is loaded, you can omit `sapi`:
+
+```csharp
+var store = ModDataStore.GetOrCreate<MySaveData>("mymod", "state", 1);
+```
+
+## ModSystem integration
 
 ```csharp
 public class MyModSystem : ModSystem
 {
-    private IModDataStore<MyData>? store;
+    private IModDataStore<MySaveData>? store;
 
     public override void StartServerSide(ICoreServerAPI sapi)
     {
-        store = ModDataStore.GetOrCreate<MyData>(sapi, "mymod", "state", 1);
+        store = ModDataStore.GetOrCreate<MySaveData>(sapi, "mymod", "state", 1);
     }
 
     public override void OnSaveGameData()
@@ -73,5 +90,6 @@ public class MyModSystem : ModSystem
 
 ## Notes
 
-- `ModDataStore` is **server-side only** because it uses `sapi.WorldManager.SaveGame`.
-- In unit tests, use `ModDataStoreInstance<T>` directly or pass `null` for `sapi` (where supported) to avoid disk access.
+- `ModDataStore` is **server-side only**.
+- In unit tests, create a `ModDataStoreInstance<T>` directly or pass `null` for `sapi` where supported.
+- Increment `dataVersion` when the data shape changes; future migrations can check this value.

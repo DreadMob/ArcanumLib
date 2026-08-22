@@ -5,11 +5,18 @@ title: TimedCache<TKey, TValue>
 
 # TimedCache<TKey, TValue>
 
-A thread-safe cache that evicts entries after a configurable time-to-live (TTL).
-Can also be bounded by a maximum size; when both apply, the oldest unused
-entries are removed first.
+## What is it for?
 
-## Usage
+`ArcanumLib.Caching.TimedCache<TKey, TValue>` is a thread-safe cache that evicts entries after a configurable time-to-live (TTL). It can also be bounded by a maximum size; when both apply, the oldest unused entries are removed first.
+
+## When to use it
+
+- Caching expensive-to-create data that should expire automatically.
+- Limiting memory usage with a maximum size.
+- A shared cache accessed from multiple threads.
+- Active entries should stay alive because each access refreshes their timestamp.
+
+## Quick example
 
 ```csharp
 using ArcanumLib.Caching;
@@ -31,7 +38,7 @@ if (cache.TryGetValue("sword", out var texture))
 cache.Dispose();
 ```
 
-## API
+## Usage
 
 ```csharp
 public sealed class TimedCache<TKey, TValue> : IDisposable
@@ -49,5 +56,19 @@ public sealed class TimedCache<TKey, TValue> : IDisposable
 }
 ```
 
-The cache uses a `ReaderWriterLockSlim` for safe concurrent access and, when an
-`ICoreAPI` is supplied, a periodic game-tick listener to clean stale entries.
+| Method | Description |
+| --- | --- |
+| `Add` | Stores a value under the given key. |
+| `TryGetValue` | Returns the value if it exists and is still fresh; refreshes the access time. |
+| `Remove` | Removes a single entry. |
+| `Clear` | Removes all entries. |
+| `Clean` | Manually removes stale entries. |
+| `Count` | Current number of entries. |
+| `Dispose` | Stops the tick listener and clears the cache. |
+
+## Notes
+
+- Accessing an entry refreshes its access time, so active entries are not evicted.
+- The cache uses a `ReaderWriterLockSlim` for safe concurrent access.
+- When an `ICoreAPI` is supplied, a periodic game-tick listener cleans stale entries in the background.
+- Call `Dispose()` when the cache is no longer needed to stop the tick listener and release references.

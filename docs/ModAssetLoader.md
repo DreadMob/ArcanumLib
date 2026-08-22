@@ -5,18 +5,35 @@ title: ModAssetLoader
 
 # ModAssetLoader
 
-`ArcanumLib.Assets.ModAssetLoader` loads JSON configuration assets from all loaded mods. It is useful when multiple mods or content packs contribute definitions under the same asset path (for example `config/encounters`, `config/worldevents`, or `config/titles`).
+## What is it for?
 
-## Why use it
+`ArcanumLib.Assets.ModAssetLoader` loads JSON configuration assets from all loaded mods under a single asset path. It wraps Vintage Story's per-mod `IAssetManager.GetMany` scan so you do not have to write `foreach (var mod in api.ModLoader.Mods)` with a `try/catch` every time you load a new config type.
 
-Vintage Story's `IAssetManager.GetMany` already scans one mod at a time. `ModAssetLoader` wraps that scan so you do not have to write `foreach (var mod in api.ModLoader.Mods)` with a `try/catch` every time you load a new config type.
+## When to use it
 
-## Main methods
+- You need to collect JSON files of the same kind from every loaded mod.
+- Several mods add definitions under a shared asset path and you need to enumerate or merge them.
+- You want typed deserialization, a flat string-keyed dictionary, or a custom keyed index.
+- You need the raw JSON text plus the source mod ID and asset location.
+- You want to restrict an asset search to a single mod domain.
+
+## Quick example
+
+```csharp
+foreach (var asset in ModAssetLoader.LoadAll<ItemDefinition>(sapi, "config/items"))
+{
+    var def = asset.Value;
+    var sourceMod = asset.SourceModId;
+    var location = asset.Location;
+}
+```
+
+## Usage
 
 ### Load typed assets from all mods
 
 ```csharp
-foreach (var asset in ModAssetLoader.LoadAll<EncounterDefinition>(sapi, "config/encounters"))
+foreach (var asset in ModAssetLoader.LoadAll<ItemDefinition>(sapi, "config/items"))
 {
     var def = asset.Value;
     var sourceMod = asset.SourceModId;
@@ -37,8 +54,8 @@ Later mods overwrite earlier mods by default. Pass `MergeStrategy.FirstWins` to 
 ### Load and index a list by a key
 
 ```csharp
-var quizDefs = ModAssetLoader.LoadDictionaryBy<QuizDefinition>(
-    api, "config/quizzes", q => q.id);
+var itemDefs = ModAssetLoader.LoadDictionaryBy<ItemDefinition>(
+    api, "config/items", i => i.Code);
 ```
 
 ### Load raw JSON text
@@ -46,7 +63,7 @@ var quizDefs = ModAssetLoader.LoadDictionaryBy<QuizDefinition>(
 For files that need custom parsing or inspection:
 
 ```csharp
-foreach (var asset in ModAssetLoader.LoadAllRaw(sapi, "config/progression"))
+foreach (var asset in ModAssetLoader.LoadAllRaw(sapi, "config/custom"))
 {
     string json = asset.Text;
     AssetLocation loc = asset.Location;
@@ -59,16 +76,12 @@ foreach (var asset in ModAssetLoader.LoadAllRaw(sapi, "config/progression"))
 All methods accept an optional `sourceModId` / `domain` argument:
 
 ```csharp
-var seasonal = ModAssetLoader.LoadAll<BountySeasonalConfig>(api, "config/bounty/seasonal", "albase");
+var seasonal = ModAssetLoader.LoadAll<SeasonConfig>(api, "config/seasons", "mymod");
 ```
 
-## Merge strategies
+## Notes
 
-- `MergeStrategy.LastWins` — later packs overwrite earlier ones (default for `LoadFlatDictionary` and `LoadDictionaryBy`).
-- `MergeStrategy.FirstWins` — the first value found is kept.
-
-Lists are left to the caller to merge, because the right shape (concatenate, union, or keyed replace) depends on the system.
-
-## Error handling
-
-Per-mod scan errors and malformed files are logged with the asset path and mod ID and do not stop loading from other mods.
+- `MergeStrategy.LastWins` is the default for `LoadFlatDictionary` and `LoadDictionaryBy`; later packs overwrite earlier ones.
+- `MergeStrategy.FirstWins` keeps the first value found.
+- Lists are left to the caller to merge, because the right shape (concatenate, union, or keyed replace) depends on the system.
+- Per-mod scan errors and malformed files are logged with the asset path and mod ID and do not stop loading from other mods.

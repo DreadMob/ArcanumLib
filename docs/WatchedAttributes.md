@@ -5,7 +5,15 @@ title: WatchedAttributes
 
 # WatchedAttributes
 
+## What is it for?
+
 `ArcanumLib.Data.WatchedAttributesExtensions` adds helpers for `ITreeAttribute` and `Entity.WatchedAttributes`. It removes the common boilerplate of `HasAttribute` checks before getting or setting defaults.
+
+## When to use it
+
+- Initialize a default value for a mod attribute without overwriting an existing one.
+- Read a value from `WatchedAttributes` and fall back to a default.
+- Safely create nested tree attributes.
 
 ## Quick example
 
@@ -19,11 +27,24 @@ int kills = player.Entity.WatchedAttributes.GetOrCreateInt("mod:kills");
 player.Entity.WatchedAttributes.SetBoolIfMissing("mod:tutorial_seen", true);
 ```
 
-## Available helpers
+## API overview
 
-- `GetOrCreateTreeAttribute(key)`
-- `GetOrCreateInt/Long/Float/Double/Bool/String(key, defaultValue)`
-- `SetIntIfMissing/LongIfMissing/FloatIfMissing/DoubleIfMissing/BoolIfMissing/StringIfMissing`
-- `SetAndMarkDirty(key, value)` for `bool/int/long/float/double/string`
+The helpers extend `ITreeAttribute`, so call them on `Entity.WatchedAttributes` or any `ITreeAttribute` instance.
 
-All helpers are also available directly on `Entity` (they forward to `Entity.WatchedAttributes`).
+| Method | Returns | Description |
+|---|---|---|
+| `GetOrCreateTreeAttribute(key)` | `ITreeAttribute` | Returns an existing tree or creates and attaches a new one. |
+| `GetOrCreateInt/Long/Float/Double/Bool/String(key, defaultValue)` | type | Gets the existing value or writes and returns `defaultValue`. |
+| `SetIntIfMissing/LongIfMissing/FloatIfMissing/DoubleIfMissing/BoolIfMissing/StringIfMissing(key, value)` | `void` | Sets the value only when the key does not already exist. |
+
+The `Entity` overload for `GetOrCreateTreeAttribute` is also available:
+
+| Method | Returns | Description |
+|---|---|---|
+| `GetOrCreateTreeAttribute(this Entity? entity, key)` | `ITreeAttribute?` | Forwards to `entity.WatchedAttributes.GetOrCreateTreeAttribute(key)`. |
+
+## Notes
+
+- Helpers are null-safe: the `Entity?` overload returns `null` when the entity or its `WatchedAttributes` is `null`.
+- The `Set*IfMissing` methods preserve existing data; use `GetOrCreate*` when you need the value back.
+- Remember to call `MarkPathDirty(key)` after manual changes if the attribute is watched.

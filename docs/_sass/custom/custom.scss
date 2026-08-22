@@ -1,0 +1,56 @@
+// Additional ArcanumLib site customisations
+
+// Soften headings and links
+h1, h2, h3, h4, h5, h6 {
+  font-weight: 500;
+  letter-spacing: 0.02em;
+}
+
+a {
+  text-decoration: none;
+
+  &:hover {
+    text-decoration: underline;
+  }
+}
+
+// Code blocks
+div.highlighter-rouge,
+figure.highlight {
+  border-radius: 6px;
+  border: 1px solid #2c2c2c;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.25);
+}
+
+code {
+  font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, Courier, monospace;
+  font-size: 0.9em;
+}
+
+// Tables
+table {
+  border-radius: 6px;
+  overflow: hidden;
+  border: 1px solid #2c2c2c;
+
+  th {
+    background-color: #1a1a1a;
+    font-weight: 600;
+  }
+
+  tr:nth-child(even) {
+    background-color: rgba(255, 255, 255, 0.03);
+  }
+}
+
+// Search input
+.search-input {
+  background-color: #1e1e1e;
+  border-color: #2c2c2c;
+  color: #e0e0e0;
+
+  &:focus {
+    border-color: #80cbc4;
+    box-shadow: 0 0 0 2px rgba(128, 203, 196, 0.2);
+  }
+}

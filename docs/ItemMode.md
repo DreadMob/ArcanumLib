@@ -5,15 +5,17 @@ title: ItemMode
 
 # ItemMode
 
-`ArcanumLib.Items.ItemMode` and `ItemModeManager` provide generic item mode data and helpers for switching, querying, and gating effects/actions by active mode.
+Generic item mode data and F-key tool-mode integration.
 
-## When to use it
+## What is it for?
 
-Use `ItemMode` when your mod has items with:
+Use `ItemMode` when an item has multiple selectable configurations:
 
-- Multiple selectable modes (e.g. bound to the F-key tool-mode cycle).
-- Mode-specific actions.
+- A staff with fire, ice, and lightning modes.
+- A tool that changes action set depending on the active mode.
 - Effects that should only run in a specific mode.
+
+It handles parsing mode JSON, reading/writing the active index, clamping out-of-range values, and building the vanilla `SkillItem[]` UI.
 
 ## Data model
 
@@ -33,7 +35,7 @@ public class ItemAction
 }
 ```
 
-Modes are normally stored as a JSON array on `ItemStack.Attributes`.
+Modes are stored as a JSON array on `ItemStack.Attributes`:
 
 ```json
 [
@@ -53,52 +55,69 @@ var config = new ItemModeConfig
 };
 ```
 
-## Usage
+| Property | What it controls |
+|----------|-----------------|
+| `ModesAttributeKey` | Where the mode JSON list is stored. |
+| `ModeIndexAttributeKey` | Where the active mode index is stored. |
+| `NameResolver` | Optional translation/localization of `Name`. |
+| `ModesPerLine` | How many icons fit before a line break in the tool-mode UI. |
+
+## Quick example
 
 ```csharp
-// Parse modes from the stack
+using ArcanumLib.Items;
+
 if (ItemModeManager.TryGetModes(stack.Attributes, out var modes, config))
 {
-    // Get current active mode
     var active = ItemModeManager.GetActiveMode(stack.Attributes, modes, config);
+    // active.Id, active.Actions
+}
+```
 
-    // Get the active mode's id
-    if (ItemModeManager.TryGetActiveModeId(stack.Attributes, out var activeId, config))
-    {
-        // gate logic/effects
-    }
+## Usage
 
-    // Get the active mode's actions
-    if (ItemModeManager.TryGetActiveModeActions(stack.Attributes, out var actions, config))
+### Get the active mode
+
+```csharp
+if (ItemModeManager.TryGetActiveModeId(stack.Attributes, out var activeId, config))
+{
+    // activeId is the current mode code
+}
+```
+
+### Get the active mode's actions
+
+```csharp
+if (ItemModeManager.TryGetActiveModeActions(stack.Attributes, out var actions, config))
+{
+    foreach (var action in actions)
     {
-        // execute actions
+        // execute action.Id with action.Args
     }
 }
+```
 
-// Switch mode
+### Switch or cycle mode
+
+```csharp
 ItemModeManager.SetActiveModeIndex(stack.Attributes, 1, config);
 
-// Cycle forward/backward
-string? nextMode = ItemModeManager.CycleActiveMode(stack.Attributes, 1, config);
-
-// Check if an effect should run in the active mode
-bool shouldRun = ItemModeManager.ShouldRunForMode(effectMode, activeMode);
+// cycle forward by one
+string? nextId = ItemModeManager.CycleActiveMode(stack.Attributes, 1, config);
 ```
 
-## Tool mode UI
-
-`ItemModeManager.GetToolModeSkillItems` returns a `SkillItem[]` for the vanilla F-key tool mode selector.
+### Gate an effect by active mode
 
 ```csharp
-SkillItem[]? skillItems = ItemModeManager.GetToolModeSkillItems(capi, modes, config);
+bool shouldRun = ItemModeManager.ShouldRunForMode(effectMode, activeModeId);
 ```
 
-Each `SkillItem` is created from the mode `Name` and `Icon` (or a letter icon fallback). You can call `GetToolModeIndex` and `SetActiveModeIndex` in your `CollectibleObject.GetToolMode` / `SetToolMode` Harmony patches.
+An empty `effectMode` means "runs in every mode".
 
-## Effect gating
-
-Effects can be gated by mode by setting their `mode` field. An empty or whitespace `mode` means "runs in every mode". Comparison is case-insensitive.
+### Tool mode UI
 
 ```csharp
-bool shouldRun = ItemModeManager.ShouldRunForMode(effect.Mode, activeModeId);
+SkillItem[]? skills = ItemModeManager.GetToolModeSkillItems(capi, modes, config);
 ```
+
+Each `SkillItem` uses the mode `Name` and `Icon`, falling back to a letter icon if the icon is empty.

@@ -5,25 +5,17 @@ title: ShapeCloner
 
 # ShapeCloner
 
-Deep-clones Vintage Story `Shape` objects so they can be safely modified without
-sharing mutable state with the cached original. This is useful when the engine
-reuses a single `Shape` for many renderers (wearable attachments, transmog, boss
-model swaps).
+## What is it for?
 
-## Why not `Shape.Clone()`?
+Deep-clones Vintage Story `Shape` objects so they can be safely modified without sharing mutable state with the cached original. This is useful when the engine reuses a single `Shape` for many renderers, such as wearable attachments, transmog, or unique creature model variants.
 
-`Shape.Clone()` creates new `ShapeElement` and `Animation` instances, but it
-keeps shallow references for `Textures`, `TextureSizes`, `FacesResolved` and
-`AttachmentPoints`. Mutating those on one clone leaks back into the cached shape.
+## When to use it
 
-`ShapeCloner.DeepClone` makes independent copies of:
+- You need to modify a `Shape` loaded from an asset without corrupting the shared cache.
+- Multiple renderers or entities share the same `Shape` and need independent texture or mesh changes.
+- You want to create per-instance visual variations at runtime.
 
-- `Shape.Textures` (`AssetLocation` instances)
-- `Shape.TextureSizes` (per-texture `int[]`)
-- `ShapeElement.FacesResolved` (each `ShapeElementFace` and its `Uv`, `WindMode`, `WindData` arrays)
-- `ShapeElement.AttachmentPoints` (each `AttachmentPoint`, with parent reset to the cloned element)
-
-## Usage
+## Quick example
 
 ```csharp
 using ArcanumLib.Geometry;
@@ -36,7 +28,7 @@ Shape clone = ShapeCloner.DeepClone(source);
 clone.Textures["main"] = new AssetLocation("mydomain", "texture.png");
 ```
 
-## API
+## API overview
 
 ```csharp
 public static class ShapeCloner
@@ -46,3 +38,16 @@ public static class ShapeCloner
     public static Shape? LoadAndClone(ICoreAPI api, string path);
 }
 ```
+
+`ShapeCloner.DeepClone` makes independent copies of mutable `Shape` sub-objects that `Shape.Clone()` only shallow-copies:
+
+| Data | Deep-cloned? |
+|------|--------------|
+| `Shape.Textures` (`AssetLocation` instances) | Yes |
+| `Shape.TextureSizes` (per-texture `int[]`) | Yes |
+| `ShapeElement.FacesResolved` (each `ShapeElementFace` and its `Uv`, `WindMode`, `WindData` arrays) | Yes |
+| `ShapeElement.AttachmentPoints` (each `AttachmentPoint`, with parent reset to the cloned element) | Yes |
+
+## Notes
+
+- `Shape.Clone()` creates new `ShapeElement` and `Animation` instances, but it keeps shallow references for `Textures`, `TextureSizes`, `FacesResolved`, and `AttachmentPoints`. Mutating those on one clone leaks back into the cached shape.

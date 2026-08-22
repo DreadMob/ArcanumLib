@@ -18,7 +18,7 @@ kramdown:
 
 permalink: pretty
 
-color_scheme: dark
+color_scheme: arcanum
 
 search_enabled: true
 search.button: true

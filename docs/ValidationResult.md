@@ -5,11 +5,18 @@ title: ValidationResult
 
 # ValidationResult
 
-A lightweight, immutable result object for validation and parse pipelines.
-Collects errors and warnings so they can be accumulated across many steps and
-logged together at the end of an operation.
+## What is it for?
 
-## Usage
+`ArcanumLib.Validation.ValidationResult` is a lightweight, immutable result object for validation and parse pipelines. It collects errors and warnings so they can be accumulated across many steps and logged together at the end of an operation.
+
+## When to use it
+
+- Validating JSON or other input through several checks.
+- Collecting errors and warnings to report at once.
+- Returning a validation status from a parse pipeline.
+- Combining validation results from multiple sources.
+
+## Quick example
 
 ```csharp
 using ArcanumLib.Validation;
@@ -36,7 +43,7 @@ if (final.HasErrors)
     final.Log(api.Logger, "MySystem");
 ```
 
-## API
+## Usage
 
 ```csharp
 public readonly struct ValidationResult
@@ -61,3 +68,18 @@ public readonly struct ValidationResult
     public static ValidationResult operator +(ValidationResult a, ValidationResult b);
 }
 ```
+
+| Member | Description |
+| --- | --- |
+| `Success()` | A result with no errors or warnings. |
+| `Error(message)` | A result with a single error. |
+| `Warning(message)` | A result with a single warning. |
+| `WithError` / `WithWarning` | Returns a new result with the additional message. |
+| `Combine` / `+` operator | Merges two results into one. |
+| `Log` | Writes warnings and errors to the logger with a context string. |
+
+## Notes
+
+- `ValidationResult` is a `readonly struct`; each mutation returns a new instance.
+- `Log` writes all warnings and errors to the supplied logger.
+- A result with only warnings is still `IsSuccess == true` but `HasWarnings == true`.
