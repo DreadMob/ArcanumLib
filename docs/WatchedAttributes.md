@@ -1,3 +1,8 @@
+---
+layout: default
+title: WatchedAttributes
+---
+
 # WatchedAttributes
 
 `ArcanumLib.Data.WatchedAttributesExtensions` adds helpers for `ITreeAttribute` and `Entity.WatchedAttributes`. It removes the common boilerplate of `HasAttribute` checks before getting or setting defaults.

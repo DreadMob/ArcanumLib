@@ -1,3 +1,8 @@
+---
+layout: default
+title: PlayerExtensions
+---
+
 # PlayerExtensions
 
 `ArcanumLib.Common.PlayerExtensions` adds helpers for iterating over alive player entities.

@@ -1,3 +1,8 @@
+---
+layout: default
+title: ModAssetRegistry
+---
+
 # ModAssetRegistry
 
 Builds validated, keyed, source-tracked registries from `ModAssetLoader` output.

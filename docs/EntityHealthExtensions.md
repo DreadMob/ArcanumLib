@@ -1,3 +1,8 @@
+---
+layout: default
+title: EntityHealthExtensions
+---
+
 # EntityHealthExtensions
 
 `ArcanumLib.Common.EntityHealthExtensions` provides health queries and scaling helpers that work through `Entity.WatchedAttributes` or `EntityBehaviorHealth`.

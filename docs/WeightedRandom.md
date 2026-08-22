@@ -1,3 +1,8 @@
+---
+layout: default
+title: WeightedRandom
+---
+
 # WeightedRandom
 
 `ArcanumLib.Randomization` provides reusable weighted random selection. It removes the common boilerplate of summing weights, rolling, and walking a cumulative list.

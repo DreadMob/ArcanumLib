@@ -1,3 +1,8 @@
+---
+layout: default
+title: Inventory / ItemStack helpers
+---
+
 # Inventory / ItemStack helpers
 
 `ArcanumLib.Inventory` contains extension methods for `IPlayer`, `IInventory`, and `ItemStack` that remove the small, repeated loops for giving, finding, counting, and consuming items.

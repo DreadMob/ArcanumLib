@@ -1,3 +1,8 @@
+---
+layout: default
+title: LoggerExtensions
+---
+
 # LoggerExtensions
 
 `ArcanumLib.Common.LoggerExtensions` adds non-critical warning logging and `SafeExecute` wrappers to `ICoreAPI`, `ICoreClientAPI`, and `ICoreServerAPI`.

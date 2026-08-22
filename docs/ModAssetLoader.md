@@ -1,3 +1,8 @@
+---
+layout: default
+title: ModAssetLoader
+---
+
 # ModAssetLoader
 
 `ArcanumLib.Assets.ModAssetLoader` loads JSON configuration assets from all loaded mods. It is useful when multiple mods or content packs contribute definitions under the same asset path (for example `config/encounters`, `config/worldevents`, or `config/titles`).

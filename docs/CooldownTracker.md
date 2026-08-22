@@ -1,3 +1,8 @@
+---
+layout: default
+title: CooldownTracker
+---
+
 # CooldownTracker
 
 `ArcanumLib.Data.CooldownTracker` stores per-entity cooldown timestamps in `WatchedAttributes` and provides helpers for readiness, elapsed, and progress checks.

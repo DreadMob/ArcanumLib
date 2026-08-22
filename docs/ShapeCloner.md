@@ -1,3 +1,8 @@
+---
+layout: default
+title: ShapeCloner
+---
+
 # ShapeCloner
 
 Deep-clones Vintage Story `Shape` objects so they can be safely modified without

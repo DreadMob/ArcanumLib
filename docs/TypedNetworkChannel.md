@@ -1,3 +1,8 @@
+---
+layout: default
+title: TypedNetworkChannel
+---
+
 # TypedNetworkChannel
 
 `ArcanumLib.Network.TypedNetworkChannel` wraps a Vintage Story `IClientNetworkChannel` or `IServerNetworkChannel` to reduce the boilerplate of registering message types, sending packets, and handling them.

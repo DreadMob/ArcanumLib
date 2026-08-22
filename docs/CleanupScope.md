@@ -1,3 +1,8 @@
+---
+layout: default
+title: CleanupScope
+---
+
 # CleanupScope
 
 `ArcanumLib.Common.CleanupScope` groups disposable resources, `DeferredWork` keys, and game tick listener IDs so they can all be cancelled or released with a single `Dispose()` call.

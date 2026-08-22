@@ -1,3 +1,8 @@
+---
+layout: default
+title: ImageIconCache
+---
+
 # ImageIconCache
 
 `ArcanumLib.Gui.Icons.ImageIconCache` loads and caches icon `ImageSurface` instances from the Vintage Story asset pipeline. It supports PNG, JPEG, GIF, BMP, ICO, WBMP, WebP, HEIF, DNG, KTX, PKM and ASTC through `GuiElement.getImageSurfaceFromAsset` / `SkiaSharp.SKCodec`.

@@ -1,3 +1,8 @@
+---
+layout: default
+title: TimedCache<TKey, TValue>
+---
+
 # TimedCache<TKey, TValue>
 
 A thread-safe cache that evicts entries after a configurable time-to-live (TTL).

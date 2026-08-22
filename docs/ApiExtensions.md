@@ -1,3 +1,8 @@
+---
+layout: default
+title: ApiExtensions
+---
+
 # ApiExtensions
 
 `ArcanumLib.Common.ApiExtensions` adds `IsClient()` and `IsServer()` helpers for `ICoreAPI`, `ICoreClientAPI`, `ICoreServerAPI`, and `IWorldAccessor`.

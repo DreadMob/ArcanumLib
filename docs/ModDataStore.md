@@ -1,3 +1,8 @@
+---
+layout: default
+title: ModDataStore
+---
+
 # ModDataStore
 
 `ArcanumLib.Persistence.ModDataStore` provides versioned per-savegame storage for arbitrary C# objects. Data is serialized to JSON and saved into the current Vintage Story savegame.

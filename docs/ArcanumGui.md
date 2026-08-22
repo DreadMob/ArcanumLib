@@ -1,3 +1,8 @@
+---
+layout: default
+title: Arcanum GUI Toolkit
+---
+
 # Arcanum GUI Toolkit
 
 `ArcanumLib.Gui` is a small toolkit for building Vintage Story GUIs with less boilerplate and a consistent look.

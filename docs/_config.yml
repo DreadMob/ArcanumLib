@@ -1,0 +1,22 @@
+title: ArcanumLib
+description: A shared utility library for Vintage Story mods
+remote_theme: just-the-docs/just-the-docs
+url: https://dreadmob.github.io
+baseurl: /ArcanumLib
+
+aux_links:
+  ArcanumLib on GitHub:
+    - "//github.com/DreadMob/ArcanumLib"
+
+plugins:
+  - jekyll-remote-theme
+
+kramdown:
+  syntax_highlighter_opts:
+    block:
+      line_numbers: false
+
+permalink: pretty
+
+search_enabled: true
+search.button: true

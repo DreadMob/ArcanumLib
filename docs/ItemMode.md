@@ -1,3 +1,8 @@
+---
+layout: default
+title: ItemMode
+---
+
 # ItemMode
 
 `ArcanumLib.Items.ItemMode` and `ItemModeManager` provide generic item mode data and helpers for switching, querying, and gating effects/actions by active mode.

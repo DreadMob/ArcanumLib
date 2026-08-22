@@ -1,3 +1,8 @@
+---
+layout: default
+title: EventScope
+---
+
 # EventScope
 
 `ArcanumLib.Common.EventScope` collects event subscriptions and unsubscribes them in reverse order when disposed. Use it in `ModSystem.Dispose` or any `IDisposable` implementation to avoid leaking handlers when a mod unloads.

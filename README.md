@@ -180,7 +180,9 @@ Requires:
 
 ## Documentation
 
-API documentation lives in the [`docs/`](docs) folder:
+Full documentation site: **https://dreadmob.github.io/ArcanumLib/**
+
+API documentation also lives in the [`docs/`](docs) folder:
 
 ### GUI & Rendering
 - [Arcanum GUI Toolkit](docs/ArcanumGui.md)

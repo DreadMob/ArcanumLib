@@ -1,3 +1,8 @@
+---
+layout: default
+title: TagSetExtensions
+---
+
 # TagSetExtensions
 
 Convenience helpers for `Vintagestory.API.Datastructures.TagSet` set operations.

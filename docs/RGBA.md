@@ -1,3 +1,8 @@
+---
+layout: default
+title: RGBA
+---
+
 # RGBA
 
 `ArcanumLib.Gui.Theme.RGBA` is a small immutable color struct with values normalized to `0..1`. It is designed to be used directly with `Cairo.Context`.

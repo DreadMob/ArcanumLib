@@ -1,3 +1,8 @@
+---
+layout: default
+title: ValidationResult
+---
+
 # ValidationResult
 
 A lightweight, immutable result object for validation and parse pipelines.

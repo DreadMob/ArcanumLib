@@ -1,3 +1,8 @@
+---
+layout: default
+title: Status Effects
+---
+
 # Status Effects
 
 `ArcanumLib.Effects.StatusEffectManager` is a static manager for applying, ticking, and removing status effects on `Vintagestory.API.Common.Entities.Entity` instances. It supports refresh, stack, override, and independent modes.

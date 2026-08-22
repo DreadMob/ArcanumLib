@@ -1,3 +1,8 @@
+---
+layout: default
+title: PityTracker
+---
+
 # PityTracker
 
 `ArcanumLib.Progression.PityTracker` is a reusable per-player pity (guarantee) counter for any loot-quality or gacha-style system. It tracks how many "opens" a player has made since last receiving each quality tier and can force a guaranteed drop.

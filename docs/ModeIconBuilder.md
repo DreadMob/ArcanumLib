@@ -1,3 +1,8 @@
+---
+layout: default
+title: ModeIconBuilder
+---
+
 # ModeIconBuilder
 
 Factory methods for creating `SkillItem` tool-mode and skill-bar icons without

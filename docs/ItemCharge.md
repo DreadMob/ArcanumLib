@@ -1,3 +1,8 @@
+---
+layout: default
+title: ItemCharge
+---
+
 # ItemCharge
 
 `ArcanumLib.Items.ItemCharge` provides generic helpers for item charge, drain, refuel and stat gating. It works directly on `Vintagestory.API.Common.ItemStack.Attributes` and is fully data-driven.
