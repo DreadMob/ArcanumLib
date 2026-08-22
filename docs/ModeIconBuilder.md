@@ -7,7 +7,7 @@ title: ModeIconBuilder
 
 ## What is it for?
 
-`ModeIconBuilder` provides factory methods for creating `SkillItem` tool-mode and skill-bar icons without repeating boilerplate. It supports existing in-game icon codes, letter icons, and live `ItemStack` rendering.
+`ModeIconBuilder` provides factory methods for creating tool-mode and skill-bar icon entries without repeating boilerplate. It supports existing in-game icon codes, letter icons, and live `ItemStack` rendering. The returned objects are Vintage Story `SkillItem` instances.
 
 ## When to use it
 

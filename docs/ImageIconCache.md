@@ -107,6 +107,5 @@ public enum IconFit
 
 ## Notes
 
-- AVIF and JPEG XL are **not** compiled into the Vintage Story `libSkiaSharp.dll` and will not decode; the loader falls back to an orange 1x1 placeholder.
 - Because `ImageIconCache` uses Vintage Story's existing image loader, you can ship `.webp`, `.png`, `.jpg` and the other listed formats directly in your mod's asset tree and draw them through the same API. No manual conversion or texture atlas changes are needed.
 - Call `Init` once during client startup and `Dispose` when the client world is unloaded.

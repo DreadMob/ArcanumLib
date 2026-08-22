@@ -34,14 +34,24 @@ The helpers extend `ITreeAttribute`, so call them on `Entity.WatchedAttributes` 
 | Method | Returns | Description |
 |---|---|---|
 | `GetOrCreateTreeAttribute(key)` | `ITreeAttribute` | Returns an existing tree or creates and attaches a new one. |
-| `GetOrCreateInt/Long/Float/Double/Bool/String(key, defaultValue)` | type | Gets the existing value or writes and returns `defaultValue`. |
-| `SetIntIfMissing/LongIfMissing/FloatIfMissing/DoubleIfMissing/BoolIfMissing/StringIfMissing(key, value)` | `void` | Sets the value only when the key does not already exist. |
+| `GetOrCreateInt(key, defaultValue = 0)` | `int` | Existing value or the supplied default. |
+| `GetOrCreateLong(key, defaultValue = 0)` | `long` | Existing value or the supplied default. |
+| `GetOrCreateFloat(key, defaultValue = 0)` | `float` | Existing value or the supplied default. |
+| `GetOrCreateDouble(key, defaultValue = 0)` | `double` | Existing value or the supplied default. |
+| `GetOrCreateBool(key, defaultValue = false)` | `bool` | Existing value or the supplied default. |
+| `GetOrCreateString(key, defaultValue = "")` | `string` | Existing value or the supplied default. |
+| `SetIntIfMissing(key, value)` | `void` | Sets the value only when the key does not exist. |
+| `SetLongIfMissing(key, value)` | `void` | Sets the value only when the key does not exist. |
+| `SetFloatIfMissing(key, value)` | `void` | Sets the value only when the key does not exist. |
+| `SetDoubleIfMissing(key, value)` | `void` | Sets the value only when the key does not exist. |
+| `SetBoolIfMissing(key, value)` | `void` | Sets the value only when the key does not exist. |
+| `SetStringIfMissing(key, value)` | `void` | Sets the value only when the key does not exist. |
 
 The `Entity` overload for `GetOrCreateTreeAttribute` is also available:
 
 | Method | Returns | Description |
 |---|---|---|
-| `GetOrCreateTreeAttribute(this Entity? entity, key)` | `ITreeAttribute?` | Forwards to `entity.WatchedAttributes.GetOrCreateTreeAttribute(key)`. |
+| `GetOrCreateTreeAttribute(entity, key)` | `ITreeAttribute?` | Forwards to `entity.WatchedAttributes.GetOrCreateTreeAttribute(key)`. |
 
 ## Notes
 

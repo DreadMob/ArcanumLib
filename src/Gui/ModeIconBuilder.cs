@@ -8,8 +8,8 @@ using Vintagestory.API.MathTools;
 namespace ArcanumLib.Gui;
 
 /// <summary>
-/// Convenience factory for <see cref="SkillItem"/> tool-mode and skill bar entries.
-/// Reduces boilerplate when creating mode icons that show an image, a letter,
+/// Convenience factory for tool-mode and skill-bar icon entries.
+/// Reduces boilerplate when creating <see cref="SkillItem"/> icons that show an image, a letter,
 /// or a live rendered item stack.
 /// </summary>
 public static class ModeIconBuilder

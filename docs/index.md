@@ -26,11 +26,11 @@ Everything you need for custom in-game UI without fighting the low-level API.
 
 | Page | Purpose |
 |------|---------|
-| [Arcanum GUI Toolkit]({% link ArcanumGui.md %}) | Themed colour palette, layout helpers, composer, and reusable controls. |
-| [ImageIconCache]({% link ImageIconCache.md %}) | Load and draw `.webp`/`.png`/`.jpg` icons with clipping and tinting. |
-| [ModeIconBuilder]({% link ModeIconBuilder.md %}) | Build `SkillItem` icons for tool modes, skill bars, and item stacks. |
-| [RGBA]({% link RGBA.md %}) | Cairo-friendly color struct with parsing, conversion, and lerping. |
-| [ShapeCloner]({% link ShapeCloner.md %}) | Deep-clone `Shape` objects for safe runtime mutation. |
+| [Arcanum GUI Toolkit]({{ site.baseurl }}{% link ArcanumGui.md %}) | Themed colour palette, layout helpers, composer, and reusable controls. |
+| [ImageIconCache]({{ site.baseurl }}{% link ImageIconCache.md %}) | Load and draw `.webp`/`.png`/`.jpg` icons with clipping and tinting. |
+| [ModeIconBuilder]({{ site.baseurl }}{% link ModeIconBuilder.md %}) | Build tool-mode and skill-bar icon entries with image, letter, or item stack rendering. |
+| [RGBA]({{ site.baseurl }}{% link RGBA.md %}) | Cairo-friendly color struct with parsing, conversion, and lerping. |
+| [ShapeCloner]({{ site.baseurl }}{% link ShapeCloner.md %}) | Deep-clone `Shape` objects for safe runtime mutation. |
 
 ## Items & Equipment
 
@@ -38,9 +38,9 @@ State and behaviour for items that need extra data on the stack.
 
 | Page | Purpose |
 |------|---------|
-| [ItemCharge]({% link ItemCharge.md %}) | Charge, drain, refuel, and stat-gating for any `ItemStack`. |
-| [ItemMode]({% link ItemMode.md %}) | Multi-mode items with F-key tool mode integration. |
-| [Inventory / ItemStack helpers]({% link InventoryHelpers.md %}) | Give, count, find, and consume items. |
+| [ItemCharge]({{ site.baseurl }}{% link ItemCharge.md %}) | Charge, drain, refuel, and stat-gating for any `ItemStack`. |
+| [ItemMode]({{ site.baseurl }}{% link ItemMode.md %}) | Multi-mode items with F-key tool mode integration. |
+| [Inventory / ItemStack helpers]({{ site.baseurl }}{% link InventoryHelpers.md %}) | Give, count, find, and consume items. |
 
 ## Persistence & Progression
 
@@ -48,9 +48,9 @@ Per-save data and long-term player systems.
 
 | Page | Purpose |
 |------|---------|
-| [ModDataStore]({% link ModDataStore.md %}) | Versioned per-savegame data with schema migration. |
-| [PityTracker]({% link PityTracker.md %}) | Per-player pity/guarantee counters for loot or reward systems. |
-| [Status Effects]({% link StatusEffects.md %}) | Timed buffs/debuffs with stack, refresh, and override modes. |
+| [ModDataStore]({{ site.baseurl }}{% link ModDataStore.md %}) | Versioned per-savegame data with schema migration. |
+| [PityTracker]({{ site.baseurl }}{% link PityTracker.md %}) | Per-player pity/guarantee counters for loot or reward systems. |
+| [Status Effects]({{ site.baseurl }}{% link StatusEffects.md %}) | Timed buffs/debuffs with stack, refresh, and override modes. |
 
 ## Assets & Data
 
@@ -58,10 +58,10 @@ Loading, validating, and managing JSON assets from multiple mods.
 
 | Page | Purpose |
 |------|---------|
-| [ModAssetLoader]({% link ModAssetLoader.md %}) | Load and merge typed JSON assets from all loaded mods. |
-| [ModAssetRegistry]({% link ModAssetRegistry.md %}) | Build validated, keyed, source-tracked registries. |
-| [TagSetExtensions]({% link TagSetExtensions.md %}) | Set operations for Vintage Story `TagSet`. |
-| [ValidationResult]({% link ValidationResult.md %}) | Accumulate errors and warnings from validation pipelines. |
+| [ModAssetLoader]({{ site.baseurl }}{% link ModAssetLoader.md %}) | Load and merge typed JSON assets from all loaded mods. |
+| [ModAssetRegistry]({{ site.baseurl }}{% link ModAssetRegistry.md %}) | Build validated, keyed, source-tracked registries. |
+| [TagSetExtensions]({{ site.baseurl }}{% link TagSetExtensions.md %}) | Set operations for Vintage Story `TagSet`. |
+| [ValidationResult]({{ site.baseurl }}{% link ValidationResult.md %}) | Accumulate errors and warnings from validation pipelines. |
 
 ## Performance & Scheduling
 
@@ -69,9 +69,9 @@ Keep the server/client responsive.
 
 | Page | Purpose |
 |------|---------|
-| [DeferredWork]({% link DeferredWork.md %}) | Game-tick scheduler for one-shot and coalesced work. |
-| [TimedCache]({% link TimedCache.md %}) | Thread-safe cache with TTL eviction. |
-| [CleanupScope]({% link CleanupScope.md %}) | Cancel listeners, work, and nested disposables in one call. |
+| [DeferredWork]({{ site.baseurl }}{% link DeferredWork.md %}) | Game-tick scheduler for one-shot and coalesced work. |
+| [TimedCache]({{ site.baseurl }}{% link TimedCache.md %}) | Thread-safe cache with TTL eviction. |
+| [CleanupScope]({{ site.baseurl }}{% link CleanupScope.md %}) | Cancel listeners, work, and nested disposables in one call. |
 
 ## Common & Utility
 
@@ -79,26 +79,26 @@ Small helpers that remove boilerplate.
 
 | Page | Purpose |
 |------|---------|
-| [ApiExtensions]({% link ApiExtensions.md %}) | `IsClient` / `IsServer` checks for API objects. |
-| [CooldownTracker]({% link CooldownTracker.md %}) | Per-entity cooldowns in `WatchedAttributes`. |
-| [EntityHealthExtensions]({% link EntityHealthExtensions.md %}) | Read and scale entity health. |
-| [EventScope]({% link EventScope.md %}) | Disposable event subscription scope. |
-| [LoggerExtensions]({% link LoggerExtensions.md %}) | Safe logging and non-critical warning helpers. |
-| [PlayerExtensions]({% link PlayerExtensions.md %}) | Player entity iteration and position checks. |
-| [WatchedAttributes]({% link WatchedAttributes.md %}) | Get-or-create and set helpers for `ITreeAttribute`. |
+| [ApiExtensions]({{ site.baseurl }}{% link ApiExtensions.md %}) | `IsClient` / `IsServer` checks for API objects. |
+| [CooldownTracker]({{ site.baseurl }}{% link CooldownTracker.md %}) | Per-entity cooldowns in `WatchedAttributes`. |
+| [EntityHealthExtensions]({{ site.baseurl }}{% link EntityHealthExtensions.md %}) | Read and scale entity health. |
+| [EventScope]({{ site.baseurl }}{% link EventScope.md %}) | Disposable event subscription scope. |
+| [LoggerExtensions]({{ site.baseurl }}{% link LoggerExtensions.md %}) | Safe logging and non-critical warning helpers. |
+| [PlayerExtensions]({{ site.baseurl }}{% link PlayerExtensions.md %}) | Player entity iteration and position checks. |
+| [WatchedAttributes]({{ site.baseurl }}{% link WatchedAttributes.md %}) | Get-or-create and set helpers for `ITreeAttribute`. |
 
 ## Randomization & Geometry
 
 | Page | Purpose |
 |------|---------|
-| [WeightedRandom]({% link WeightedRandom.md %}) | Weighted random picks and reusable weighted tables. |
-| [ShapeCloner]({% link ShapeCloner.md %}) | Deep-clone `Shape` objects. |
+| [WeightedRandom]({{ site.baseurl }}{% link WeightedRandom.md %}) | Weighted random picks and reusable weighted tables. |
+| [ShapeCloner]({{ site.baseurl }}{% link ShapeCloner.md %}) | Deep-clone `Shape` objects. |
 
 ## Networking
 
 | Page | Purpose |
 |------|---------|
-| [TypedNetworkChannel]({% link TypedNetworkChannel.md %}) | Typed send/receive wrapper for network channels. |
+| [TypedNetworkChannel]({{ site.baseurl }}{% link TypedNetworkChannel.md %}) | Typed send/receive wrapper for network channels. |
 
 ---
 
