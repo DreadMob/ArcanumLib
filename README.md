@@ -20,6 +20,40 @@ The library is currently used by the **[Alegacy Quest Framework](https://gitlab.
 
 ---
 
+## Quick Start
+
+### Installation
+
+1. Add `ArcanumLib.csproj` as a project reference in your mod project.
+2. Set the `VINTAGE_STORY` environment variable to your Vintage Story installation directory.
+3. Add `arcanumlib` to the `dependson` list in your `modinfo.json`.
+
+### Example: charge-gated item
+
+```csharp
+using ArcanumLib.Items;
+
+float charge = ItemCharge.GetChargeValue(stack);
+if (ItemCharge.TryConsumeCharge(stack, 1f))
+{
+    // consume one use and proceed
+}
+```
+
+### Example: per-save data
+
+```csharp
+using ArcanumLib.Persistence;
+
+var store = ModDataStore.GetOrCreate<MySaveData>(sapi, "mymod", "state", 1);
+store.Data.Counter++;
+store.Save();
+```
+
+See the [`docs/`](docs) folder for full API documentation and examples.
+
+---
+
 ## Key Features
 
 ### GUI & Rendering
@@ -42,7 +76,7 @@ The library is currently used by the **[Alegacy Quest Framework](https://gitlab.
 | **Wildcard** | Fast case-insensitive wildcard matching for asset codes. |
 | **TagSetExtensions** | Set operations and readable aliases for `Vintagestory.API.Datastructures.TagSet`. |
 | **WatchedAttributesExtensions** | Get-or-create, set-if-missing, and set-and-mark-dirty helpers for `ITreeAttribute`. |
-|| **CooldownTracker** | Per-entity cooldown state in `WatchedAttributes` with readiness, remaining, and progress checks. |
+| **CooldownTracker** | Per-entity cooldown state in `WatchedAttributes` with readiness, remaining, and progress checks. |
 | **ModDataStore** | Versioned per-savegame data persistence with JSON migrations. |
 | **ValidationResult** | Immutable result object that accumulates errors and warnings from validation pipelines. |
 
@@ -85,6 +119,19 @@ The library is currently used by the **[Alegacy Quest Framework](https://gitlab.
 | **TypedNetworkChannel** | Typed network channel wrapper for send/receive. |
 | **Inventory / ItemStack helpers** | Give, count, find, and consume items. |
 
+### Progression
+
+| Module | Description |
+|--------|-------------|
+| **PityTracker** | Per-player pity counters with tiered guarantee rules, persistence, and legacy savegame migration. |
+
+### Items & Equipment
+
+| Module | Description |
+|--------|-------------|
+| **ItemCharge** | Generic charge, drain, refuel, and stat-gating helpers for any `ItemStack` with charge attributes. |
+| **ItemModeManager** | Generic item mode data and F-key tool-mode integration (parsing, switching, effect gating). |
+
 ---
 
 ## Architecture
@@ -106,7 +153,9 @@ ArcanumLib/
 │   ├── Network/               — TypedNetworkChannel
 │   ├── Helpers/               — CollectibleNameResolver
 │   ├── Persistence/           — ModDataStore
-│   └── Effects/               — StatusEffectManager
+│   ├── Effects/               — StatusEffectManager
+│   ├── Progression/           — PityTracker
+│   └── Items/                 — ItemCharge, ItemMode, ItemModeManager
 ├── docs/                      — API documentation
 ├── resources/
 │   └── modinfo.json           — mod metadata
@@ -133,17 +182,47 @@ Requires:
 
 API documentation lives in the [`docs/`](docs) folder:
 
+### GUI & Rendering
 - [Arcanum GUI Toolkit](docs/ArcanumGui.md)
 - [ImageIconCache](docs/ImageIconCache.md)
+- [ModeIconBuilder](docs/ModeIconBuilder.md)
+- [RGBA](docs/RGBA.md)
+- [ShapeCloner](docs/ShapeCloner.md)
+
+### Items & Equipment
+- [ItemCharge](docs/ItemCharge.md)
+- [ItemMode](docs/ItemMode.md)
+- [Inventory / ItemStack helpers](docs/InventoryHelpers.md)
+
+### Persistence & Progression
+- [ModDataStore](docs/ModDataStore.md)
+- [PityTracker](docs/PityTracker.md)
+- [Status Effects](docs/StatusEffects.md)
+
+### Assets & Data
 - [ModAssetLoader](docs/ModAssetLoader.md)
 - [ModAssetRegistry](docs/ModAssetRegistry.md)
+- [TagSetExtensions](docs/TagSetExtensions.md)
+- [ValidationResult](docs/ValidationResult.md)
+
+### Performance & Scheduling
 - [DeferredWork](docs/DeferredWork.md)
-- [CooldownTracker](docs/CooldownTracker.md)
+- [TimedCache](docs/TimedCache.md)
 - [CleanupScope](docs/CleanupScope.md)
-- [WeightedRandom](docs/WeightedRandom.md)
-- [WatchedAttributes](docs/WatchedAttributes.md)
+
+### Common & Utility
+- [ApiExtensions](docs/ApiExtensions.md)
+- [CooldownTracker](docs/CooldownTracker.md)
+- [EntityHealthExtensions](docs/EntityHealthExtensions.md)
 - [EventScope](docs/EventScope.md)
-- [Inventory / ItemStack helpers](docs/InventoryHelpers.md)
+- [LoggerExtensions](docs/LoggerExtensions.md)
+- [PlayerExtensions](docs/PlayerExtensions.md)
+- [WatchedAttributes](docs/WatchedAttributes.md)
+
+### Randomization
+- [WeightedRandom](docs/WeightedRandom.md)
+
+### Networking
 - [TypedNetworkChannel](docs/TypedNetworkChannel.md)
 
 ---
