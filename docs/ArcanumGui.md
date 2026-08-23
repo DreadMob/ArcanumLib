@@ -63,11 +63,12 @@ The toolkit is organised into the following namespaces. The snippets below show 
 | Namespace | Purpose |
 |-----------|---------|
 | `ArcanumLib.Gui.Theme` | The `ArcanumGuiTheme` colour palette, `RGBA`, `ArcanumFont`, and Cairo drawing helpers. |
-| `ArcanumLib.Gui.Icons` | `ImageIconCache` for loading and drawing PNG/JPEG/GIF/BMP/ICO/WebP/HEIF icons and other `SKCodec` formats. |
-| `ArcanumLib.Gui.Controls` | Ready-to-use elements: `ArcanumIcon`, `ArcanumCard`, `ArcanumButton`, `ArcanumScrollbar`, `ArcanumDialogBackground`, `ArcanumList<T>`. |
+| `ArcanumLib.Gui.Icons` | `ImageIconCache` for loading and drawing PNG/JPEG/GIF/BMP/ICO/WebP/HEIF icons and other `SKCodec` formats. Also contains `CustomIconRegistry` and `ICustomIconRenderer` for custom Cairo-drawn icons, and `CustomTabIconRenderer` for decorative tab icons. |
+| `ArcanumLib.Gui.Controls` | Ready-to-use elements: `ArcanumIcon`, `ArcanumCard`, `ArcanumButton`, `ArcanumScrollbar`, `ArcanumDialogBackground`, `ArcanumList<T>`, `ItemListElement`, `GuiElementCustomTabContent`, `GuiDateTimePicker`. |
 | `ArcanumLib.Gui.Layout` | `ArcanumLayout` helpers for vertical/horizontal stacks and the `ArcanumComposer` fluent builder. |
 | `ArcanumLib.Gui.Dialogs` | `ArcanumGuiDialog` base class. |
 | `ArcanumLib.Gui.RadialMenu` | `RadialMenuGui`, `RadialMenuItem`, `IRadialMenuStyle`, and `RadialMenuStyleRegistry`. See the [Radial Menu](RadialMenu.md) page for details. |
+| `ArcanumLib.Gui` | Extension methods for `GuiComposer` such as `AddItemSlot`. |
 
 ### Theme
 

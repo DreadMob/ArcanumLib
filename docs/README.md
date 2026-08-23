@@ -22,6 +22,10 @@ This folder contains API documentation for `ArcanumLib` — a shared Vintage Sto
 |------|----------------|
 | [Arcanum GUI Toolkit](ArcanumGui.md) | Themed colour palette, `ArcanumGuiTheme`, `ArcanumComposer`, layout helpers, `ArcanumFont`, and controls (`ArcanumCard`, `ArcanumIcon`, `ArcanumButton`, `ArcanumScrollbar`, `ArcanumList<T>`). |
 | [Radial Menu](RadialMenu.md) | Generic Cairo-styled radial (pie) menu with `RadialMenuGui`, `RadialMenuItem`, pluggable `IRadialMenuStyle` themes, and `RadialMenuStyleRegistry`. |
+| [ItemListElement](ItemListElement.md) | Scrollable vertical list with icon nodes, status colours, tooltips, and `CustomIconRegistry` support. |
+| [CustomTabContent](CustomTabContent.md) | Data-driven scrollable tab content with decorative Cairo icons, section layout, and `CustomTabData` model. |
+| [GuiDateTimePicker](GuiDateTimePicker.md) | Reusable date/time picker for `GuiComposer` with Now/Clear buttons and parameterized lang keys. |
+| [Custom Icons](CustomIcons.md) | `ICustomIconRenderer`, `CustomIconRegistry`, and `CustomTabIconRenderer` for custom Cairo-drawn GUI icons. |
 | [ImageIconCache](ImageIconCache.md) | Load, cache and draw icon image surfaces with circle, hexagon, and diamond clipping plus optional tinting. |
 | [ModeIconBuilder](ModeIconBuilder.md) | Factory for `SkillItem` tool-mode icons (in-game icon, letter, or live `ItemStack` rendering). |
 | [RGBA](RGBA.md) | Lightweight Cairo-friendly color struct with hex parsing, ARGB conversion, lerping, and alpha overrides. |
