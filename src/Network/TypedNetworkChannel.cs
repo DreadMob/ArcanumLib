@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using Vintagestory.API.Client;
 using Vintagestory.API.Common;
 using Vintagestory.API.Server;
@@ -14,6 +15,7 @@ namespace ArcanumLib.Network
     {
         private readonly ICoreAPI _api;
         private readonly string _name;
+        private readonly HashSet<Type> _registeredMessageTypes = new();
         private IClientNetworkChannel? _clientChannel;
         private IServerNetworkChannel? _serverChannel;
 
@@ -45,8 +47,11 @@ namespace ArcanumLib.Network
         public TypedNetworkChannel AddMessageType<T>() where T : new()
         {
             EnsureChannel();
-            _serverChannel?.RegisterMessageType<T>();
-            _clientChannel?.RegisterMessageType<T>();
+            if (_registeredMessageTypes.Add(typeof(T)))
+            {
+                _serverChannel?.RegisterMessageType<T>();
+                _clientChannel?.RegisterMessageType<T>();
+            }
             return this;
         }
 
@@ -55,8 +60,7 @@ namespace ArcanumLib.Network
         /// </summary>
         public TypedNetworkChannel OnServer<T>(Action<IServerPlayer, T> handler) where T : new()
         {
-            EnsureChannel();
-            _serverChannel?.RegisterMessageType<T>();
+            AddMessageType<T>();
             _serverChannel?.SetMessageHandler<T>((player, msg) => handler(player, msg));
             return this;
         }
@@ -66,8 +70,7 @@ namespace ArcanumLib.Network
         /// </summary>
         public TypedNetworkChannel On<T>(Action<T> handler) where T : new()
         {
-            EnsureChannel();
-            _clientChannel?.RegisterMessageType<T>();
+            AddMessageType<T>();
             _clientChannel?.SetMessageHandler<T>(msg => handler(msg));
             return this;
         }
