@@ -40,7 +40,9 @@ public class GameTimeScheduler : ModSystem
     {
         _sapi = api;
         _instance = this;
-        _lastTotalHours = api.World.Calendar.TotalHours;
+        // Calendar may be null during StartServerSide on some run phases.
+        // Use -1 as a sentinel; OnTick will capture the first real hour.
+        _lastTotalHours = api.World?.Calendar?.TotalHours ?? -1.0;
         _tickListenerId = api.Event.RegisterGameTickListener(OnTick, CheckIntervalMs);
         api.Logger.Notification("[ArcanumLib] GameTimeScheduler started.");
     }
@@ -185,6 +187,14 @@ public class GameTimeScheduler : ModSystem
         if (!IsEnabled || _sapi?.World?.Calendar == null) return;
 
         double currentHours = _sapi.World.Calendar.TotalHours;
+
+        // First real tick: just capture the baseline to avoid firing all schedules at once.
+        if (_lastTotalHours < 0)
+        {
+            _lastTotalHours = currentHours;
+            return;
+        }
+
         double prevHours = _lastTotalHours;
         _lastTotalHours = currentHours;
 

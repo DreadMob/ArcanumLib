@@ -48,7 +48,7 @@ namespace ArcanumLib.Gui.Controls
     {
         private List<ItemListRow> rows;
         private readonly Action<string>? onRowClicked;
-        private LoadedTexture listTexture;
+        private LoadedTexture? listTexture;
         private LoadedTexture? _hoverOverlayTexture;
         private int _hoverOverlayW;
         private int _hoverOverlayH;
@@ -92,7 +92,7 @@ namespace ArcanumLib.Gui.Controls
         // Tooltip support - one cached element per distinct text. Reusing pre-composed tooltip
         // surfaces avoids the expensive richtext recompose that SetNewText triggers on every
         // hover change while sweeping the cursor across rows.
-        private readonly Dictionary<string, GuiElementHoverText> tooltipCache =
+        private readonly Dictionary<string, GuiElementHoverText?> tooltipCache =
             new(StringComparer.Ordinal);
         private GuiElementHoverText? activeTooltipElem;
         private string? lastTooltipText;
@@ -183,7 +183,7 @@ namespace ArcanumLib.Gui.Controls
             EnsureBounds();
 
             // --- Hover detection (no texture regeneration) ---
-            string newHover = null;
+            string? newHover = null;
             try
             {
                 newHover = Bounds.PointInside(api.Input.MouseX, api.Input.MouseY)
@@ -246,13 +246,13 @@ namespace ArcanumLib.Gui.Controls
         private void RenderTooltip(float deltaTime)
         {
             // Find currently hovered row
-            ItemListRow row = null;
+            ItemListRow? row = null;
             if (!string.IsNullOrWhiteSpace(hoveredRowId))
             {
                 row = rows.Find(r => string.Equals(r?.Id, hoveredRowId, StringComparison.Ordinal));
             }
 
-            string tip = row?.TooltipText;
+            string? tip = row?.TooltipText;
             if (string.IsNullOrWhiteSpace(tip))
             {
                 activeTooltipElem?.SetVisible(false);
@@ -271,28 +271,28 @@ namespace ArcanumLib.Gui.Controls
             if (activeTooltipElem == null) return;
             activeTooltipElem.SetVisible(true);
 
-            bool scissorWasEnabled = api.Render.ScissorStack.Count > 0;
-            if (scissorWasEnabled) api.Render.GlScissorFlag(false);
+            bool scissorWasEnabled = api?.Render?.ScissorStack.Count > 0;
+            if (scissorWasEnabled) api?.Render?.GlScissorFlag(false);
 
             try { activeTooltipElem.RenderInteractiveElements(deltaTime); }
             catch (Exception ex) { api?.Logger?.Warning("[ItemListElement] non-critical GUI operation failed: {0}", ex.Message); }
 
-            if (scissorWasEnabled) api.Render.GlScissorFlag(true);
+            if (scissorWasEnabled) api?.Render?.GlScissorFlag(true);
         }
 
         private GuiElementHoverText GetTooltipElem(string text)
         {
-            if (tooltipCache.TryGetValue(text, out var elem)) return elem;
+            if (tooltipCache.TryGetValue(text, out var elem) && elem != null) return elem;
 
             var bounds = ElementBounds.Fixed(0, 0, 1, 1);
             bounds.ParentBounds = ElementBounds.Empty;
-            elem = new GuiElementHoverText(api, text, CairoFont.WhiteSmallText(), 420, bounds, TooltipBg);
-            elem.SetAutoDisplay(false);
-            elem.SetAutoWidth(true);
-            elem.SetFollowMouse(true);
-            elem.SetVisible(false);
-            tooltipCache[text] = elem;
-            return elem;
+            var created = new GuiElementHoverText(api, text, CairoFont.WhiteSmallText(), 420, bounds, TooltipBg);
+            created.SetAutoDisplay(false);
+            created.SetAutoWidth(true);
+            created.SetFollowMouse(true);
+            created.SetVisible(false);
+            tooltipCache[text] = created;
+            return created;
         }
 
         private void RenderIcons()
@@ -341,7 +341,7 @@ namespace ArcanumLib.Gui.Controls
             if (Bounds?.ParentBounds == null) return;
             if (!Bounds.PointInside(args.X, args.Y)) return;
 
-            string rowId = GetRowIdAt(args.Y);
+            string? rowId = GetRowIdAt(args.Y);
             if (!string.IsNullOrWhiteSpace(rowId))
             {
                 var row = rows.Find(r => string.Equals(r?.Id, rowId, StringComparison.Ordinal));
@@ -448,7 +448,8 @@ namespace ArcanumLib.Gui.Controls
 
                 // Draw custom icon if present (Cairo glyph).
                 if (!string.IsNullOrWhiteSpace(row.CustomIconKey)
-                    && CustomIconRegistry.TryGet(row.CustomIconKey, out var customRenderer))
+                    && CustomIconRegistry.TryGet(row.CustomIconKey, out var customRenderer)
+                    && customRenderer != null)
                 {
                     customRenderer.Draw(context, nodeCX, nodeCY, nodeR * 0.85);
                 }
@@ -594,7 +595,7 @@ namespace ArcanumLib.Gui.Controls
             string iconKey = MakeIconKey(row);
             if (iconStacks.TryGetValue(iconKey, out var cached)) return cached;
 
-            ItemStack stack = null;
+            ItemStack? stack = null;
             var loc = new AssetLocation(row.IconItemCode);
             var item = api.World.GetItem(loc);
             if (item != null)

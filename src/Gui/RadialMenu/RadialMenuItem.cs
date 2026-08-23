@@ -11,17 +11,17 @@ namespace ArcanumLib.Gui.RadialMenu;
 /// </summary>
 public class RadialMenuItem
 {
-    public string Label { get; set; }
-    public string Description { get; set; }
-    public string Icon { get; set; }
+    public string Label { get; set; } = string.Empty;
+    public string Description { get; set; } = string.Empty;
+    public string Icon { get; set; } = string.Empty;
 
     /// <summary>
     /// If set, this callback is used to draw the icon instead of the string-based Icon switch.
     /// Parameters: (Context ctx, float cx, float cy, float size)
     /// </summary>
-    public Action<Context, float, float, float> CustomIconDraw { get; set; }
+    public Action<Context, float, float, float>? CustomIconDraw { get; set; }
 
-    public Action Action { get; set; }
+    public Action? Action { get; set; }
 
     public bool CloseAfterClick { get; set; } = true;
 
@@ -39,5 +39,5 @@ public class RadialMenuItem
     /// If set, clicking this item opens a nested radial menu with these items
     /// instead of firing the Action.
     /// </summary>
-    public List<RadialMenuItem> SubItems { get; set; }
+    public List<RadialMenuItem> SubItems { get; set; } = new();
 }

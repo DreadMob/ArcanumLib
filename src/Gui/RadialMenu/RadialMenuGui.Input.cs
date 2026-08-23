@@ -65,7 +65,7 @@ namespace ArcanumLib.Gui.RadialMenu
         }
 
         private void DrawSectorIcon(Context ctx, float cx, float cy, float a0, float a1,
-            string icon, bool disabled, Action<Context, float, float, float> customDraw = null)
+            string icon, bool disabled, Action<Context, float, float, float>? customDraw = null)
         {
             float midAngle = (a0 + a1) / 2f;
             float ix = cx + (float)Math.Cos(midAngle) * _iconRadius;

@@ -229,7 +229,7 @@ namespace ArcanumLib.Gui.Controls
             double y = PadTop;
 
             // Resolve decoration
-            string decorPrefix = tabData.decorPrefix;
+            string? decorPrefix = tabData.decorPrefix;
             bool useIcons = !string.IsNullOrWhiteSpace(decorPrefix);
 
             for (int sIdx = 0; sIdx < tabData.sections.Count; sIdx++)

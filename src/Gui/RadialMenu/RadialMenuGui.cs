@@ -15,7 +15,7 @@ namespace ArcanumLib.Gui.RadialMenu
     /// </summary>
     public partial class RadialMenuGui : GuiDialog
     {
-        public override string ToggleKeyCombinationCode => null;
+        public override string? ToggleKeyCombinationCode => null;
         public override double DrawOrder => 1.0;
         public override bool PrefersUngrabbedMouse => true;
         public override bool ShouldReceiveMouseEvents() => IsOpened();

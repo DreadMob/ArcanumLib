@@ -21,7 +21,7 @@ namespace ArcanumLib.Common
         private readonly string _dataFileName;
 
         /// <summary>Fired when a session is saved: (playerUid, totalMs).</summary>
-        public event Action<string, long> OnSessionSaved;
+        public event Action<string, long>? OnSessionSaved;
 
         /// <summary>
         /// Creates a new tracker. The <paramref name="dataFileName"/> is the JSON file name
