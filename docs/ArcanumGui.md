@@ -67,6 +67,7 @@ The toolkit is organised into the following namespaces. The snippets below show 
 | `ArcanumLib.Gui.Controls` | Ready-to-use elements: `ArcanumIcon`, `ArcanumCard`, `ArcanumButton`, `ArcanumScrollbar`, `ArcanumDialogBackground`, `ArcanumList<T>`. |
 | `ArcanumLib.Gui.Layout` | `ArcanumLayout` helpers for vertical/horizontal stacks and the `ArcanumComposer` fluent builder. |
 | `ArcanumLib.Gui.Dialogs` | `ArcanumGuiDialog` base class. |
+| `ArcanumLib.Gui.RadialMenu` | `RadialMenuGui`, `RadialMenuItem`, `IRadialMenuStyle`, and `RadialMenuStyleRegistry`. See the [Radial Menu](RadialMenu.md) page for details. |
 
 ### Theme
 

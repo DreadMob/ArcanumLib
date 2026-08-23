@@ -27,6 +27,7 @@ Everything you need for custom in-game UI without fighting the low-level API.
 | Page | Purpose |
 |------|---------|
 | [Arcanum GUI Toolkit]({{ site.baseurl }}{% link ArcanumGui.md %}) | Themed colour palette, layout helpers, composer, and reusable controls. |
+| [Radial Menu]({{ site.baseurl }}{% link RadialMenu.md %}) | Generic Cairo-styled radial (pie) menu with pluggable styles via `IRadialMenuStyle` registry. |
 | [BlockEntityConfigDialog]({{ site.baseurl }}{% link BlockEntityConfigDialog.md %}) | Generic base dialog for editing block entity configuration with typed config and save/cancel. |
 | [ImageIconCache]({{ site.baseurl }}{% link ImageIconCache.md %}) | Load and draw `.png`/`.jpg`/`.webp` icons with clipping and tinting. |
 | [RGBA]({{ site.baseurl }}{% link RGBA.md %}) | Cairo-friendly color struct with parsing, conversion, and lerping. |
