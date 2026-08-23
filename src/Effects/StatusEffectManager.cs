@@ -11,7 +11,7 @@ namespace ArcanumLib.Effects
     /// </summary>
     public static class StatusEffectManager
     {
-        private static readonly ConcurrentDictionary<Entity, StatusEffectContainer> _containers = new();
+        private static readonly ConcurrentDictionary<long, StatusEffectContainer> _containers = new();
         internal static long NextInstanceId = 0;
 
         /// <summary>
@@ -51,7 +51,7 @@ namespace ArcanumLib.Effects
         {
             if (entity == null) return null;
 
-            var container = _containers.GetOrAdd(entity, _ => new StatusEffectContainer(entity));
+            var container = _containers.GetOrAdd(entity.EntityId, _ => new StatusEffectContainer(entity));
             StatusEffectInstance? instance;
             StatusEffectInstance? oldInstance;
             StatusEffectApplyResult result;
@@ -102,7 +102,7 @@ namespace ArcanumLib.Effects
         {
             if (entity == null) return false;
 
-            if (!_containers.TryGetValue(entity, out var container)) return false;
+            if (!_containers.TryGetValue(entity.EntityId, out var container)) return false;
 
             IReadOnlyList<StatusEffectInstance> removed;
             lock (container)
@@ -117,7 +117,7 @@ namespace ArcanumLib.Effects
 
             if (container.IsEmpty)
             {
-                _containers.TryRemove(entity, out _);
+                _containers.TryRemove(entity.EntityId, out _);
             }
 
             return removed.Count > 0;
@@ -133,7 +133,7 @@ namespace ArcanumLib.Effects
         {
             if (entity == null) return false;
 
-            if (!_containers.TryGetValue(entity, out var container)) return false;
+            if (!_containers.TryGetValue(entity.EntityId, out var container)) return false;
 
             StatusEffectInstance? instance;
             lock (container)
@@ -148,7 +148,7 @@ namespace ArcanumLib.Effects
 
             if (container.IsEmpty)
             {
-                _containers.TryRemove(entity, out _);
+                _containers.TryRemove(entity.EntityId, out _);
             }
 
             return instance != null;
@@ -163,7 +163,7 @@ namespace ArcanumLib.Effects
         {
             if (entity == null) return false;
 
-            if (!_containers.TryGetValue(entity, out var container)) return false;
+            if (!_containers.TryGetValue(entity.EntityId, out var container)) return false;
 
             IReadOnlyList<StatusEffectInstance> removed;
             lock (container)
@@ -176,7 +176,7 @@ namespace ArcanumLib.Effects
                 SafeRemove(entity, instance, expired: false);
             }
 
-            _containers.TryRemove(entity, out _);
+            _containers.TryRemove(entity.EntityId, out _);
             return removed.Count > 0;
         }
 
@@ -190,7 +190,7 @@ namespace ArcanumLib.Effects
         {
             if (entity == null) return false;
 
-            if (!_containers.TryGetValue(entity, out var container)) return false;
+            if (!_containers.TryGetValue(entity.EntityId, out var container)) return false;
 
             lock (container)
             {
@@ -207,7 +207,7 @@ namespace ArcanumLib.Effects
         {
             if (entity == null) return Array.Empty<IStatusEffectInstance>();
 
-            if (!_containers.TryGetValue(entity, out var container)) return Array.Empty<IStatusEffectInstance>();
+            if (!_containers.TryGetValue(entity.EntityId, out var container)) return Array.Empty<IStatusEffectInstance>();
 
             lock (container)
             {
@@ -221,10 +221,13 @@ namespace ArcanumLib.Effects
         /// <param name="dt">Seconds since the last tick.</param>
         public static void Tick(float dt)
         {
-            foreach (var (entity, container) in _containers.ToList())
+            foreach (var kvp in _containers)
             {
+                var container = kvp.Value;
+                var entity = container.Entity;
                 if (entity is null)
                 {
+                    _containers.TryRemove(kvp.Key, out _);
                     continue;
                 }
 
@@ -252,7 +255,7 @@ namespace ArcanumLib.Effects
 
                 if (container.IsEmpty)
                 {
-                    _containers.TryRemove(entity, out _);
+                    _containers.TryRemove(kvp.Key, out _);
                 }
             }
         }

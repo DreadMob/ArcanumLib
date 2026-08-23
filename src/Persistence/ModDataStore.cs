@@ -50,6 +50,9 @@ namespace ArcanumLib.Persistence
         {
             if (sapi == null) throw new ArgumentNullException(nameof(sapi));
             if (factory == null) throw new ArgumentNullException(nameof(factory));
+            if (string.IsNullOrWhiteSpace(modId)) throw new ArgumentException("modId cannot be empty.", nameof(modId));
+            if (string.IsNullOrWhiteSpace(storeId)) throw new ArgumentException("storeId cannot be empty.", nameof(storeId));
+            if (dataVersion <= 0) throw new ArgumentOutOfRangeException(nameof(dataVersion), "dataVersion must be greater than 0.");
 
             var key = $"{modId}:{storeId}";
             return (IModDataStore<T>)_stores.GetOrAdd(key, _ => new ModDataStoreInstance<T>(sapi, modId, storeId, dataVersion, factory));

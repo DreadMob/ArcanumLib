@@ -18,6 +18,7 @@ namespace ArcanumLib.Network
         private readonly HashSet<Type> _registeredMessageTypes = new();
         private IClientNetworkChannel? _clientChannel;
         private IServerNetworkChannel? _serverChannel;
+        private bool _warnedExistingChannel;
 
         /// <summary>
         /// Creates a wrapper for the named channel.
@@ -106,12 +107,32 @@ namespace ArcanumLib.Network
 
             if (_api is ICoreServerAPI sapi)
             {
-                _serverChannel = sapi.Network.GetChannel(_name) ?? sapi.Network.RegisterChannel(_name);
+                var existing = sapi.Network.GetChannel(_name);
+                if (existing != null)
+                {
+                    WarnExistingChannel("server");
+                }
+
+                _serverChannel = existing ?? sapi.Network.RegisterChannel(_name);
             }
             else if (_api is ICoreClientAPI capi)
             {
-                _clientChannel = capi.Network.GetChannel(_name) ?? capi.Network.RegisterChannel(_name);
+                var existing = capi.Network.GetChannel(_name);
+                if (existing != null)
+                {
+                    WarnExistingChannel("client");
+                }
+
+                _clientChannel = existing ?? capi.Network.RegisterChannel(_name);
             }
+        }
+
+        private void WarnExistingChannel(string side)
+        {
+            if (_warnedExistingChannel) return;
+            _warnedExistingChannel = true;
+            _api.Logger?.Warning("[ArcanumLib] [TypedNetworkChannel] Channel '{0}' already exists on the {1}; " +
+                "another mod may be using the same channel name. Message ids may desynchronize.", _name, side);
         }
     }
 }

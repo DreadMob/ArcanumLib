@@ -84,16 +84,8 @@ public sealed class TimedCache<TKey, TValue> : IDisposable
                 long now = Environment.TickCount64;
                 if (now - entry.LastAccess <= _ttlMs)
                 {
-                    _lock.EnterWriteLock();
-                    try
-                    {
-                        entry.LastAccess = now;
-                        value = entry.Value;
-                    }
-                    finally
-                    {
-                        _lock.ExitWriteLock();
-                    }
+                    Interlocked.Exchange(ref entry.LastAccess, now);
+                    value = entry.Value;
                     return true;
                 }
 
@@ -204,7 +196,10 @@ public sealed class TimedCache<TKey, TValue> : IDisposable
 
     private void TrimToSize(int maxSize)
     {
-        while (_mapping.Count > maxSize)
+        int excess = _mapping.Count - maxSize;
+        if (excess <= 0) return;
+
+        if (excess == 1)
         {
             TKey? oldest = default;
             long oldestAccess = long.MaxValue;
@@ -221,10 +216,15 @@ public sealed class TimedCache<TKey, TValue> : IDisposable
             {
                 _mapping.Remove(oldest);
             }
-            else
-            {
-                break;
-            }
+            return;
+        }
+
+        var entries = new List<KeyValuePair<TKey, CacheEntry>>(_mapping);
+        entries.Sort((a, b) => a.Value.LastAccess.CompareTo(b.Value.LastAccess));
+
+        for (int i = 0; i < excess && i < entries.Count; i++)
+        {
+            _mapping.Remove(entries[i].Key);
         }
     }
 

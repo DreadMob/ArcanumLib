@@ -105,22 +105,19 @@ public class StatCoalescingEngine : ModSystem
         if (player?.EntityId == null) return;
 
         long entityId = player.EntityId;
+        string statKey = string.IsNullOrEmpty(category) ? stat : $"{category}:{stat}";
 
-        CoalescedUpdate update;
         bool needsSchedule;
         lock (_syncLock)
         {
-            if (!PendingUpdates.TryGetValue(entityId, out var existing))
+            if (!PendingUpdates.TryGetValue(entityId, out var update))
             {
                 update = new CoalescedUpdate();
                 PendingUpdates[entityId] = update;
             }
-            else
-            {
-                update = existing;
-            }
 
-            needsSchedule = update.Stats.Count == 0 && !update.IsFlushing;
+            update.Stats[statKey] = value;
+            needsSchedule = update.Stats.Count == 1 && !update.IsFlushing;
         }
 
         if (needsSchedule)
@@ -130,12 +127,6 @@ public class StatCoalescingEngine : ModSystem
                 () => FlushUpdates(api, entityId),
                 CoalesceWindowMs,
                 MaxDelayMs);
-        }
-
-        string statKey = string.IsNullOrEmpty(category) ? stat : $"{category}:{stat}";
-        lock (_syncLock)
-        {
-            update.Stats[statKey] = value;
         }
     }
 
@@ -153,22 +144,27 @@ public class StatCoalescingEngine : ModSystem
         category ??= DefaultCategory;
 
         long entityId = player.EntityId;
+        int addedCount = stats?.Count ?? 0;
 
-        CoalescedUpdate update;
         bool needsSchedule;
         lock (_syncLock)
         {
-            if (!PendingUpdates.TryGetValue(entityId, out var existing))
+            if (!PendingUpdates.TryGetValue(entityId, out var update))
             {
                 update = new CoalescedUpdate();
                 PendingUpdates[entityId] = update;
             }
-            else
+
+            if (stats != null)
             {
-                update = existing;
+                foreach (var stat in stats)
+                {
+                    string statKey = string.IsNullOrEmpty(category) ? stat.Key : $"{category}:{stat.Key}";
+                    update.Stats[statKey] = stat.Value;
+                }
             }
 
-            needsSchedule = update.Stats.Count == 0 && !update.IsFlushing;
+            needsSchedule = update.Stats.Count == addedCount && !update.IsFlushing;
         }
 
         if (needsSchedule)
@@ -178,15 +174,6 @@ public class StatCoalescingEngine : ModSystem
                 () => FlushUpdates(api, entityId),
                 CoalesceWindowMs,
                 MaxDelayMs);
-        }
-
-        lock (_syncLock)
-        {
-            foreach (var stat in stats)
-            {
-                string statKey = string.IsNullOrEmpty(category) ? stat.Key : $"{category}:{stat.Key}";
-                update.Stats[statKey] = stat.Value;
-            }
         }
     }
 

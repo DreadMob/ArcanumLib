@@ -27,7 +27,10 @@ public static class ServerBroadcaster
     {
         if (sapi == null || channel == null) return;
 
-        foreach (var player in sapi.World.AllOnlinePlayers)
+        var players = sapi.World?.AllOnlinePlayers;
+        if (players == null) return;
+
+        foreach (var player in players)
         {
             if (player is IServerPlayer sp)
                 channel.SendPacket(packet, sp);
@@ -45,7 +48,10 @@ public static class ServerBroadcaster
     {
         if (sapi == null || channel == null || predicate == null) return;
 
-        foreach (var player in sapi.World.AllOnlinePlayers)
+        var players = sapi.World?.AllOnlinePlayers;
+        if (players == null) return;
+
+        foreach (var player in players)
         {
             if (player is IServerPlayer sp && predicate(sp))
                 channel.SendPacket(packet, sp);

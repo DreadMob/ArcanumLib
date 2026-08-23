@@ -295,8 +295,15 @@ public class CategorizedLogger : IDisposable
 
     private StreamWriter? GetOrCreateWriter(string category)
     {
-        return writers.GetOrAdd(category, cat =>
+        if (writers.TryGetValue(category, out var existing))
+            return existing;
+
+        var lockObj = writeLocks.GetOrAdd(category, _ => new object());
+        lock (lockObj)
         {
+            if (writers.TryGetValue(category, out existing))
+                return existing;
+
             try
             {
                 if (!Config.EnableFileLog || string.IsNullOrWhiteSpace(baseLogPath))
@@ -304,7 +311,7 @@ public class CategorizedLogger : IDisposable
                     return null;
                 }
 
-                var sanitized = cat.Replace("..", "").Replace("\\", "/").Trim('/');
+                var sanitized = category.Replace("..", "").Replace("\\", "/").Trim('/');
                 var logFile = Path.Combine(baseLogPath, sanitized + ".log");
 
                 var dir = Path.GetDirectoryName(logFile);
@@ -313,18 +320,22 @@ public class CategorizedLogger : IDisposable
                     Directory.CreateDirectory(dir);
                 }
 
-                var stream = new FileStream(logFile, FileMode.Create, FileAccess.Write, FileShare.Read);
+                // Append to avoid truncating an existing log; a concurrent GetOrAdd could otherwise
+                // call the factory twice and the second FileMode.Create would wipe the first writer.
+                var stream = new FileStream(logFile, FileMode.Append, FileAccess.Write, FileShare.Read);
                 var writer = new StreamWriter(stream) { AutoFlush = false };
+
+                writers[category] = writer;
 
                 api?.Logger?.Debug($"[{_consolePrefix}] Created log file: {logFile}");
                 return writer;
             }
             catch (Exception ex)
             {
-                api?.Logger?.Error("[{0}] Failed to create writer for '{1}': {2}", _consolePrefix, cat, ex);
+                api?.Logger?.Error("[{0}] Failed to create writer for '{1}': {2}", _consolePrefix, category, ex);
                 return null;
             }
-        });
+        }
     }
 
     private void TryAutoFlush()

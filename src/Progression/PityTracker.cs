@@ -22,6 +22,7 @@ namespace ArcanumLib.Progression
         private readonly IModDataStore<Dictionary<string, PityPlayerData>> _store;
         private readonly Dictionary<string, PityDefinition> _definitions = new(StringComparer.OrdinalIgnoreCase);
         private readonly List<string> _legacyFallbackKeys = new();
+        private readonly object _syncLock = new();
 
         /// <summary>
         /// Legacy save keys to check and import when no new-store data exists.
@@ -70,15 +71,18 @@ namespace ArcanumLib.Progression
 
         /// <summary>
         /// Loads data and performs one-time migration from the registered legacy save keys if needed.
-        /// Safe to call multiple times; only re-imports when the new store is empty.
+        /// Safe to call multiple times; only re-imports when the new store is empty. Thread-safe.
         /// </summary>
         public void Initialize()
         {
-            _store.Load();
-
-            if (_store.Data.Count == 0)
+            lock (_syncLock)
             {
-                TryImportLegacyData();
+                _store.Load();
+
+                if (_store.Data.Count == 0)
+                {
+                    TryImportLegacyData();
+                }
             }
         }
 

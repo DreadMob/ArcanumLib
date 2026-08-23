@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using Vintagestory.API.Common;
 using Vintagestory.API.Common.Entities;
+using Vintagestory.API.Server;
 
 namespace ArcanumLib.Inventory;
 
@@ -20,6 +21,7 @@ public class InventoryChangeTracker
 
     private readonly Dictionary<long, Fingerprint> _lastFingerprints = new();
     private readonly Dictionary<long, long> _lastCheckTimes = new();
+    private readonly object _syncLock = new();
 
     private record Fingerprint(int Hash, int Count);
 
@@ -48,6 +50,11 @@ public class InventoryChangeTracker
         _checkIntervalMs = checkIntervalMs;
         _stackHash = stackHash ?? InventoryFingerprint.GetStableStackHash;
         _slotFilter = slotFilter ?? IsWearableSlot;
+
+        if (_api is ICoreServerAPI sapi)
+        {
+            sapi.Event.PlayerDisconnect += OnPlayerDisconnect;
+        }
     }
 
     /// <summary>
@@ -61,30 +68,37 @@ public class InventoryChangeTracker
         long entityId = player.EntityId;
         long now = _api.World.ElapsedMilliseconds;
 
-        // Throttle per-player checks.
-        if (_lastCheckTimes.TryGetValue(entityId, out long lastCheck))
+        lock (_syncLock)
         {
-            if ((now - lastCheck) < _checkIntervalMs)
+            // Throttle per-player checks.
+            if (_lastCheckTimes.TryGetValue(entityId, out long lastCheck))
             {
-                return false;
+                if ((now - lastCheck) < _checkIntervalMs)
+                {
+                    return false;
+                }
             }
+            _lastCheckTimes[entityId] = now;
         }
-        _lastCheckTimes[entityId] = now;
 
         var inv = player.Player.InventoryManager.GetOwnInventory(_inventoryCode);
         if (inv == null) return false;
 
         var current = BuildFingerprint(inv);
-        if (_lastFingerprints.TryGetValue(entityId, out var last))
-        {
-            if (last.Equals(current))
-            {
-                return false;
-            }
-        }
 
-        _lastFingerprints[entityId] = current;
-        return true;
+        lock (_syncLock)
+        {
+            if (_lastFingerprints.TryGetValue(entityId, out var last))
+            {
+                if (last.Equals(current))
+                {
+                    return false;
+                }
+            }
+
+            _lastFingerprints[entityId] = current;
+            return true;
+        }
     }
 
     /// <summary>
@@ -93,8 +107,11 @@ public class InventoryChangeTracker
     /// </summary>
     public void Invalidate(long entityId)
     {
-        _lastFingerprints.Remove(entityId);
-        _lastCheckTimes.Remove(entityId);
+        lock (_syncLock)
+        {
+            _lastFingerprints.Remove(entityId);
+            _lastCheckTimes.Remove(entityId);
+        }
     }
 
     /// <summary>
@@ -102,8 +119,30 @@ public class InventoryChangeTracker
     /// </summary>
     public void Clear()
     {
-        _lastFingerprints.Clear();
-        _lastCheckTimes.Clear();
+        lock (_syncLock)
+        {
+            _lastFingerprints.Clear();
+            _lastCheckTimes.Clear();
+        }
+    }
+
+    /// <summary>
+    /// Releases the player disconnect handler. Call on world unload.
+    /// </summary>
+    public void Dispose()
+    {
+        if (_api is ICoreServerAPI sapi)
+        {
+            sapi.Event.PlayerDisconnect -= OnPlayerDisconnect;
+        }
+    }
+
+    private void OnPlayerDisconnect(IServerPlayer player)
+    {
+        if (player?.Entity?.EntityId != null)
+        {
+            Invalidate(player.Entity.EntityId);
+        }
     }
 
     private Fingerprint BuildFingerprint(IInventory inv)

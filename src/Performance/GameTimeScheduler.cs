@@ -60,6 +60,7 @@ public class GameTimeScheduler : ModSystem
             _schedules.Clear();
         }
 
+        _instance = null;
         _sapi = null;
         base.Dispose();
     }
@@ -85,7 +86,9 @@ public class GameTimeScheduler : ModSystem
 
         lock (_syncLock)
         {
-            _instance?._schedules.Add(schedule);
+            if (_instance == null)
+                throw new InvalidOperationException("GameTimeScheduler has not been started.");
+            _instance._schedules.Add(schedule);
         }
 
         return schedule.Id;
@@ -111,7 +114,9 @@ public class GameTimeScheduler : ModSystem
 
         lock (_syncLock)
         {
-            _instance?._schedules.Add(schedule);
+            if (_instance == null)
+                throw new InvalidOperationException("GameTimeScheduler has not been started.");
+            _instance._schedules.Add(schedule);
         }
 
         return schedule.Id;
@@ -126,7 +131,14 @@ public class GameTimeScheduler : ModSystem
         if (action == null) throw new ArgumentNullException(nameof(action));
         if (hours <= 0) throw new ArgumentOutOfRangeException(nameof(hours), "Hours must be positive.");
 
-        double now = _instance?._sapi?.World.Calendar.TotalHours ?? 0;
+        double now;
+        lock (_syncLock)
+        {
+            if (_instance == null)
+                throw new InvalidOperationException("GameTimeScheduler has not been started.");
+            now = _instance._sapi?.World.Calendar.TotalHours ?? 0;
+        }
+
         var schedule = new GameSchedule
         {
             Id = NextId(),
@@ -137,7 +149,7 @@ public class GameTimeScheduler : ModSystem
 
         lock (_syncLock)
         {
-            _instance?._schedules.Add(schedule);
+            _instance._schedules.Add(schedule);
         }
 
         return schedule.Id;
@@ -198,56 +210,60 @@ public class GameTimeScheduler : ModSystem
         double prevHours = _lastTotalHours;
         _lastTotalHours = currentHours;
 
-        List<GameSchedule> snapshot;
+        var toRun = new List<(GameSchedule schedule, double hours)>();
+        var toRemove = new HashSet<int>();
+
         lock (_syncLock)
         {
-            snapshot = new List<GameSchedule>(_schedules);
-        }
-
-        var toRemove = new List<int>();
-        var toRun = new List<(GameSchedule schedule, double hours)>();
-
-        foreach (var schedule in snapshot)
-        {
-            bool due = false;
-
-            switch (schedule.Mode)
+            foreach (var schedule in _schedules)
             {
-                case ScheduleMode.Daily:
-                {
-                    // Fire when the in-game hour crosses the target hour.
-                    int prevHour = (int)prevHours % 24;
-                    int curHour = (int)currentHours % 24;
-                    if (prevHour != curHour && curHour == schedule.TargetHour)
-                        due = true;
-                    break;
-                }
+                bool due = false;
 
-                case ScheduleMode.Hourly:
+                switch (schedule.Mode)
                 {
-                    // Fire when the minute within the current hour crosses the target.
-                    double prevFraction = prevHours - Math.Floor(prevHours);
-                    double curFraction = currentHours - Math.Floor(currentHours);
-                    int prevMinute = (int)(prevFraction * 60);
-                    int curMinute = (int)(curFraction * 60);
-                    if (prevMinute != curMinute && curMinute == schedule.TargetMinute)
-                        due = true;
-                    break;
-                }
-
-                case ScheduleMode.AfterHours:
-                {
-                    if (currentHours >= schedule.TargetTotalHours)
+                    case ScheduleMode.Daily:
                     {
-                        due = true;
-                        toRemove.Add(schedule.Id);
+                        // Fire when the next daily target hour is crossed, even if time jumps.
+                        double dayStart = Math.Floor(prevHours / 24.0) * 24.0;
+                        double target = dayStart + schedule.TargetHour;
+                        if (target <= prevHours)
+                            target += 24.0;
+
+                        due = currentHours >= target;
+                        break;
                     }
-                    break;
+
+                    case ScheduleMode.Hourly:
+                    {
+                        // Fire when the next target minute within the hour is crossed.
+                        double hourStart = Math.Floor(prevHours);
+                        double target = hourStart + schedule.TargetMinute / 60.0;
+                        if (target <= prevHours)
+                            target += 1.0;
+
+                        due = currentHours >= target;
+                        break;
+                    }
+
+                    case ScheduleMode.AfterHours:
+                    {
+                        if (currentHours >= schedule.TargetTotalHours)
+                        {
+                            due = true;
+                            toRemove.Add(schedule.Id);
+                        }
+                        break;
+                    }
                 }
+
+                if (due)
+                    toRun.Add((schedule, currentHours));
             }
 
-            if (due)
-                toRun.Add((schedule, currentHours));
+            if (toRemove.Count > 0)
+            {
+                _schedules.RemoveAll(s => toRemove.Contains(s.Id));
+            }
         }
 
         foreach (var (schedule, hours) in toRun)
@@ -259,15 +275,6 @@ public class GameTimeScheduler : ModSystem
             catch (Exception ex)
             {
                 _sapi.Logger?.Warning("[ArcanumLib] GameTimeScheduler action {0} failed: {1}", schedule.Id, ex.Message);
-            }
-        }
-
-        if (toRemove.Count > 0)
-        {
-            lock (_syncLock)
-            {
-                foreach (var id in toRemove)
-                    _schedules.RemoveAll(s => s.Id == id);
             }
         }
     }

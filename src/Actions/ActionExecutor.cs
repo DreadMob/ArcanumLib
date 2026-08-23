@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using ArcanumLib.Persistence;
 using Vintagestory.API.Common;
 using Vintagestory.API.Server;
 
@@ -84,16 +85,35 @@ public static class ActionExecutor
 
     /// <summary>
     /// Returns the remaining cooldown in milliseconds for the given player and action,
-    /// or 0 if not on cooldown.
+    /// or 0 if not on cooldown. Uses the currently registered server API time.
     /// </summary>
+    [Obsolete("Use the overload that accepts ICoreServerAPI to avoid mixed time sources.")]
     public static long GetRemainingCooldown(long playerEntityId, string actionId)
     {
+        var sapi = ModDataStore.Sapi;
+        if (sapi == null)
+        {
+            // Without a server API we cannot compute a reliable remaining time.
+            return 0;
+        }
+        return GetRemainingCooldown(playerEntityId, actionId, sapi);
+    }
+
+    /// <summary>
+    /// Returns the remaining cooldown in milliseconds for the given player and action,
+    /// using the provided server API's world time.
+    /// </summary>
+    public static long GetRemainingCooldown(long playerEntityId, string actionId, ICoreServerAPI sapi)
+    {
+        if (sapi == null) throw new ArgumentNullException(nameof(sapi));
         if (string.IsNullOrWhiteSpace(actionId)) return 0;
+
+        long now = sapi.World.ElapsedMilliseconds;
         lock (_syncLock)
         {
             if (!_cooldowns.TryGetValue(playerEntityId, out var byAction)) return 0;
             if (!byAction.TryGetValue(actionId, out var until)) return 0;
-            return Math.Max(0, until - Environment.TickCount64);
+            return Math.Max(0, until - now);
         }
     }
 

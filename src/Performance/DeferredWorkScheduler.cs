@@ -13,7 +13,7 @@ namespace ArcanumLib.Performance;
 /// </summary>
 public class DeferredWork : ModSystem
 {
-    private static ICoreAPI? _api;
+    private static volatile ICoreAPI? _api;
     private static long _tickListenerId;
     private static readonly Dictionary<string, ScheduledTask> _tasks = new(StringComparer.Ordinal);
     private static readonly Dictionary<string, long> _callbacks = new(StringComparer.Ordinal);
@@ -95,13 +95,14 @@ public class DeferredWork : ModSystem
         if (action is null) throw new ArgumentNullException(nameof(action));
         if (delayMs < 0) delayMs = 0;
 
-        if (!IsEnabled || _api?.World is null)
+        var api = _api;
+        if (!IsEnabled || api?.World is null)
         {
             action();
             return;
         }
 
-        long now = _api.World.ElapsedMilliseconds;
+        long now = api.World.ElapsedMilliseconds;
         lock (_syncLock)
         {
             _tasks[key] = new ScheduledTask(key, action)
@@ -127,7 +128,8 @@ public class DeferredWork : ModSystem
         if (action is null) throw new ArgumentNullException(nameof(action));
         if (delayMs < 0) delayMs = 0;
 
-        if (!IsEnabled || _api?.World is null)
+        var api = _api;
+        if (!IsEnabled || api?.World is null)
         {
             action();
             return;
@@ -137,11 +139,11 @@ public class DeferredWork : ModSystem
         {
             if (_callbacks.TryGetValue(key, out var existingId))
             {
-                _api.Event.UnregisterCallback(existingId);
+                api.Event.UnregisterCallback(existingId);
                 _callbacks.Remove(key);
             }
 
-            long callbackId = _api.Event.RegisterCallback((_) =>
+            long callbackId = api.Event.RegisterCallback((_) =>
             {
                 lock (_syncLock)
                 {
@@ -153,7 +155,7 @@ public class DeferredWork : ModSystem
                 }
                 catch (Exception ex)
                 {
-                    _api.Logger?.Warning("[ArcanumLib] Deferred callback '{0}' failed: {1}", key, ex.Message);
+                    api.Logger?.Warning("[ArcanumLib] Deferred callback '{0}' failed: {1}", key, ex.Message);
                 }
             }, delayMs);
 
@@ -171,7 +173,8 @@ public class DeferredWork : ModSystem
         {
             if (_callbacks.TryGetValue(key, out var callbackId))
             {
-                _api?.Event.UnregisterCallback(callbackId);
+                var api = _api;
+                api?.Event.UnregisterCallback(callbackId);
                 _callbacks.Remove(key);
             }
         }
@@ -198,12 +201,13 @@ public class DeferredWork : ModSystem
         if (string.IsNullOrEmpty(prefix)) return;
         lock (_syncLock)
         {
+            var api = _api;
             var toRemove = new List<string>();
             foreach (var kvp in _callbacks)
             {
                 if (kvp.Key.StartsWith(prefix, StringComparison.Ordinal))
                 {
-                    _api?.Event.UnregisterCallback(kvp.Value);
+                    api?.Event.UnregisterCallback(kvp.Value);
                     toRemove.Add(kvp.Key);
                 }
             }
@@ -223,13 +227,14 @@ public class DeferredWork : ModSystem
         if (action is null) throw new ArgumentNullException(nameof(action));
         if (windowMs < 0) windowMs = 0;
 
-        if (!IsEnabled || _api?.World is null)
+        var api = _api;
+        if (!IsEnabled || api?.World is null)
         {
             action();
             return;
         }
 
-        long now = _api.World.ElapsedMilliseconds;
+        long now = api.World.ElapsedMilliseconds;
         lock (_syncLock)
         {
             if (_tasks.TryGetValue(key, out var existing))
@@ -287,9 +292,10 @@ public class DeferredWork : ModSystem
 
     private static void OnGameTick(float dt)
     {
-        if (_api?.World is null) return;
+        var api = _api;
+        if (api?.World is null) return;
 
-        long now = _api.World.ElapsedMilliseconds;
+        long now = api.World.ElapsedMilliseconds;
         var toRun = new List<ScheduledTask>(_tasks.Count);
         var toRemove = new List<string>(_tasks.Count);
 
@@ -318,7 +324,7 @@ public class DeferredWork : ModSystem
             }
             catch (Exception ex)
             {
-                _api.Logger?.Warning("[ArcanumLib] Deferred task '{0}' failed: {1}", task.Key, ex.Message);
+                api.Logger?.Warning("[ArcanumLib] Deferred task '{0}' failed: {1}", task.Key, ex.Message);
             }
         }
 
@@ -344,7 +350,7 @@ public class DeferredWork : ModSystem
             }
             catch (Exception ex)
             {
-                _api.Logger?.Warning("[ArcanumLib] End-of-tick task failed: {0}", ex.Message);
+                api.Logger?.Warning("[ArcanumLib] End-of-tick task failed: {0}", ex.Message);
             }
         }
     }

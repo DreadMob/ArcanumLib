@@ -22,15 +22,26 @@ namespace ArcanumLib.Effects
     /// </summary>
     internal class StatusEffectContainer
     {
-        private readonly Entity _entity;
+        private readonly long _entityId;
+        private readonly WeakReference<Entity> _entityRef;
         private readonly List<StatusEffectInstance> _instances = new();
 
         public StatusEffectContainer(Entity entity)
         {
-            _entity = entity ?? throw new ArgumentNullException(nameof(entity));
+            if (entity == null) throw new ArgumentNullException(nameof(entity));
+            _entityId = entity.EntityId;
+            _entityRef = new WeakReference<Entity>(entity);
         }
 
-        public Entity Entity => _entity;
+        /// <summary>
+        /// The entity id this container belongs to.
+        /// </summary>
+        public long EntityId => _entityId;
+
+        /// <summary>
+        /// The target entity, or null if the entity has been garbage-collected.
+        /// </summary>
+        public Entity? Entity => _entityRef.TryGetTarget(out var e) ? e : null;
 
         public bool IsEmpty => _instances.Count == 0;
 
@@ -133,7 +144,8 @@ namespace ArcanumLib.Effects
             var removedByDeath = new List<StatusEffectInstance>();
             var alive = new List<StatusEffectInstance>();
 
-            if (_entity == null || _entity.Alive == false)
+            var entity = Entity;
+            if (entity == null || entity.Alive == false)
             {
                 foreach (var instance in _instances.ToList())
                 {
