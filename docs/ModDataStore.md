@@ -2,7 +2,6 @@
 layout: default
 title: ModDataStore
 nav_order: 40
-has_children: true
 ---
 
 # ModDataStore
@@ -27,6 +26,7 @@ using ArcanumLib.Persistence;
 
 var store = ModDataStore.GetOrCreate<MySaveData>(sapi, "mymod", "state", 1);
 store.Data.Counter++;
+store.MarkDirty();
 store.Save();
 ```
 
@@ -95,3 +95,5 @@ public class MyModSystem : ModSystem
 - `ModDataStore` is **server-side only**.
 - In unit tests, create a `ModDataStoreInstance<T>` directly or pass `null` for `sapi` where supported.
 - Increment `dataVersion` when the data shape changes; future migrations can check this value.
+- `MarkDirty()` must be called when `Data` is modified, otherwise `Save()` is a no-op.
+- `IsDirty` returns `true` if the store has been modified since the last successful `Save()`.

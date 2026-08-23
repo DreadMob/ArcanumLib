@@ -39,18 +39,25 @@ This folder contains API documentation for `ArcanumLib` — a shared Vintage Sto
 | [ItemMode](ItemMode.md) | Generic item mode data and F-key tool-mode integration (parsing, switching, effect gating). |
 | [Inventory / ItemStack helpers](InventoryHelpers.md) | Give, count, find, and consume items. |
 
+## Services & Lifecycle
+
+| Page | What it covers |
+|------|----------------|
+| [ArcanumServices](ArcanumServices.md) | World-scoped service registry for cross-mod instance lookup and lifecycle. |
+| [ArcanumLibModSystem](ArcanumLibModSystem.md) | Central lifecycle `ModSystem` that registers APIs and clears state on unload. |
+
 ## Persistence
 
 | Page | What it covers |
 |------|----------------|
-| [ModDataStore](ModDataStore.md) | Versioned per-savegame data persistence with schema versioning. |
+| [ModDataStore](ModDataStore.md) | Versioned per-savegame data persistence with dirty tracking and JSON migrations. |
 
 ## Progression & Status
 
 | Page | What it covers |
 |------|----------------|
-| [PityTracker](PityTracker.md) | Per-player pity counters with tiered guarantee rules, persistence, and legacy savegame migration. |
-| [Status Effects](StatusEffects.md) | Apply, tick, and remove timed status effects with refresh, stack, override, and independent modes. |
+| [PityTracker](PityTracker.md) | Thread-safe per-player pity counters with tiered guarantee rules, persistence, legacy migration, and `ArcanumServices` integration. |
+| [Status Effects](StatusEffects.md) | Apply, tick, and remove timed status effects; `StatusEffectService` is exposed through the static `StatusEffectManager` facade. |
 
 ## Assets & Data
 
@@ -67,6 +74,8 @@ This folder contains API documentation for `ArcanumLib` — a shared Vintage Sto
 |------|----------------|
 | [TimedCache](TimedCache.md) | Thread-safe cache with TTL eviction and optional size limit. |
 | [DeferredWork](DeferredWork.md) | Game-tick scheduler for one-shot, coalesced and end-of-tick work. |
+| [GameTimeScheduler](GameTimeScheduler.md) | Daily/hourly/after-hours scheduling based on `World.Calendar.TotalHours`. |
+| [StatCoalescingEngine](StatCoalescingEngine.md) | Batches rapid `EntityStats.Set` calls into a single network sync. |
 | [CleanupScope](CleanupScope.md) | Cancels `DeferredWork` keys, tick listeners, and nested disposables in one `Dispose()`. |
 
 ## Randomization & Geometry
@@ -103,7 +112,21 @@ This folder contains API documentation for `ArcanumLib` — a shared Vintage Sto
 
 | Page | What it covers |
 |------|----------------|
-| [TypedNetworkChannel](TypedNetworkChannel.md) | Typed network channel wrapper for send/receive. |
+| [TypedNetworkChannel](TypedNetworkChannel.md) | Typed network channel wrapper with duplicate message-type protection. |
+| [ServerBroadcaster](ServerBroadcaster.md) | Snapshot-based packet broadcast to all or filtered online players. |
+
+## Inventory
+
+| Page | What it covers |
+|------|----------------|
+| [InventoryChangeTracker](InventoryChangeTracker.md) | Fingerprint-based inventory change detection with disconnect cleanup. |
+| [Inventory / ItemStack helpers](InventoryHelpers.md) | Give, count, find, and consume items. |
+
+## Logging
+
+| Page | What it covers |
+|------|----------------|
+| [CategorizedLogger](CategorizedLogger.md) | File and console logger with per-category files and throttled debug output. |
 
 ---
 

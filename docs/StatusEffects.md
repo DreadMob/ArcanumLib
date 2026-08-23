@@ -1,8 +1,7 @@
 ﻿---
 layout: default
 title: Status Effects
-parent: "ModDataStore"
-nav_order: 3
+nav_order: 30
 ---
 
 # Status Effects
@@ -122,3 +121,10 @@ StatusEffectManager.OnEffectExpired += (entity, instance) => { /* ... */ };
 ```
 
 Use events to drive UI, logging, or side effects without touching effect classes.
+
+## Lifecycle
+
+- The static `StatusEffectManager` is a facade that delegates to a `StatusEffectService` registered in `ArcanumServices`.
+- `StatusEffectModSystem` creates and registers the service during `StartClientSide` / `StartServerSide`.
+- `StatusEffectManager.Clear()` clears the service on world unload.
+- `StatusEffectManager` methods are safe to call before the service is ready; they will return no-ops / empty results.

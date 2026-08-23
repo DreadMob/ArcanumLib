@@ -47,7 +47,8 @@ using ArcanumLib.Persistence;
 
 var store = ModDataStore.GetOrCreate<MySaveData>(sapi, "mymod", "state", 1);
 store.Data.Counter++;
-store.Save();
+store.MarkDirty();
+store.Save(); // no-op if nothing changed
 ```
 
 See the [`docs/`](docs) folder for full API documentation and examples.
@@ -89,6 +90,17 @@ See the [`docs/`](docs) folder for full API documentation and examples.
 || **CleanupScope** | Cancels `DeferredWork` keys, tick listeners, and nested disposables in one `Dispose()`. |
 | **StatCoalescingEngine** | Batches rapid value changes into a single delayed update. |
 
+### Services & Lifecycle
+
+| Module | Description |
+|--------|-------------|
+| **ArcanumServices** | World-scoped service registry (`Register<T>` / `Get<T>` / `Shutdown`) for cross-mod instances. |
+| **ArcanumLibModSystem** | Central `ModSystem` that registers the client/server API and clears caches on unload. |
+| **ActionExecutorService / ActionRegistryService** | Instance-backed action execution behind the static `ActionExecutor` / `ActionRegistry` facades. |
+| **StatusEffectService** | Instance-backed status effects behind the static `StatusEffectManager` facade. |
+| **CategorizedLogger** | File and console logger with per-category files and throttled debug output. |
+| **PityTracker** | Per-player pity counters; resolved through `ArcanumServices` or `PityTracker.Current`. |
+
 ### Randomization & Geometry
 
 | Module | Description |
@@ -109,21 +121,23 @@ See the [`docs/`](docs) folder for full API documentation and examples.
 
 | Module | Description |
 |--------|-------------|
-| **StatusEffectManager** | Apply, tick, and remove timed status effects with refresh, stack, override, and independent modes. |
+| **StatusEffectManager / StatusEffectService** | Apply, tick, and remove timed status effects with refresh, stack, override, and independent modes. The instance `StatusEffectService` is exposed through the static facade. |
 | **StatModifierEffect** | Reusable effect that adds or removes values from an `EntityStats` category. |
 
 ### Networking & Inventory
 
 | Module | Description |
 |--------|-------------|
-| **TypedNetworkChannel** | Typed network channel wrapper for send/receive. |
+| **TypedNetworkChannel** | Typed network channel wrapper for send/receive with duplicate message-type protection. |
+| **ServerBroadcaster** | Snapshot-based packet broadcast to all or filtered online players. |
+| **InventoryChangeTracker** | Fingerprint-based inventory change detection with automatic disconnect cleanup. |
 | **Inventory / ItemStack helpers** | Give, count, find, and consume items. |
 
 ### Progression
 
 | Module | Description |
 |--------|-------------|
-| **PityTracker** | Per-player pity counters with tiered guarantee rules, persistence, and legacy savegame migration. |
+| **PityTracker** | Thread-safe per-player pity counters with tiered guarantee rules, persistence, legacy savegame migration, and `ArcanumServices` integration. |
 
 ### Items & Equipment
 
@@ -138,23 +152,27 @@ See the [`docs/`](docs) folder for full API documentation and examples.
 
 ```
 ArcanumLib/
-├── ArcanumLibModSystem.cs    — Vintage Story entry point
+├── ArcanumLibModSystem.cs    — Vintage Story entry point, lifecycle, and API registration
 ├── src/
+│   ├── Core/                  — ArcanumServices, ArcanumLibModSystem
 │   ├── Gui/                   — theme, composer, controls, layout, icons
 │   ├── Geometry/              — ShapeCloner
 │   ├── Caching/               — TimedCache and SimpleLRUCache
-│   ├── Common/                — EventScope and CleanupScope
+│   ├── Common/                — EventScope, CleanupScope, PlaytimeTracker, PlaytimeCooldownManager
 │   ├── Data/                  — TagSet, WatchedAttributes, and CooldownTracker
 │   ├── Validation/            — ValidationResult
 │   ├── Assets/                — ModAssetLoader, ModAssetRegistry
-│   ├── Performance/           — DeferredWork, StatCoalescingEngine
+│   ├── Performance/           — DeferredWork, GameTimeScheduler, StatCoalescingEngine
 │   ├── Random/                — WeightedRandom, WeightedTable
 │   ├── Text/                  — Pretty, Wildcard
-│   ├── Network/               — TypedNetworkChannel
+│   ├── Network/               — TypedNetworkChannel, ServerBroadcaster
 │   ├── Helpers/               — CollectibleNameResolver
 │   ├── Persistence/           — ModDataStore
-│   ├── Effects/               — StatusEffectManager
+│   ├── Actions/               — ActionRegistry, ActionExecutor, ActionRegistryService, ActionExecutorService
+│   ├── Effects/               — StatusEffectManager, StatusEffectService
 │   ├── Progression/           — PityTracker
+│   ├── Inventory/             — InventoryChangeTracker, InventoryFingerprint, InventoryHelpers
+│   ├── Logging/               — CategorizedLogger
 │   └── Items/                 — ItemCharge, ItemMode, ItemModeManager
 ├── docs/                      — API documentation
 ├── resources/
@@ -200,6 +218,11 @@ API documentation also lives in the [`docs/`](docs) folder:
 - [ModDataStore](docs/ModDataStore.md)
 - [PityTracker](docs/PityTracker.md)
 - [Status Effects](docs/StatusEffects.md)
+
+### Services & Lifecycle
+- [ArcanumServices](docs/ArcanumServices.md)
+- [ArcanumLibModSystem](docs/ArcanumLibModSystem.md)
+- [ActionRegistry](docs/ActionRegistry.md)
 
 ### Assets & Data
 - [ModAssetLoader](docs/ModAssetLoader.md)

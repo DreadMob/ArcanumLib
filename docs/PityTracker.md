@@ -1,8 +1,7 @@
 ﻿---
 layout: default
 title: PityTracker
-parent: "ModDataStore"
-nav_order: 2
+nav_order: 25
 ---
 
 # PityTracker
@@ -117,3 +116,10 @@ public class MyPityModSystem : ModSystem
     }
 }
 ```
+
+## Thread-safety and lifecycle
+
+- All public methods on `PityTracker` are thread-safe (`_syncLock`).
+- `PityTracker.Current` is a facade backed by `ArcanumServices`. Setting it registers the instance; setting it to `null` unregisters it.
+- `PityTrackerModSystem` creates and saves the global tracker on the server.
+- `RecordOpen` automatically marks the `ModDataStore` as dirty so the next `Save` persists.

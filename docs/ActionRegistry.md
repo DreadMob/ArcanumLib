@@ -95,7 +95,8 @@ else
 | Method | Description |
 |--------|---------|
 | `Execute(ActionDescriptor, context)` | Executes with cooldown and permission checks. |
-| `GetRemainingCooldown(entityId, actionId)` | Returns remaining cooldown in ms. |
+| `GetRemainingCooldown(entityId, actionId)` | Returns remaining cooldown in ms (uses `ArcanumServices` API time). |
+| `GetRemainingCooldown(entityId, actionId, sapi)` | Returns remaining cooldown using the provided server API. |
 | `ClearCooldowns(entityId)` | Clears cooldowns for a player. |
 
 ### ActionDescriptor
@@ -117,7 +118,8 @@ else
 
 ## Notes
 
+- The static `ActionRegistry` and `ActionExecutor` are facades that delegate to `ActionRegistryService` and `ActionExecutorService` registered in `ArcanumServices`.
 - The registry is thread-safe (locked).
-- Cooldowns are per-player per-action-id and tracked server-side.
-- `ActionRegistryModSystem` clears state on world unload and player disconnect.
+- Cooldowns are per-player per-action-id, tracked server-side, and use `World.ElapsedMilliseconds`.
+- `ActionRegistryModSystem` creates, registers, and clears the services on world unload and player disconnect.
 - Handlers should not throw; exceptions are caught and returned as `Failed`.
