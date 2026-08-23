@@ -146,5 +146,65 @@ namespace ArcanumLib.Data
             if (tree == null) throw new ArgumentNullException(nameof(tree));
             if (!tree.HasAttribute(key)) tree.SetString(key, value);
         }
+
+        /// <summary>
+        /// Sets a boolean on the entity's watched attributes and marks the path dirty.
+        /// </summary>
+        public static void SetAndMarkDirty(this Entity entity, string path, bool value)
+        {
+            if (entity == null) return;
+            entity.WatchedAttributes.SetBool(path, value);
+            entity.WatchedAttributes.MarkPathDirty(path);
+        }
+
+        /// <summary>
+        /// Sets an integer on the entity's watched attributes and marks the path dirty.
+        /// </summary>
+        public static void SetAndMarkDirty(this Entity entity, string path, int value)
+        {
+            if (entity == null) return;
+            entity.WatchedAttributes.SetInt(path, value);
+            entity.WatchedAttributes.MarkPathDirty(path);
+        }
+
+        /// <summary>
+        /// Sets a float on the entity's watched attributes and marks the path dirty.
+        /// </summary>
+        public static void SetAndMarkDirty(this Entity entity, string path, float value)
+        {
+            if (entity == null) return;
+            entity.WatchedAttributes.SetFloat(path, value);
+            entity.WatchedAttributes.MarkPathDirty(path);
+        }
+
+        /// <summary>
+        /// Sets a long on the entity's watched attributes and marks the path dirty.
+        /// </summary>
+        public static void SetAndMarkDirty(this Entity entity, string path, long value)
+        {
+            if (entity == null) return;
+            entity.WatchedAttributes.SetLong(path, value);
+            entity.WatchedAttributes.MarkPathDirty(path);
+        }
+
+        /// <summary>
+        /// Sets a double on the entity's watched attributes and marks the path dirty.
+        /// </summary>
+        public static void SetAndMarkDirty(this Entity entity, string path, double value)
+        {
+            if (entity == null) return;
+            entity.WatchedAttributes.SetDouble(path, value);
+            entity.WatchedAttributes.MarkPathDirty(path);
+        }
+
+        /// <summary>
+        /// Sets a string on the entity's watched attributes and marks the path dirty.
+        /// </summary>
+        public static void SetAndMarkDirty(this Entity entity, string path, string value)
+        {
+            if (entity == null) return;
+            entity.WatchedAttributes.SetString(path, value);
+            entity.WatchedAttributes.MarkPathDirty(path);
+        }
     }
 }

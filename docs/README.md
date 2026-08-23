@@ -75,16 +75,27 @@ This folder contains API documentation for `ArcanumLib` — a shared Vintage Sto
 |------|----------------|
 | [WeightedRandom](WeightedRandom.md) | Weighted random picks and reusable weighted tables with merge strategies. |
 | [ShapeCloner](ShapeCloner.md) | Deep-clones Vintage Story `Shape` objects for safe mutation. |
+| [PositionUtils](PositionUtils.md) | Random horizontal offsets and ground-level position finding around entities. |
+| [BlockEntitySearchUtils](BlockEntitySearchUtils.md) | Chunk-based block entity counting within a region. |
+
+## Particle Effects
+
+| Page | What it covers |
+|------|----------------|
+| [Particle Effects](ParticleEffects.md) | Fluent `ParticleEffectBuilder`, named color presets, and ready-to-use effect presets (explosions, auras, impacts, shockwaves, ambient). |
 
 ## Common & Utility
 
 | Page | What it covers |
 |------|----------------|
 | [ApiExtensions](ApiExtensions.md) | `IsClient` / `IsServer` helpers for `ICoreAPI`, `IWorldAccessor`. |
+| [ChatFormatUtil](ChatFormatUtil.md) | Colorize chat and HUD text with `<font>` tags; alert-prefixed messages. |
+| [DamageHelper](DamageHelper.md) | Factory for `DamageSource` with common field combinations (Entity/Player/Weather/Internal). |
 | [EntityHealthExtensions](EntityHealthExtensions.md) | Read and scale entity health through `WatchedAttributes` or `EntityBehaviorHealth`. |
 | [PlayerExtensions](PlayerExtensions.md) | `HasValidPosition`, `GetAliveEntities`, and `GetAliveServerEntities`. |
 | [LoggerExtensions](LoggerExtensions.md) | Non-critical warning logging and `SafeExecute` wrappers. |
 | [EventScope](EventScope.md) | Disposable event subscription scope with automatic unsubscription. |
+| [PlaytimeTracker](PlaytimeTracker.md) | Per-player online time tracking, login streaks, real-time cooldowns, and combat-state checks. |
 | [WatchedAttributes](WatchedAttributes.md) | Get-or-create, set-if-missing, and set-and-mark-dirty helpers for `ITreeAttribute`. |
 | [CooldownTracker](CooldownTracker.md) | Per-entity cooldown state in `WatchedAttributes` with readiness, remaining, and progress checks. |
 

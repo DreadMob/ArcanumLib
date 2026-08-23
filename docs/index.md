@@ -105,10 +105,13 @@ Small helpers that remove boilerplate. Some are thin syntactic sugar over existi
 | Page | Purpose |
 |------|---------|
 | [ApiExtensions]({{ site.baseurl }}{% link ApiExtensions.md %}) | `IsClient` / `IsServer` checks for `ICoreAPI` and `IWorldAccessor` (sugar for `api.Side`). |
+| [ChatFormatUtil]({{ site.baseurl }}{% link ChatFormatUtil.md %}) | Colorize chat and HUD text with `<font>` tags; alert-prefixed messages. |
 | [CollectibleNameResolver]({{ site.baseurl }}{% link CollectibleNameResolver.md %}) | Resolve item/block/entity codes to localized display names with wildcard support. |
 | [CooldownTracker]({{ site.baseurl }}{% link CooldownTracker.md %}) | Per-entity cooldowns in `WatchedAttributes`. |
+| [DamageHelper]({{ site.baseurl }}{% link DamageHelper.md %}) | Factory for `DamageSource` with common field combinations (Entity/Player/Weather/Internal). |
 | [EntityHealthExtensions]({{ site.baseurl }}{% link EntityHealthExtensions.md %}) | Read and scale entity health. |
 | [EventScope]({{ site.baseurl }}{% link EventScope.md %}) | Disposable event subscription scope. |
+| [PlaytimeTracker]({{ site.baseurl }}{% link PlaytimeTracker.md %}) | Per-player online time tracking, login streaks, real-time cooldowns, and combat-state checks. |
 | [PlayerExtensions]({{ site.baseurl }}{% link PlayerExtensions.md %}) | Player entity iteration and position checks. |
 | [WatchedAttributes]({{ site.baseurl }}{% link WatchedAttributes.md %}) | Get-or-create and set helpers for `ITreeAttribute`. |
 
@@ -128,6 +131,14 @@ Small helpers for formatting and pattern matching.
 | [WeightedRandom]({{ site.baseurl }}{% link WeightedRandom.md %}) | Weighted random picks and reusable weighted tables. |
 | [LootTable]({{ site.baseurl }}{% link LootTable.md %}) | JSON-friendly loot tables with tiers, weighted entries, and luck multipliers. |
 | [ShapeCloner]({{ site.baseurl }}{% link ShapeCloner.md %}) | Deep-clone `Shape` objects. |
+| [PositionUtils]({{ site.baseurl }}{% link PositionUtils.md %}) | Random horizontal offsets and ground-level position finding around entities. |
+| [BlockEntitySearchUtils]({{ site.baseurl }}{% link BlockEntitySearchUtils.md %}) | Chunk-based block entity counting within a region. |
+
+## Particle Effects
+
+| Page | Purpose |
+|------|---------|
+| [Particle Effects]({{ site.baseurl }}{% link ParticleEffects.md %}) | Fluent `ParticleEffectBuilder`, named color presets, and ready-to-use effect presets (explosions, auras, impacts, shockwaves, ambient). |
 
 ## Networking
 
