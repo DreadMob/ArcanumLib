@@ -3,6 +3,7 @@ using System.Collections.Concurrent;
 using System.IO;
 using System.Text;
 using System.Threading;
+using ArcanumLib.Core;
 using Vintagestory.API.Common;
 
 namespace ArcanumLib.Logging;
@@ -23,9 +24,20 @@ namespace ArcanumLib.Logging;
 public class CategorizedLogger : IDisposable
 {
     /// <summary>
-    /// Singleton instance. Set by <see cref="Init"/> and cleared by <see cref="Dispose"/>.
+    /// Singleton instance. Backed by <see cref="ArcanumServices"/>.
+    /// Set by <see cref="Init"/> and cleared by <see cref="Dispose"/>.
     /// </summary>
-    public static CategorizedLogger? Instance { get; protected set; }
+    public static CategorizedLogger? Instance
+    {
+        get => ArcanumServices.Get<CategorizedLogger>();
+        protected set
+        {
+            if (value == null)
+                ArcanumServices.Unregister<CategorizedLogger>();
+            else
+                ArcanumServices.Register(value);
+        }
+    }
 
     /// <summary>
     /// Initializes the singleton with the given API, config, and log subfolder name.

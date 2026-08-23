@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using Vintagestory.API.Common;
 using Vintagestory.API.Common.Entities;
 
@@ -25,12 +26,14 @@ namespace ArcanumLib.Effects
         private readonly long _entityId;
         private readonly WeakReference<Entity> _entityRef;
         private readonly List<StatusEffectInstance> _instances = new();
+        private readonly Func<long> _nextId;
 
-        public StatusEffectContainer(Entity entity)
+        public StatusEffectContainer(Entity entity, Func<long> nextId)
         {
             if (entity == null) throw new ArgumentNullException(nameof(entity));
             _entityId = entity.EntityId;
             _entityRef = new WeakReference<Entity>(entity);
+            _nextId = nextId ?? throw new ArgumentNullException(nameof(nextId));
         }
 
         /// <summary>
@@ -187,9 +190,9 @@ namespace ArcanumLib.Effects
             return new StatusEffectTickResult(expired, removedByDeath, alive);
         }
 
-        private static StatusEffectInstance CreateInstance(IStatusEffect effect, float durationMs, object? data)
+        private StatusEffectInstance CreateInstance(IStatusEffect effect, float durationMs, object? data)
         {
-            var id = System.Threading.Interlocked.Increment(ref StatusEffectManager.NextInstanceId);
+            var id = _nextId();
             return new StatusEffectInstance(id, effect, durationMs, data);
         }
     }

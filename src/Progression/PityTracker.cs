@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using ArcanumLib.Core;
 using ArcanumLib.Persistence;
 using Vintagestory.API.Server;
 
@@ -14,9 +15,20 @@ namespace ArcanumLib.Progression
     public class PityTracker : IPityProvider
     {
         /// <summary>
-        /// The current global tracker instance. Consumers may set this in their own ModSystem.
+        /// The current global tracker instance, backed by <see cref="ArcanumServices"/>.
+        /// Setting this registers or unregisters the tracker in the shared registry.
         /// </summary>
-        public static PityTracker? Current { get; set; }
+        public static PityTracker? Current
+        {
+            get => ArcanumServices.Get<PityTracker>();
+            set
+            {
+                if (value == null)
+                    ArcanumServices.Unregister<PityTracker>();
+                else
+                    ArcanumServices.Register(value);
+            }
+        }
 
         private readonly ICoreServerAPI? _sapi;
         private readonly IModDataStore<Dictionary<string, PityPlayerData>> _store;
@@ -65,8 +77,11 @@ namespace ArcanumLib.Progression
         public void AddLegacyFallbackKey(string key)
         {
             if (string.IsNullOrWhiteSpace(key)) return;
-            if (!_legacyFallbackKeys.Contains(key))
-                _legacyFallbackKeys.Add(key);
+            lock (_syncLock)
+            {
+                if (!_legacyFallbackKeys.Contains(key))
+                    _legacyFallbackKeys.Add(key);
+            }
         }
 
         /// <summary>
@@ -91,7 +106,10 @@ namespace ArcanumLib.Progression
         /// </summary>
         public void Save()
         {
-            _store.Save();
+            lock (_syncLock)
+            {
+                _store.Save();
+            }
         }
 
         /// <summary>
@@ -101,7 +119,10 @@ namespace ArcanumLib.Progression
         {
             if (def == null || string.IsNullOrWhiteSpace(def.definitionId)) return;
             def.Validate();
-            _definitions[def.definitionId] = def;
+            lock (_syncLock)
+            {
+                _definitions[def.definitionId] = def;
+            }
         }
 
         /// <summary>
@@ -131,7 +152,10 @@ namespace ArcanumLib.Progression
         /// </summary>
         public bool TryGetDefinition(string definitionId, out PityDefinition? definition)
         {
-            return _definitions.TryGetValue(definitionId, out definition);
+            lock (_syncLock)
+            {
+                return _definitions.TryGetValue(definitionId, out definition);
+            }
         }
 
         /// <summary>
@@ -140,24 +164,30 @@ namespace ArcanumLib.Progression
         public void RecordOpen(string playerUid, string definitionId, int rolledQuality)
         {
             if (string.IsNullOrWhiteSpace(playerUid) || string.IsNullOrWhiteSpace(definitionId)) return;
-            if (!TryGetDefinition(definitionId, out var def) || def == null) return;
 
-            var data = GetOrCreatePlayerData(playerUid);
-            var key = MakeKey(playerUid, definitionId);
-            if (!data.counters.TryGetValue(key, out var counters))
+            lock (_syncLock)
             {
-                counters = new PityCounters();
-                data.counters[key] = counters;
-            }
+                if (!_definitions.TryGetValue(definitionId, out var def) || def == null) return;
 
-            counters.totalOpens++;
+                var data = GetOrCreatePlayerData(playerUid);
+                var key = MakeKey(playerUid, definitionId);
+                if (!data.counters.TryGetValue(key, out var counters))
+                {
+                    counters = new PityCounters();
+                    data.counters[key] = counters;
+                }
 
-            foreach (var rule in def.rules)
-            {
-                if (rule.qualityTierIndex <= rolledQuality)
-                    counters.opensSinceQuality[rule.qualityTierIndex] = 0;
-                else
-                    counters.opensSinceQuality[rule.qualityTierIndex] = counters.opensSinceQuality.GetValueOrDefault(rule.qualityTierIndex, 0) + 1;
+                counters.totalOpens++;
+
+                foreach (var rule in def.rules)
+                {
+                    if (rule.qualityTierIndex <= rolledQuality)
+                        counters.opensSinceQuality[rule.qualityTierIndex] = 0;
+                    else
+                        counters.opensSinceQuality[rule.qualityTierIndex] = counters.opensSinceQuality.GetValueOrDefault(rule.qualityTierIndex, 0) + 1;
+                }
+
+                _store.MarkDirty();
             }
         }
 
@@ -167,15 +197,19 @@ namespace ArcanumLib.Progression
         public int GetGuaranteedQuality(string playerUid, string definitionId)
         {
             if (string.IsNullOrWhiteSpace(playerUid) || string.IsNullOrWhiteSpace(definitionId)) return 0;
-            if (!TryGetDefinition(definitionId, out var def) || def == null) return 0;
 
-            var data = TryGetPlayerData(playerUid);
-            if (data == null) return 0;
+            lock (_syncLock)
+            {
+                if (!_definitions.TryGetValue(definitionId, out var def) || def == null) return 0;
 
-            var key = MakeKey(playerUid, definitionId);
-            if (!data.counters.TryGetValue(key, out var counters)) return 0;
+                var data = TryGetPlayerData(playerUid);
+                if (data == null) return 0;
 
-            return def.GetGuaranteedQuality(counters.opensSinceQuality);
+                var key = MakeKey(playerUid, definitionId);
+                if (!data.counters.TryGetValue(key, out var counters)) return 0;
+
+                return def.GetGuaranteedQuality(counters.opensSinceQuality);
+            }
         }
 
         /// <summary>
@@ -185,17 +219,26 @@ namespace ArcanumLib.Progression
         {
             if (string.IsNullOrWhiteSpace(playerUid) || string.IsNullOrWhiteSpace(definitionId)) return null;
 
-            var data = TryGetPlayerData(playerUid);
-            if (data == null) return null;
+            lock (_syncLock)
+            {
+                var data = TryGetPlayerData(playerUid);
+                if (data == null) return null;
 
-            var key = MakeKey(playerUid, definitionId);
-            return data.counters.TryGetValue(key, out var counters) ? counters : null;
+                var key = MakeKey(playerUid, definitionId);
+                return data.counters.TryGetValue(key, out var counters) ? counters : null;
+            }
         }
 
         /// <summary>
         /// Returns all registered definition IDs.
         /// </summary>
-        public IEnumerable<string> GetDefinitionIds() => _definitions.Keys;
+        public IEnumerable<string> GetDefinitionIds()
+        {
+            lock (_syncLock)
+            {
+                return _definitions.Keys.ToList();
+            }
+        }
 
         /// <summary>
         /// Removes all pity counters for a player.
@@ -203,7 +246,11 @@ namespace ArcanumLib.Progression
         public void ResetPlayerData(string playerUid)
         {
             if (string.IsNullOrWhiteSpace(playerUid)) return;
-            _store.Data.Remove(playerUid);
+            lock (_syncLock)
+            {
+                _store.Data.Remove(playerUid);
+                _store.MarkDirty();
+            }
         }
 
         private PityPlayerData? TryGetPlayerData(string playerUid)
@@ -238,6 +285,7 @@ namespace ArcanumLib.Progression
                         _store.Data[kvp.Key] = kvp.Value;
                     }
 
+                    _store.MarkDirty();
                     _store.Save();
 
                     _sapi.Logger.Notification("[ArcanumLib] [PityTracker] Migrated {0} legacy pity records from {1}.", legacy.Count, legacyKey);

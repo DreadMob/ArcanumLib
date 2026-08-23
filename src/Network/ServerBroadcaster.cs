@@ -27,12 +27,12 @@ public static class ServerBroadcaster
     {
         if (sapi == null || channel == null) return;
 
-        var players = sapi.World?.AllOnlinePlayers;
-        if (players == null) return;
+        var players = sapi.World?.AllOnlinePlayers?.ToList();
+        if (players == null || players.Count == 0) return;
 
-        foreach (var player in players)
+        for (int i = 0; i < players.Count; i++)
         {
-            if (player is IServerPlayer sp)
+            if (players[i] is IServerPlayer sp)
                 channel.SendPacket(packet, sp);
         }
     }
@@ -48,12 +48,12 @@ public static class ServerBroadcaster
     {
         if (sapi == null || channel == null || predicate == null) return;
 
-        var players = sapi.World?.AllOnlinePlayers;
-        if (players == null) return;
+        var players = sapi.World?.AllOnlinePlayers?.ToList();
+        if (players == null || players.Count == 0) return;
 
-        foreach (var player in players)
+        for (int i = 0; i < players.Count; i++)
         {
-            if (player is IServerPlayer sp && predicate(sp))
+            if (players[i] is IServerPlayer sp && predicate(sp))
                 channel.SendPacket(packet, sp);
         }
     }

@@ -33,8 +33,11 @@ public static class ImageIconCache
     public static void Init(ICoreClientAPI capi)
     {
         if (_capi == capi) return;
+
+        // Dispose any existing surfaces before switching contexts.
+        Dispose();
+
         _capi = capi;
-        _surfaces.Clear();
         _missing.Clear();
     }
 
@@ -138,6 +141,11 @@ public static class ImageIconCache
             var surface = LoadSurface(loc);
             if (surface != null)
             {
+                if (_surfaces.TryGetValue(assetPath, out var existing) && existing != null)
+                {
+                    try { existing.Dispose(); }
+                    catch { /* non-critical */ }
+                }
                 _surfaces[assetPath] = surface;
             }
             else

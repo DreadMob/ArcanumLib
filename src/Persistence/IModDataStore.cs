@@ -34,14 +34,25 @@ namespace ArcanumLib.Persistence
         bool IsLoaded { get; }
 
         /// <summary>
+        /// Whether the live data has changed since the last <see cref="Save"/>.
+        /// </summary>
+        bool IsDirty { get; }
+
+        /// <summary>
         /// Loads the data from the current savegame, applying migrations if needed.
         /// </summary>
         void Load();
 
         /// <summary>
-        /// Saves the current data into the current savegame.
+        /// Saves the current data into the current savegame if <see cref="IsDirty"/> is true.
+        /// Resets the dirty flag on success.
         /// </summary>
         void Save();
+
+        /// <summary>
+        /// Marks the store as dirty so the next <see cref="Save"/> will persist the data.
+        /// </summary>
+        void MarkDirty();
     }
 
     /// <summary>

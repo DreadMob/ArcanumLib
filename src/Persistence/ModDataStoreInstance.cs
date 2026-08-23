@@ -19,6 +19,7 @@ namespace ArcanumLib.Persistence
         private readonly List<(int fromVersion, Func<JToken, JToken> migration)> _migrations = new();
         private T? _data;
         private bool _isLoaded;
+        private bool _isDirty;
 
         /// <summary>
         /// The mod that owns this store.
@@ -44,6 +45,16 @@ namespace ArcanumLib.Persistence
         /// Whether the store has been loaded at least once.
         /// </summary>
         public bool IsLoaded => _isLoaded;
+
+        /// <summary>
+        /// Whether the live data has changed since the last save.
+        /// </summary>
+        public bool IsDirty => _isDirty;
+
+        /// <summary>
+        /// Marks the store as dirty so the next <see cref="Save"/> will persist the data.
+        /// </summary>
+        public void MarkDirty() => _isDirty = true;
 
         /// <summary>
         /// The live data object.
@@ -106,6 +117,7 @@ namespace ArcanumLib.Persistence
         public void Load()
         {
             _data = _factory();
+            _isDirty = false;
 
             var saveGame = _sapi?.WorldManager?.SaveGame;
             if (saveGame == null)
@@ -178,13 +190,17 @@ namespace ArcanumLib.Persistence
             }
 
             _isLoaded = true;
+            _isDirty = false;
         }
 
         /// <summary>
-        /// Saves the current data into the current savegame.
+        /// Saves the current data into the current savegame if <see cref="IsDirty"/> is true.
+        /// Resets the dirty flag on success.
         /// </summary>
         public void Save()
         {
+            if (!_isDirty) return;
+
             var saveGame = _sapi?.WorldManager?.SaveGame;
             if (saveGame == null)
             {
@@ -198,11 +214,13 @@ namespace ArcanumLib.Persistence
                 var json = JsonConvert.SerializeObject(envelope);
                 var bytes = Encoding.UTF8.GetBytes(json);
                 saveGame.StoreData(StoreKey, bytes);
+                _isDirty = false;
             }
             catch (Exception ex)
             {
                 _sapi?.Logger?.Warning("[ArcanumLib] [ModDataStore] Failed to save {0}: {1}", StoreKey, ex.Message);
             }
         }
+
     }
 }

@@ -1,11 +1,12 @@
+using ArcanumLib.Core;
 using Vintagestory.API.Common;
 using Vintagestory.API.Server;
 
 namespace ArcanumLib.Actions;
 
 /// <summary>
-/// ModSystem that clears the <see cref="ActionRegistry"/> and <see cref="ActionExecutor"/>
-/// static state when the world is unloaded. Also hooks player disconnect to clear
+/// ModSystem that registers <see cref="ActionRegistryService"/> and <see cref="ActionExecutorService"/>
+/// and unregisters/clears them on world unload. Also hooks player disconnect to clear
 /// per-player cooldowns.
 /// </summary>
 public class ActionRegistryModSystem : ModSystem
@@ -21,6 +22,9 @@ public class ActionRegistryModSystem : ModSystem
     {
         _sapi = sapi;
         sapi.Event.PlayerDisconnect += OnPlayerDisconnect;
+
+        ArcanumServices.Register(new ActionRegistryService());
+        ArcanumServices.Register(new ActionExecutorService(sapi));
     }
 
     public override void Dispose()
@@ -31,15 +35,21 @@ public class ActionRegistryModSystem : ModSystem
             _sapi = null;
         }
 
-        ActionRegistry.Clear();
-        ActionExecutor.ClearAllCooldowns();
+        if (ArcanumServices.Get<ActionExecutorService>() is { } executor)
+            executor.ClearAllCooldowns();
+
+        if (ArcanumServices.Get<ActionRegistryService>() is { } registry)
+            registry.Clear();
+
+        ArcanumServices.Unregister<ActionExecutorService>();
+        ArcanumServices.Unregister<ActionRegistryService>();
     }
 
     private void OnPlayerDisconnect(IServerPlayer player)
     {
         if (player?.Entity?.EntityId != null)
         {
-            ActionExecutor.ClearCooldowns(player.Entity.EntityId);
+            ArcanumServices.Get<ActionExecutorService>()?.ClearCooldowns(player.Entity.EntityId);
         }
     }
 }
