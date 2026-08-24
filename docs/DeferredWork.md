@@ -28,7 +28,14 @@ DeferredWork.Schedule("spawn-particles", () => SpawnParticles(pos), 250);
 
 ## Usage
 
-`DeferredWork` is a `ModSystem`; it starts and stops its game tick listener automatically. You can call the static methods from anywhere once the game has loaded.
+`DeferredWork` is managed by `ArcanumPerformanceModSystem`, which starts client and server schedulers automatically.
+
+The static methods (`Schedule`, `Coalesce`, etc.) pick the right side automatically based on the calling thread. For code that runs on a known side, you can use the explicit scopes:
+
+```csharp
+DeferredWork.Server.Schedule("save-all", () => Save(), 1000);
+DeferredWork.Client.Schedule("spawn-fx", () => SpawnFx(pos), 100);
+```
 
 | Method | Description |
 | --- | --- |
@@ -89,3 +96,4 @@ if (DeferredWork.IsPending("rebuild-mesh"))
 - `IsEnabled` defaults to `true`. If it is `false` or the world is not loaded, scheduled work executes immediately.
 - Exceptions in deferred and end-of-tick tasks are logged and do not stop the tick loop.
 - `AtEndOfTick` actions are capped at 100 per tick to avoid infinite cascading.
+- Client and server schedulers are independent. In singleplayer, each side gets its own task queue.

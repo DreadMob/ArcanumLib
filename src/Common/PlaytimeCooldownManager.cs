@@ -25,6 +25,7 @@ namespace ArcanumLib.Common
         /// <summary>
         /// Creates a cooldown manager backed by the given playtime tracker.
         /// </summary>
+        /// <param name="playtimeTracker">The playtime tracker value.</param>
         public PlaytimeCooldownManager(PlaytimeTracker? playtimeTracker)
         {
             _playtimeTracker = playtimeTracker;
@@ -35,12 +36,18 @@ namespace ArcanumLib.Common
         // ========================================================================
 
         /// <summary>Records the current time as a cooldown start for the given key.</summary>
+        /// <param name="playerUid">The unique player identifier.</param>
+        /// <param name="category">The category value.</param>
         public void SetCooldown(string playerUid, string category)
         {
             _cooldowns[Key(playerUid, category)] = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
         }
 
         /// <summary>Returns true if the player is still on cooldown for this category.</summary>
+        /// <param name="playerUid">The unique player identifier.</param>
+        /// <param name="category">The category value.</param>
+        /// <param name="cooldownSeconds">The cooldown seconds value.</param>
+        /// <returns>true if on cooldown; otherwise, false.</returns>
         public bool IsOnCooldown(string playerUid, string category, int cooldownSeconds)
         {
             if (cooldownSeconds <= 0) return false;
@@ -53,6 +60,10 @@ namespace ArcanumLib.Common
         }
 
         /// <summary>Seconds remaining on cooldown. 0 = ready.</summary>
+        /// <param name="playerUid">The unique player identifier.</param>
+        /// <param name="category">The category value.</param>
+        /// <param name="cooldownSeconds">The cooldown seconds value.</param>
+        /// <returns>The cooldown remaining.</returns>
         public int GetCooldownRemaining(string playerUid, string category, int cooldownSeconds)
         {
             if (cooldownSeconds <= 0) return 0;
@@ -66,6 +77,8 @@ namespace ArcanumLib.Common
         }
 
         /// <summary>Clears a cooldown immediately.</summary>
+        /// <param name="playerUid">The unique player identifier.</param>
+        /// <param name="category">The category value.</param>
         public void ClearCooldown(string playerUid, string category)
         {
             _cooldowns.Remove(Key(playerUid, category));
@@ -76,12 +89,16 @@ namespace ArcanumLib.Common
         // ========================================================================
 
         /// <summary>Marks the player as currently in combat (e.g. on damage dealt/received).</summary>
+        /// <param name="playerUid">The unique player identifier.</param>
         public void MarkCombat(string playerUid)
         {
             _lastCombatSeconds[playerUid] = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
         }
 
         /// <summary>Returns true if the player was in combat within the combatCooldownSeconds window.</summary>
+        /// <param name="playerUid">The unique player identifier.</param>
+        /// <param name="combatCooldownSeconds">The combat cooldown seconds value.</param>
+        /// <returns>true if in combat; otherwise, false.</returns>
         public bool IsInCombat(string playerUid, int combatCooldownSeconds)
         {
             if (combatCooldownSeconds <= 0) return false;
@@ -94,6 +111,9 @@ namespace ArcanumLib.Common
         }
 
         /// <summary>Seconds remaining until out of combat. 0 = safe.</summary>
+        /// <param name="playerUid">The unique player identifier.</param>
+        /// <param name="combatCooldownSeconds">The combat cooldown seconds value.</param>
+        /// <returns>The combat remaining.</returns>
         public int GetCombatRemaining(string playerUid, int combatCooldownSeconds)
         {
             if (combatCooldownSeconds <= 0) return 0;
@@ -111,6 +131,9 @@ namespace ArcanumLib.Common
         // ========================================================================
 
         /// <summary>Returns true if the player has at least the required playtime hours.</summary>
+        /// <param name="playerUid">The unique player identifier.</param>
+        /// <param name="requiredHours">The required hours value.</param>
+        /// <returns>true if the operation has required playtime; otherwise, false.</returns>
         public bool HasRequiredPlaytime(string playerUid, float requiredHours)
         {
             if (requiredHours <= 0f) return true;
@@ -119,6 +142,9 @@ namespace ArcanumLib.Common
         }
 
         /// <summary>Hours remaining until the requirement is met. 0 = unlocked.</summary>
+        /// <param name="playerUid">The unique player identifier.</param>
+        /// <param name="requiredHours">The required hours value.</param>
+        /// <returns>The playtime remaining.</returns>
         public float GetPlaytimeRemaining(string playerUid, float requiredHours)
         {
             if (requiredHours <= 0f) return 0f;
@@ -127,6 +153,8 @@ namespace ArcanumLib.Common
         }
 
         /// <summary>Total playtime hours for the player.</summary>
+        /// <param name="playerUid">The unique player identifier.</param>
+        /// <returns>The playtime hours.</returns>
         public float GetPlaytimeHours(string playerUid)
         {
             return _playtimeTracker?.GetPlaytimeHours(playerUid) ?? 0f;
@@ -139,9 +167,15 @@ namespace ArcanumLib.Common
         /// <summary>
         /// Returns true if all conditions are met:
         /// - no real-time cooldown active
-        /// - not in combat (if combatCooldown > 0)
-        /// - meets playtime requirement (if requiredHours > 0)
+        /// - not in combat (if combatCooldown &gt; 0)
+        /// - meets playtime requirement (if requiredHours &gt; 0)
         /// </summary>
+        /// <param name="playerUid">The unique player identifier.</param>
+        /// <param name="cooldownCategory">The cooldown category value.</param>
+        /// <param name="cooldownSeconds">The cooldown seconds value.</param>
+        /// <param name="combatCooldownSeconds">The combat cooldown seconds value.</param>
+        /// <param name="requiredPlaytimeHours">The required playtime hours value.</param>
+        /// <returns>true if the operation can proceed; otherwise, false.</returns>
         public bool CanProceed(string playerUid, string cooldownCategory, int cooldownSeconds,
             int combatCooldownSeconds, float requiredPlaytimeHours)
         {

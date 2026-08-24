@@ -7,13 +7,18 @@ using Vintagestory.API.Server;
 namespace ArcanumLib.Data
 {
     /// <summary>
-    /// Extension methods for <see cref="ITreeAttribute"/> / <see cref="Entity.WatchedAttributes"/>.
+    /// Extension methods for <see cref="ITreeAttribute" /> / <see cref="Entity.WatchedAttributes" />.
     /// </summary>
     public static class WatchedAttributesExtensions
     {
         /// <summary>
         /// Returns an existing tree attribute or creates and attaches a new one.
         /// </summary>
+        /// <param name="tree">The tree value.</param>
+        /// <param name="key">The key to look up.</param>
+        /// <returns>The or create tree attribute.</returns>
+        /// <exception cref="ArgumentNullException">Thrown when <paramref name="tree" /> is <see langword="null" />.</exception>
+        /// <exception cref="ArgumentException">Thrown when <paramref name="key" /> is invalid.</exception>
         public static ITreeAttribute GetOrCreateTreeAttribute(this ITreeAttribute tree, string key)
         {
             if (tree == null) throw new ArgumentNullException(nameof(tree));
@@ -24,12 +29,20 @@ namespace ArcanumLib.Data
         /// <summary>
         /// Returns an existing tree attribute on the entity or creates one.
         /// </summary>
+        /// <param name="entity">The entity.</param>
+        /// <param name="key">The key to look up.</param>
+        /// <returns>The or create tree attribute, or null if none is found.</returns>
         public static ITreeAttribute? GetOrCreateTreeAttribute(this Entity? entity, string key)
             => entity?.WatchedAttributes?.GetOrCreateTreeAttribute(key);
 
         /// <summary>
-        /// Gets an existing integer or writes and returns <paramref name="defaultValue"/>.
+        /// Gets an existing integer or writes and returns <paramref name="defaultValue" />.
         /// </summary>
+        /// <param name="tree">The tree value.</param>
+        /// <param name="key">The key to look up.</param>
+        /// <param name="defaultValue">The default value to use when none is found.</param>
+        /// <returns>The or create int.</returns>
+        /// <exception cref="ArgumentNullException">Thrown when <paramref name="tree" /> is <see langword="null" />.</exception>
         public static int GetOrCreateInt(this ITreeAttribute tree, string key, int defaultValue = 0)
         {
             if (tree == null) throw new ArgumentNullException(nameof(tree));
@@ -39,8 +52,13 @@ namespace ArcanumLib.Data
         }
 
         /// <summary>
-        /// Gets an existing long or writes and returns <paramref name="defaultValue"/>.
+        /// Gets an existing long or writes and returns <paramref name="defaultValue" />.
         /// </summary>
+        /// <param name="tree">The tree value.</param>
+        /// <param name="key">The key to look up.</param>
+        /// <param name="defaultValue">The default value to use when none is found.</param>
+        /// <returns>The or create long.</returns>
+        /// <exception cref="ArgumentNullException">Thrown when <paramref name="tree" /> is <see langword="null" />.</exception>
         public static long GetOrCreateLong(this ITreeAttribute tree, string key, long defaultValue = 0)
         {
             if (tree == null) throw new ArgumentNullException(nameof(tree));
@@ -50,8 +68,13 @@ namespace ArcanumLib.Data
         }
 
         /// <summary>
-        /// Gets an existing float or writes and returns <paramref name="defaultValue"/>.
+        /// Gets an existing float or writes and returns <paramref name="defaultValue" />.
         /// </summary>
+        /// <param name="tree">The tree value.</param>
+        /// <param name="key">The key to look up.</param>
+        /// <param name="defaultValue">The default value to use when none is found.</param>
+        /// <returns>The or create float.</returns>
+        /// <exception cref="ArgumentNullException">Thrown when <paramref name="tree" /> is <see langword="null" />.</exception>
         public static float GetOrCreateFloat(this ITreeAttribute tree, string key, float defaultValue = 0f)
         {
             if (tree == null) throw new ArgumentNullException(nameof(tree));
@@ -61,8 +84,13 @@ namespace ArcanumLib.Data
         }
 
         /// <summary>
-        /// Gets an existing double or writes and returns <paramref name="defaultValue"/>.
+        /// Gets an existing double or writes and returns <paramref name="defaultValue" />.
         /// </summary>
+        /// <param name="tree">The tree value.</param>
+        /// <param name="key">The key to look up.</param>
+        /// <param name="defaultValue">The default value to use when none is found.</param>
+        /// <returns>The or create double.</returns>
+        /// <exception cref="ArgumentNullException">Thrown when <paramref name="tree" /> is <see langword="null" />.</exception>
         public static double GetOrCreateDouble(this ITreeAttribute tree, string key, double defaultValue = 0.0)
         {
             if (tree == null) throw new ArgumentNullException(nameof(tree));
@@ -72,8 +100,13 @@ namespace ArcanumLib.Data
         }
 
         /// <summary>
-        /// Gets an existing boolean or writes and returns <paramref name="defaultValue"/>.
+        /// Gets an existing boolean or writes and returns <paramref name="defaultValue" />.
         /// </summary>
+        /// <param name="tree">The tree value.</param>
+        /// <param name="key">The key to look up.</param>
+        /// <param name="defaultValue">The default value to use when none is found.</param>
+        /// <returns>true if the operation succeeds; otherwise, false.</returns>
+        /// <exception cref="ArgumentNullException">Thrown when <paramref name="tree" /> is <see langword="null" />.</exception>
         public static bool GetOrCreateBool(this ITreeAttribute tree, string key, bool defaultValue = false)
         {
             if (tree == null) throw new ArgumentNullException(nameof(tree));
@@ -83,8 +116,13 @@ namespace ArcanumLib.Data
         }
 
         /// <summary>
-        /// Gets an existing string or writes and returns <paramref name="defaultValue"/>.
+        /// Gets an existing string or writes and returns <paramref name="defaultValue" />.
         /// </summary>
+        /// <param name="tree">The tree value.</param>
+        /// <param name="key">The key to look up.</param>
+        /// <param name="defaultValue">The default value to use when none is found.</param>
+        /// <returns>The or create string string, or null if none is found.</returns>
+        /// <exception cref="ArgumentNullException">Thrown when <paramref name="tree" /> is <see langword="null" />.</exception>
         public static string GetOrCreateString(this ITreeAttribute tree, string key, string defaultValue = "")
         {
             if (tree == null) throw new ArgumentNullException(nameof(tree));
@@ -96,6 +134,10 @@ namespace ArcanumLib.Data
         /// <summary>
         /// Sets an integer only if the key does not already exist.
         /// </summary>
+        /// <param name="tree">The tree value.</param>
+        /// <param name="key">The key to look up.</param>
+        /// <param name="value">The value to set or compare.</param>
+        /// <exception cref="ArgumentNullException">Thrown when <paramref name="tree" /> is <see langword="null" />.</exception>
         public static void SetIntIfMissing(this ITreeAttribute tree, string key, int value)
         {
             if (tree == null) throw new ArgumentNullException(nameof(tree));
@@ -105,6 +147,10 @@ namespace ArcanumLib.Data
         /// <summary>
         /// Sets a long only if the key does not already exist.
         /// </summary>
+        /// <param name="tree">The tree value.</param>
+        /// <param name="key">The key to look up.</param>
+        /// <param name="value">The value to set or compare.</param>
+        /// <exception cref="ArgumentNullException">Thrown when <paramref name="tree" /> is <see langword="null" />.</exception>
         public static void SetLongIfMissing(this ITreeAttribute tree, string key, long value)
         {
             if (tree == null) throw new ArgumentNullException(nameof(tree));
@@ -114,6 +160,10 @@ namespace ArcanumLib.Data
         /// <summary>
         /// Sets a float only if the key does not already exist.
         /// </summary>
+        /// <param name="tree">The tree value.</param>
+        /// <param name="key">The key to look up.</param>
+        /// <param name="value">The value to set or compare.</param>
+        /// <exception cref="ArgumentNullException">Thrown when <paramref name="tree" /> is <see langword="null" />.</exception>
         public static void SetFloatIfMissing(this ITreeAttribute tree, string key, float value)
         {
             if (tree == null) throw new ArgumentNullException(nameof(tree));
@@ -123,6 +173,10 @@ namespace ArcanumLib.Data
         /// <summary>
         /// Sets a double only if the key does not already exist.
         /// </summary>
+        /// <param name="tree">The tree value.</param>
+        /// <param name="key">The key to look up.</param>
+        /// <param name="value">The value to set or compare.</param>
+        /// <exception cref="ArgumentNullException">Thrown when <paramref name="tree" /> is <see langword="null" />.</exception>
         public static void SetDoubleIfMissing(this ITreeAttribute tree, string key, double value)
         {
             if (tree == null) throw new ArgumentNullException(nameof(tree));
@@ -132,6 +186,10 @@ namespace ArcanumLib.Data
         /// <summary>
         /// Sets a boolean only if the key does not already exist.
         /// </summary>
+        /// <param name="tree">The tree value.</param>
+        /// <param name="key">The key to look up.</param>
+        /// <param name="value">The value to set or compare.</param>
+        /// <exception cref="ArgumentNullException">Thrown when <paramref name="tree" /> is <see langword="null" />.</exception>
         public static void SetBoolIfMissing(this ITreeAttribute tree, string key, bool value)
         {
             if (tree == null) throw new ArgumentNullException(nameof(tree));
@@ -141,6 +199,10 @@ namespace ArcanumLib.Data
         /// <summary>
         /// Sets a string only if the key does not already exist.
         /// </summary>
+        /// <param name="tree">The tree value.</param>
+        /// <param name="key">The key to look up.</param>
+        /// <param name="value">The value to set or compare.</param>
+        /// <exception cref="ArgumentNullException">Thrown when <paramref name="tree" /> is <see langword="null" />.</exception>
         public static void SetStringIfMissing(this ITreeAttribute tree, string key, string value)
         {
             if (tree == null) throw new ArgumentNullException(nameof(tree));
@@ -150,6 +212,9 @@ namespace ArcanumLib.Data
         /// <summary>
         /// Sets a boolean on the entity's watched attributes and marks the path dirty.
         /// </summary>
+        /// <param name="entity">The entity.</param>
+        /// <param name="path">The path.</param>
+        /// <param name="value">The value to set or compare.</param>
         public static void SetAndMarkDirty(this Entity entity, string path, bool value)
         {
             if (entity == null) return;
@@ -160,6 +225,9 @@ namespace ArcanumLib.Data
         /// <summary>
         /// Sets an integer on the entity's watched attributes and marks the path dirty.
         /// </summary>
+        /// <param name="entity">The entity.</param>
+        /// <param name="path">The path.</param>
+        /// <param name="value">The value to set or compare.</param>
         public static void SetAndMarkDirty(this Entity entity, string path, int value)
         {
             if (entity == null) return;
@@ -170,6 +238,9 @@ namespace ArcanumLib.Data
         /// <summary>
         /// Sets a float on the entity's watched attributes and marks the path dirty.
         /// </summary>
+        /// <param name="entity">The entity.</param>
+        /// <param name="path">The path.</param>
+        /// <param name="value">The value to set or compare.</param>
         public static void SetAndMarkDirty(this Entity entity, string path, float value)
         {
             if (entity == null) return;
@@ -180,6 +251,9 @@ namespace ArcanumLib.Data
         /// <summary>
         /// Sets a long on the entity's watched attributes and marks the path dirty.
         /// </summary>
+        /// <param name="entity">The entity.</param>
+        /// <param name="path">The path.</param>
+        /// <param name="value">The value to set or compare.</param>
         public static void SetAndMarkDirty(this Entity entity, string path, long value)
         {
             if (entity == null) return;
@@ -190,6 +264,9 @@ namespace ArcanumLib.Data
         /// <summary>
         /// Sets a double on the entity's watched attributes and marks the path dirty.
         /// </summary>
+        /// <param name="entity">The entity.</param>
+        /// <param name="path">The path.</param>
+        /// <param name="value">The value to set or compare.</param>
         public static void SetAndMarkDirty(this Entity entity, string path, double value)
         {
             if (entity == null) return;
@@ -200,6 +277,9 @@ namespace ArcanumLib.Data
         /// <summary>
         /// Sets a string on the entity's watched attributes and marks the path dirty.
         /// </summary>
+        /// <param name="entity">The entity.</param>
+        /// <param name="path">The path.</param>
+        /// <param name="value">The value to set or compare.</param>
         public static void SetAndMarkDirty(this Entity entity, string path, string value)
         {
             if (entity == null) return;

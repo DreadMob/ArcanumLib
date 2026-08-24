@@ -18,10 +18,14 @@ public static class DeferredWork
     {
         public ICoreAPI? Api;
         public long TickListenerId;
+        /// <summary>The tasks value.</summary>
         public readonly Dictionary<string, ScheduledTask> Tasks = new(StringComparer.Ordinal);
+        /// <summary>The callbacks value.</summary>
         public readonly Dictionary<string, long> Callbacks = new(StringComparer.Ordinal);
+        /// <summary>The end of tick queue value.</summary>
         public readonly Queue<Action> EndOfTickQueue = new();
         public Thread? OwnerThread;
+        /// <summary>Gets a value indicating whether is running.</summary>
         public bool IsRunning => Api != null;
     }
 
@@ -33,6 +37,9 @@ public static class DeferredWork
         public long DueTimeMs;
         public long? MaxDelayMs;
 
+        /// <summary>Performs the scheduled task operation.</summary>
+        /// <param name="key">The key to look up.</param>
+        /// <param name="action">The action value.</param>
         public ScheduledTask(string key, Action action)
         {
             Key = key;
@@ -62,6 +69,7 @@ public static class DeferredWork
     /// <summary>
     /// Starts the deferred work scheduler for the given API side.
     /// </summary>
+    /// <param name="api">The core API instance.</param>
     public static void Start(ICoreAPI api)
     {
         if (api is ICoreServerAPI sapi)
@@ -84,46 +92,60 @@ public static class DeferredWork
     }
 
     /// <summary>
-    /// Schedules a one-shot action to run after <paramref name="delayMs"/>.
-    /// Calling <see cref="Schedule"/> again with the same <paramref name="key"/>
+    /// Schedules a one-shot action to run after <paramref name="delayMs" />.
+    /// Calling <see cref="Schedule" /> again with the same <paramref name="key" />
     /// reschedules and replaces the action, so the work runs only once.
     /// </summary>
+    /// <param name="key">The key to look up.</param>
+    /// <param name="action">The action value.</param>
+    /// <param name="delayMs">The delay ms value.</param>
     public static void Schedule(string key, Action action, int delayMs)
         => Active.Schedule(key, action, delayMs);
 
     /// <summary>
-    /// Schedules a one-shot callback via <see cref="ICoreAPI.Event.RegisterCallback"/>,
+    /// Schedules a one-shot callback via the API's <c>RegisterCallback</c> mechanism,
     /// which is truly zero-poll: no tick listener runs while the callback is pending.
-    /// Calling again with the same <paramref name="key"/> cancels the previous callback.
+    /// Calling again with the same <paramref name="key" /> cancels the previous callback.
     /// Use this for timed effects where no polling should occur during the wait.
     /// </summary>
+    /// <param name="key">The key to look up.</param>
+    /// <param name="action">The action value.</param>
+    /// <param name="delayMs">The delay ms value.</param>
     public static void ScheduleCallback(string key, Action action, int delayMs)
         => Active.ScheduleCallback(key, action, delayMs);
 
     /// <summary>
-    /// Cancels a pending <see cref="ScheduleCallback"/> by key.
+    /// Cancels a pending <see cref="ScheduleCallback" /> by key.
     /// </summary>
+    /// <param name="key">The key to look up.</param>
     public static void CancelCallback(string key)
         => Active.CancelCallback(key);
 
     /// <summary>
     /// Returns true when a callback with the given key is pending.
     /// </summary>
+    /// <param name="key">The key to look up.</param>
+    /// <returns>true if callback pending; otherwise, false.</returns>
     public static bool IsCallbackPending(string key)
         => Active.IsCallbackPending(key);
 
     /// <summary>
-    /// Cancels all callbacks whose key starts with <paramref name="prefix"/>.
+    /// Cancels all callbacks whose key starts with <paramref name="prefix" />.
     /// Use this to clean up all effects for a player or entity on disconnect.
     /// </summary>
+    /// <param name="prefix">The prefix value.</param>
     public static void CancelCallbacksByPrefix(string prefix)
         => Active.CancelCallbacksByPrefix(prefix);
 
     /// <summary>
-    /// Coalesces repeated calls for the same <paramref name="key"/> into a single
-    /// execution. The window is extended by <paramref name="windowMs"/> each call,
-    /// but the task is forced after <paramref name="maxDelayMs"/> even if calls keep coming.
+    /// Coalesces repeated calls for the same <paramref name="key" /> into a single
+    /// execution. The window is extended by <paramref name="windowMs" /> each call,
+    /// but the task is forced after <paramref name="maxDelayMs" /> even if calls keep coming.
     /// </summary>
+    /// <param name="key">The key to look up.</param>
+    /// <param name="action">The action value.</param>
+    /// <param name="windowMs">The window ms value.</param>
+    /// <param name="maxDelayMs">The max delay ms value.</param>
     public static void Coalesce(string key, Action action, int windowMs, int maxDelayMs = -1)
         => Active.Coalesce(key, action, windowMs, maxDelayMs);
 
@@ -131,18 +153,22 @@ public static class DeferredWork
     /// Queues an action to run at the end of the current game tick.
     /// Actions that throw are logged; queued actions are not coalesced.
     /// </summary>
+    /// <param name="action">The action value.</param>
     public static void AtEndOfTick(Action action)
         => Active.AtEndOfTick(action);
 
     /// <summary>
     /// Cancels a pending task.
     /// </summary>
+    /// <param name="key">The key to look up.</param>
     public static void Cancel(string key)
         => Active.Cancel(key);
 
     /// <summary>
     /// Returns true when a task with the given key is pending.
     /// </summary>
+    /// <param name="key">The key to look up.</param>
+    /// <returns>true if pending; otherwise, false.</returns>
     public static bool IsPending(string key)
         => Active.IsPending(key);
 
@@ -277,35 +303,64 @@ public static class DeferredWork
     {
         private readonly Scheduler _scheduler;
 
+        /// <summary>Performs the deferred work facade operation.</summary>
+        /// <param name="scheduler">The scheduler value.</param>
         public DeferredWorkFacade(Scheduler scheduler)
         {
             _scheduler = scheduler;
         }
 
+        /// <summary>Performs the schedule operation.</summary>
+        /// <param name="key">The key to look up.</param>
+        /// <param name="action">The action value.</param>
+        /// <param name="delayMs">The delay ms value.</param>
         public void Schedule(string key, Action action, int delayMs)
             => ScheduleCore(_scheduler, key, action, delayMs);
 
+        /// <summary>Performs the schedule callback operation.</summary>
+        /// <param name="key">The key to look up.</param>
+        /// <param name="action">The action value.</param>
+        /// <param name="delayMs">The delay ms value.</param>
         public void ScheduleCallback(string key, Action action, int delayMs)
             => ScheduleCallbackCore(_scheduler, key, action, delayMs);
 
+        /// <summary>Returns a value indicating whether the operation can cel callback.</summary>
+        /// <param name="key">The key to look up.</param>
         public void CancelCallback(string key)
             => CancelCallbackCore(_scheduler, key);
 
+        /// <summary>Returns a value indicating whether callback pending.</summary>
+        /// <param name="key">The key to look up.</param>
+        /// <returns>true if callback pending; otherwise, false.</returns>
         public bool IsCallbackPending(string key)
             => IsCallbackPendingCore(_scheduler, key);
 
+        /// <summary>Returns a value indicating whether the operation can cel callbacks by prefix.</summary>
+        /// <param name="prefix">The prefix value.</param>
         public void CancelCallbacksByPrefix(string prefix)
             => CancelCallbacksByPrefixCore(_scheduler, prefix);
 
+        /// <summary>Performs the coalesce operation.</summary>
+        /// <param name="key">The key to look up.</param>
+        /// <param name="action">The action value.</param>
+        /// <param name="windowMs">The window ms value.</param>
+        /// <param name="maxDelayMs">The max delay ms value.</param>
         public void Coalesce(string key, Action action, int windowMs, int maxDelayMs = -1)
             => CoalesceCore(_scheduler, key, action, windowMs, maxDelayMs);
 
+        /// <summary>Performs the at end of tick operation.</summary>
+        /// <param name="action">The action value.</param>
         public void AtEndOfTick(Action action)
             => AtEndOfTickCore(_scheduler, action);
 
+        /// <summary>Returns a value indicating whether the operation can cel.</summary>
+        /// <param name="key">The key to look up.</param>
         public void Cancel(string key)
             => CancelCore(_scheduler, key);
 
+        /// <summary>Returns a value indicating whether pending.</summary>
+        /// <param name="key">The key to look up.</param>
+        /// <returns>true if pending; otherwise, false.</returns>
         public bool IsPending(string key)
             => IsPendingCore(_scheduler, key);
     }

@@ -13,8 +13,11 @@ namespace ArcanumLib.Gui.Controls
     /// </summary>
     public enum ItemRowStatus
     {
+        /// <summary>Locked.</summary>
         Locked,
+        /// <summary>Available.</summary>
         Available,
+        /// <summary>Owned.</summary>
         Owned
     }
 
@@ -23,12 +26,19 @@ namespace ArcanumLib.Gui.Controls
     /// </summary>
     public class ItemListRow
     {
+        /// <summary>Gets or sets the id.</summary>
         public string? Id { get; set; }
+        /// <summary>Gets or sets the icon item code.</summary>
         public string? IconItemCode { get; set; }
+        /// <summary>Gets or sets the icon ucontents.</summary>
         public string? IconUcontents { get; set; }
+        /// <summary>Gets or sets the custom icon key.</summary>
         public string? CustomIconKey { get; set; }
+        /// <summary>Gets or sets the title.</summary>
         public string? Title { get; set; }
+        /// <summary>Gets or sets the subtitle.</summary>
         public string? Subtitle { get; set; }
+        /// <summary>Gets or sets the status.</summary>
         public ItemRowStatus Status { get; set; }
         /// <summary>Optional tooltip text (rich text) shown on hover. If null/empty, no tooltip.</summary>
         public string? TooltipText { get; set; }
@@ -41,7 +51,7 @@ namespace ArcanumLib.Gui.Controls
     /// <summary>
     /// A reusable vertical list GUI element with icon nodes on the left and text on the right.
     /// Each row: [circle with item icon] Title
-    ///                                    Subtitle (smaller, grey)
+    /// Subtitle (smaller, grey)
     /// Click on a row fires the callback with the row Id.
     /// </summary>
     public class ItemListElement : GuiElement
@@ -103,7 +113,7 @@ namespace ArcanumLib.Gui.Controls
         /// <summary>
         /// Optional fallback resolver for icon item codes that are not found as regular
         /// items or blocks. Consumers with custom item systems (e.g. action items) should
-        /// set this to provide <see cref="ItemStack"/> instances for their custom codes.
+        /// set this to provide <see cref="ItemStack" /> instances for their custom codes.
         /// Parameters: (ICoreClientAPI capi, string itemCode) → ItemStack or null.
         /// </summary>
         public static System.Func<ICoreClientAPI, string, ItemStack>? IconStackFallbackResolver { get; set; }
@@ -115,6 +125,11 @@ namespace ArcanumLib.Gui.Controls
         private double TextLeft => scaled(62.0);
         private double PadTop => scaled(8.0);
 
+        /// <summary>Performs the item list element operation.</summary>
+        /// <param name="capi">The client API instance.</param>
+        /// <param name="bounds">The bounds value.</param>
+        /// <param name="rows">The rows value.</param>
+        /// <param name="onRowClicked">The callback to invoke.</param>
         public ItemListElement(ICoreClientAPI capi, ElementBounds bounds, List<ItemListRow> rows, Action<string> onRowClicked)
             : base(capi, bounds)
         {
@@ -123,6 +138,8 @@ namespace ArcanumLib.Gui.Controls
             listTexture = new LoadedTexture(capi);
         }
 
+        /// <summary>Sets data.</summary>
+        /// <param name="rows">The rows value.</param>
         public void SetData(List<ItemListRow> rows)
         {
             this.rows = rows ?? new List<ItemListRow>();
@@ -137,6 +154,7 @@ namespace ArcanumLib.Gui.Controls
         }
 
         /// <summary>Sets the vertical scroll offset in logical (unscaled) pixels.</summary>
+        /// <param name="value">The value to set or compare.</param>
         public void SetScroll(double value)
         {
             _scrollY = scaled(Math.Max(0.0, value));
@@ -145,6 +163,9 @@ namespace ArcanumLib.Gui.Controls
         /// <summary>Total height of the scrolled content in world pixels.</summary>
         private double ContentHeight => PadTop + (rows?.Count ?? 0) * RowHeight;
 
+        /// <summary>Performs the compose elements operation.</summary>
+        /// <param name="ctxStatic">The ctx static value.</param>
+        /// <param name="surfaceStatic">The surface static value.</param>
         public override void ComposeElements(Cairo.Context ctxStatic, Cairo.ImageSurface surfaceStatic)
         {
             _boundsCached = false;
@@ -176,6 +197,8 @@ namespace ArcanumLib.Gui.Controls
             lastTooltipText = null;
         }
 
+        /// <summary>Performs the render interactive elements operation.</summary>
+        /// <param name="deltaTime">The delta time value.</param>
         public override void RenderInteractiveElements(float deltaTime)
         {
             if (listTexture == null || Bounds?.ParentBounds == null) return;
@@ -340,6 +363,9 @@ namespace ArcanumLib.Gui.Controls
             }
         }
 
+        /// <summary>Performs the on mouse up on element operation.</summary>
+        /// <param name="api">The client API instance.</param>
+        /// <param name="args">The arguments.</param>
         public override void OnMouseUpOnElement(ICoreClientAPI api, MouseEvent args)
         {
             if (Bounds?.ParentBounds == null) return;
@@ -638,6 +664,7 @@ namespace ArcanumLib.Gui.Controls
             return stack;
         }
 
+        /// <summary>Releases all resources used by the current object.</summary>
         public override void Dispose()
         {
             listTexture?.Dispose();

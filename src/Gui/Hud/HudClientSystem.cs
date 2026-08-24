@@ -10,8 +10,13 @@ namespace ArcanumLib.Gui.Hud;
 /// <summary>
 /// Generic client-side ModSystem for a data-driven HUD.
 /// Loads definitions and themes, registers the network channel, and creates
-/// a <typeparamref name="TDialog"/> when a snapshot arrives.
+/// a <typeparamref name="TDialog" /> when a snapshot arrives.
 /// </summary>
+/// <typeparam name="TSnapshot">The type of the tsnapshot value.</typeparam>
+/// <typeparam name="THudDefinition">The type of the thuddefinition value.</typeparam>
+/// <typeparam name="TTheme">The type of the ttheme value.</typeparam>
+/// <typeparam name="TPanel">The type of the tpanel value.</typeparam>
+/// <typeparam name="TDialog">The type of the tdialog value.</typeparam>
 public abstract class HudClientSystem<TSnapshot, THudDefinition, TTheme, TPanel, TDialog> : ModSystem
     where TSnapshot : class, IHudSnapshot
     where THudDefinition : class, IValidatableDefinition
@@ -50,6 +55,8 @@ public abstract class HudClientSystem<TSnapshot, THudDefinition, TTheme, TPanel,
     protected virtual long HudTimeoutMs => 5000;
 
     /// <summary>Returns the loaded definition for the given identifier, or null.</summary>
+    /// <param name="id">The identifier.</param>
+    /// <returns>The definition, or null if none is found.</returns>
     public THudDefinition? GetDefinition(string id)
     {
         if (string.IsNullOrWhiteSpace(id)) return null;
@@ -57,6 +64,8 @@ public abstract class HudClientSystem<TSnapshot, THudDefinition, TTheme, TPanel,
     }
 
     /// <summary>Returns the loaded HUD theme for the given name, or null.</summary>
+    /// <param name="name">The name.</param>
+    /// <returns>The hud theme, or null if none is found.</returns>
     public TTheme? GetHudTheme(string name)
     {
         if (string.IsNullOrWhiteSpace(name)) return null;
@@ -64,34 +73,48 @@ public abstract class HudClientSystem<TSnapshot, THudDefinition, TTheme, TPanel,
     }
 
     /// <summary>Resolves a theme by name, merging over the built-in default.</summary>
+    /// <param name="name">The name.</param>
+    /// <returns>The resolve theme.</returns>
     public virtual TTheme ResolveTheme(string name) => HudThemeResolver.Resolve(name, _hudThemes, ResolveBuiltInTheme, CreateDefaultTheme());
 
     /// <summary>Returns a built-in theme for a name, or null when the name is not a built-in.</summary>
+    /// <param name="name">The name.</param>
+    /// <returns>The resolve built in theme, or null if none is found.</returns>
     protected abstract TTheme? ResolveBuiltInTheme(string name);
 
     /// <summary>Creates the default (fallback) theme.</summary>
+    /// <returns>The default theme.</returns>
     protected abstract TTheme CreateDefaultTheme();
 
     /// <summary>Creates the concrete HUD dialog instance.</summary>
+    /// <returns>The hud.</returns>
     protected abstract TDialog CreateHud();
 
     /// <summary>Returns true when the snapshot should be shown for the given definition.</summary>
+    /// <param name="snapshot">The snapshot value.</param>
+    /// <param name="definition">The definition value.</param>
+    /// <returns>true if active; otherwise, false.</returns>
     protected virtual bool IsActive(TSnapshot snapshot, THudDefinition? definition)
         => !snapshot.IsRemoved() && definition != null;
 
     /// <summary>Called after a snapshot has been applied to the dialog and before cleanup.</summary>
+    /// <param name="snapshot">The snapshot value.</param>
     protected virtual void OnSnapshotApplied(TSnapshot snapshot) { }
 
     /// <summary>Pushes a snapshot directly into the HUD.</summary>
+    /// <param name="snapshot">The snapshot value.</param>
     public virtual void UpdateFromSnapshot(TSnapshot snapshot) => OnSnapshotReceived(snapshot);
 
     /// <summary>Client-side only.</summary>
+    /// <param name="forSide">The for side value.</param>
+    /// <returns>true if the operation should load; otherwise, false.</returns>
     public override bool ShouldLoad(EnumAppSide forSide) => forSide == EnumAppSide.Client;
 
     /// <summary>
     /// Starts the client system: loads definitions and themes, then registers
-    /// the network channel. Derived types can override <see cref="OnStarted"/>.
+    /// the network channel. Derived types can override <see cref="OnStarted" />.
     /// </summary>
+    /// <param name="api">The client API instance.</param>
     public override void StartClientSide(ICoreClientAPI api)
     {
         _capi = api;
@@ -109,12 +132,14 @@ public abstract class HudClientSystem<TSnapshot, THudDefinition, TTheme, TPanel,
     }
 
     /// <summary>Allows derived systems to register additional message types on the same channel.</summary>
+    /// <param name="channel">The channel value.</param>
     protected virtual void RegisterExtraMessageTypes(IClientNetworkChannel channel) { }
 
     /// <summary>Called after the network channel is registered.</summary>
     protected virtual void OnStarted() { }
 
     /// <summary>Reloads definitions and themes after asset hot-reload.</summary>
+    /// <param name="api">The core API instance.</param>
     public override void AssetsFinalize(ICoreAPI api)
     {
         base.AssetsFinalize(api);
@@ -125,7 +150,7 @@ public abstract class HudClientSystem<TSnapshot, THudDefinition, TTheme, TPanel,
         }
     }
 
-    /// <summary>Loads definitions from <see cref="DefinitionAssetPath"/>.</summary>
+    /// <summary>Loads definitions from <see cref="DefinitionAssetPath" />.</summary>
     protected virtual void LoadDefinitions()
     {
         if (_capi == null) return;
@@ -140,9 +165,11 @@ public abstract class HudClientSystem<TSnapshot, THudDefinition, TTheme, TPanel,
     }
 
     /// <summary>Extracts the unique identifier from a loaded definition.</summary>
+    /// <param name="definition">The definition value.</param>
+    /// <returns>The definition id string, or null if none is found.</returns>
     protected abstract string GetDefinitionId(THudDefinition definition);
 
-    /// <summary>Loads themes from <see cref="ThemeAssetPath"/>.</summary>
+    /// <summary>Loads themes from <see cref="ThemeAssetPath" />.</summary>
     protected virtual void LoadThemes()
     {
         if (_capi == null) return;
@@ -155,6 +182,7 @@ public abstract class HudClientSystem<TSnapshot, THudDefinition, TTheme, TPanel,
     }
 
     /// <summary>Called when a snapshot packet arrives.</summary>
+    /// <param name="snapshot">The snapshot value.</param>
     protected virtual void OnSnapshotReceived(TSnapshot snapshot)
     {
         if (snapshot == null || _capi == null) return;
@@ -185,9 +213,12 @@ public abstract class HudClientSystem<TSnapshot, THudDefinition, TTheme, TPanel,
     }
 
     /// <summary>Extracts the definition identifier from a snapshot.</summary>
+    /// <param name="snapshot">The snapshot value.</param>
+    /// <returns>The snapshot id string, or null if none is found.</returns>
     protected abstract string GetSnapshotId(TSnapshot snapshot);
 
-    /// <summary>Closes the HUD if no snapshot has been received within <see cref="HudTimeoutMs"/>.</summary>
+    /// <summary>Closes the HUD if no snapshot has been received within <see cref="HudTimeoutMs" />.</summary>
+    /// <param name="dt">The elapsed time in seconds.</param>
     protected virtual void OnHudTimeoutTick(float dt)
     {
         if (_hud == null || _capi?.World == null) return;
@@ -201,7 +232,7 @@ public abstract class HudClientSystem<TSnapshot, THudDefinition, TTheme, TPanel,
         }
     }
 
-    /// <summary>Disposes the dialog, tick listener and calls <see cref="OnDisposed"/>.</summary>
+    /// <summary>Disposes the dialog, tick listener and calls <see cref="OnDisposed" />.</summary>
     public override void Dispose()
     {
         if (_hudTimeoutListenerId != 0 && _capi != null)
@@ -216,6 +247,6 @@ public abstract class HudClientSystem<TSnapshot, THudDefinition, TTheme, TPanel,
         base.Dispose();
     }
 
-    /// <summary>Called during <see cref="Dispose"/> after the HUD is closed.</summary>
+    /// <summary>Called during <see cref="Dispose" /> after the HUD is closed.</summary>
     protected virtual void OnDisposed() { }
 }

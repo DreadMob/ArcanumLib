@@ -14,6 +14,8 @@ public static class Pretty
     /// Removes line breaks, collapses multiple spaces, and trims a display string.
     /// Also strips common VTML/JSON newline markers.
     /// </summary>
+    /// <param name="value">The value to set or compare.</param>
+    /// <returns>The sanitize string, or null if none is found.</returns>
     public static string Sanitize(string? value)
     {
         if (string.IsNullOrWhiteSpace(value)) return "";
@@ -71,6 +73,8 @@ public static class Pretty
     /// readable, title-cased string ("Metalbit Uranium", "Hollow Trials").
     /// Underscores and colons are treated as separators.
     /// </summary>
+    /// <param name="value">The value to set or compare.</param>
+    /// <returns>The readable string, or null if none is found.</returns>
     public static string Readable(string? value)
     {
         if (string.IsNullOrWhiteSpace(value)) return "";
@@ -88,6 +92,8 @@ public static class Pretty
     /// Returns the last <c>:</c>-separated segment of a code, pretty-printed.
     /// Example: <c>"game:creature:bear"</c> → <c>"Bear"</c>.
     /// </summary>
+    /// <param name="value">The value to set or compare.</param>
+    /// <returns>The last segment string, or null if none is found.</returns>
     public static string LastSegment(string? value)
     {
         if (string.IsNullOrWhiteSpace(value)) return "";
@@ -103,6 +109,8 @@ public static class Pretty
     /// trailing dashes and wildcard markers.
     /// Example: <c>"game:flower-*"</c> → <c>"Flower"</c>.
     /// </summary>
+    /// <param name="code">The code value.</param>
+    /// <returns>The target code string, or null if none is found.</returns>
     public static string TargetCode(string? code)
     {
         if (string.IsNullOrWhiteSpace(code)) return "";

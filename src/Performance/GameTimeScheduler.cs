@@ -11,7 +11,7 @@ namespace ArcanumLib.Performance;
 /// and one-shot schedules at a specific in-game hour.
 /// </summary>
 /// <remarks>
-/// Uses <see cref="ICoreServerAPI.World.Calendar"/> for time queries and a game
+/// Uses the world's <c>Calendar</c> for time queries and a game
 /// tick listener to check for due schedules. This is server-side only because
 /// in-game time is authoritative on the server.
 /// </remarks>
@@ -38,6 +38,8 @@ public static class GameTimeScheduler
     /// <summary>
     /// Starts the in-game time scheduler on the server.
     /// </summary>
+    /// <param name="api">The server API instance.</param>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="api" /> is <see langword="null" />.</exception>
     public static void Start(ICoreServerAPI api)
     {
         if (api == null) throw new ArgumentNullException(nameof(api));
@@ -83,7 +85,10 @@ public static class GameTimeScheduler
     /// </summary>
     /// <param name="hour">Hour of the in-game day (0-23).</param>
     /// <param name="action">The action to run. Receives the current total hours.</param>
-    /// <returns>A schedule ID that can be used to cancel with <see cref="Cancel"/>.</returns>
+    /// <returns>A schedule ID that can be used to cancel with <see cref="Cancel" />.</returns>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="action" /> is <see langword="null" />.</exception>
+    /// <exception cref="ArgumentOutOfRangeException">Thrown when a argument out of range occurs.</exception>
+    /// <exception cref="InvalidOperationException">Thrown when the operation is invalid for the current state.</exception>
     public static int ScheduleDaily(int hour, Action<double> action)
     {
         if (action == null) throw new ArgumentNullException(nameof(action));
@@ -112,6 +117,10 @@ public static class GameTimeScheduler
     /// </summary>
     /// <param name="minute">Minute within the hour (0-59). Use 0 for on-the-hour.</param>
     /// <param name="action">The action to run.</param>
+    /// <returns>The schedule hourly.</returns>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="action" /> is <see langword="null" />.</exception>
+    /// <exception cref="ArgumentOutOfRangeException">Thrown when a argument out of range occurs.</exception>
+    /// <exception cref="InvalidOperationException">Thrown when the operation is invalid for the current state.</exception>
     public static int ScheduleHourly(int minute, Action<double> action)
     {
         if (action == null) throw new ArgumentNullException(nameof(action));
@@ -139,6 +148,12 @@ public static class GameTimeScheduler
     /// Schedules a one-shot action to fire after the given number of in-game hours
     /// have elapsed from the time of scheduling.
     /// </summary>
+    /// <param name="hours">The hours value.</param>
+    /// <param name="action">The callback to invoke.</param>
+    /// <returns>The schedule after hours.</returns>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="action" /> is <see langword="null" />.</exception>
+    /// <exception cref="ArgumentOutOfRangeException">Thrown when a argument out of range occurs.</exception>
+    /// <exception cref="InvalidOperationException">Thrown when the operation is invalid for the current state.</exception>
     public static int ScheduleAfterHours(double hours, Action<double> action)
     {
         if (action == null) throw new ArgumentNullException(nameof(action));
@@ -165,6 +180,7 @@ public static class GameTimeScheduler
     /// <summary>
     /// Cancels a scheduled action by ID.
     /// </summary>
+    /// <param name="scheduleId">The schedule id value.</param>
     public static void Cancel(int scheduleId)
     {
         lock (_syncLock)
@@ -188,6 +204,7 @@ public static class GameTimeScheduler
     /// <summary>
     /// Returns the number of active schedules.
     /// </summary>
+    /// <returns>The schedule count.</returns>
     public static int GetScheduleCount()
     {
         lock (_syncLock)

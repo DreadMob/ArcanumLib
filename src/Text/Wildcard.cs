@@ -9,8 +9,11 @@ namespace ArcanumLib.Text;
 public static class Wildcard
 {
     /// <summary>
-    /// Returns true when <paramref name="input"/> matches <paramref name="pattern"/>.
+    /// Returns true when <paramref name="input" /> matches <paramref name="pattern" />.
     /// </summary>
+    /// <param name="input">The input value.</param>
+    /// <param name="pattern">The pattern value.</param>
+    /// <returns>true if the operation succeeds; otherwise, false.</returns>
     public static bool Match(string? input, string? pattern)
     {
         if (input == null || pattern == null) return false;
@@ -54,9 +57,11 @@ public static class Wildcard
     }
 
     /// <summary>
-    /// Quick pre-check: returns true when <paramref name="pattern"/> is exactly
+    /// Quick pre-check: returns true when <paramref name="pattern" /> is exactly
     /// <c>prefix*</c> (a single star at the end). Useful for fast-path registry scans.
     /// </summary>
+    /// <param name="pattern">The pattern value.</param>
+    /// <returns>true if simple prefix; otherwise, false.</returns>
     public static bool IsSimplePrefix(string? pattern)
     {
         if (string.IsNullOrEmpty(pattern)) return false;

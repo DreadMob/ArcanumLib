@@ -32,12 +32,13 @@ public class InventoryChangeTracker : IDisposable
     /// <param name="inventoryCode">Inventory class to watch, e.g. "character".</param>
     /// <param name="checkIntervalMs">Minimum time between checks for one player.</param>
     /// <param name="stackHash">
-    /// Optional hash for an <see cref="ItemStack"/>. Defaults to
-    /// <see cref="InventoryFingerprint.GetStableStackHash"/>.
+    /// Optional hash for an <see cref="ItemStack" />. Defaults to
+    /// <see cref="InventoryFingerprint.GetStableStackHash" />.
     /// </param>
     /// <param name="slotFilter">
     /// Optional predicate for which slots to include. Defaults to wearable items.
     /// </param>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="api" /> is <see langword="null" />.</exception>
     public InventoryChangeTracker(
         ICoreAPI api,
         string inventoryCode = "character",
@@ -61,6 +62,8 @@ public class InventoryChangeTracker : IDisposable
     /// Returns true if the player's inventory has changed since the last check.
     /// Call before an expensive recalculation and skip the work when this returns false.
     /// </summary>
+    /// <param name="player">The player.</param>
+    /// <returns>true if the operation should recalculate; otherwise, false.</returns>
     public bool ShouldRecalculate(EntityPlayer player)
     {
         if (player?.Player?.InventoryManager == null) return false;
@@ -99,9 +102,10 @@ public class InventoryChangeTracker : IDisposable
     }
 
     /// <summary>
-    /// Forces a recalculation on the next <see cref="ShouldRecalculate"/> call
+    /// Forces a recalculation on the next <see cref="ShouldRecalculate" /> call
     /// for the given entity by clearing its cached fingerprint.
     /// </summary>
+    /// <param name="entityId">The entity id value.</param>
     public void Invalidate(long entityId)
     {
         lock (_syncLock)

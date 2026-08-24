@@ -3,7 +3,7 @@ using System;
 namespace ArcanumLib.Gui.Hud;
 
 /// <summary>
-/// A single data-driven element inside a <see cref="HudDefinition{TElement}"/>.
+/// A single data-driven element inside a <see cref="HudDefinition{TElement}" />.
 /// Contains the common layout and styling fields; specific mod elements can inherit
 /// and add their own typed options.
 /// </summary>
@@ -46,7 +46,7 @@ public class HudElementDefinition
     /// <summary>If true, draw a decorative horizontal bar to the right of the text for this element.</summary>
     public bool showBar;
 
-    /// <summary>Alias for <see cref="textColor"/>; used if <see cref="textColor"/> is not set.</summary>
+    /// <summary>Alias for <see cref="textColor" />; used if <see cref="textColor" /> is not set.</summary>
     public string? color { get; init; }
 
     /// <summary>

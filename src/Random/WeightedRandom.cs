@@ -7,6 +7,7 @@ namespace ArcanumLib.Randomization
     /// <summary>
     /// A single weighted entry.
     /// </summary>
+    /// <typeparam name="T">The type of the t value.</typeparam>
     public readonly struct WeightedEntry<T>
     {
         /// <summary>
@@ -19,6 +20,9 @@ namespace ArcanumLib.Randomization
         /// </summary>
         public float Weight { get; }
 
+        /// <summary>Performs the weighted entry operation.</summary>
+        /// <param name="value">The value to set or compare.</param>
+        /// <param name="weight">The weight value.</param>
         public WeightedEntry(T value, float weight)
         {
             Value = value;
@@ -30,6 +34,7 @@ namespace ArcanumLib.Randomization
     /// Reusable weighted table. Allows multiple entries to be added and picked
     /// repeatedly without recomputing the total weight each time, unless entries change.
     /// </summary>
+    /// <typeparam name="T">The type of the t value.</typeparam>
     public class WeightedTable<T>
     {
         private readonly List<WeightedEntry<T>> _entries = new();
@@ -67,6 +72,8 @@ namespace ArcanumLib.Randomization
         /// <summary>
         /// Add a weighted entry.
         /// </summary>
+        /// <param name="value">The value to set or compare.</param>
+        /// <param name="weight">The weight value.</param>
         public void Add(T value, float weight)
         {
             _entries.Add(new WeightedEntry<T>(value, weight));
@@ -76,6 +83,7 @@ namespace ArcanumLib.Randomization
         /// <summary>
         /// Add a range of weighted entries.
         /// </summary>
+        /// <param name="entries">The collection of entries values.</param>
         public void AddRange(IEnumerable<WeightedEntry<T>> entries)
         {
             if (entries == null) return;
@@ -86,6 +94,8 @@ namespace ArcanumLib.Randomization
         /// <summary>
         /// Add a range of values with a weight selector.
         /// </summary>
+        /// <param name="values">The collection of values values.</param>
+        /// <param name="weightSelector">The weight selector value.</param>
         public void AddRange(IEnumerable<T> values, System.Func<T, float> weightSelector)
         {
             if (values == null || weightSelector == null) return;
@@ -107,6 +117,8 @@ namespace ArcanumLib.Randomization
         /// <summary>
         /// Pick a value using the provided random source.
         /// </summary>
+        /// <param name="random">The random number generator.</param>
+        /// <returns>The pick, or null if none is found.</returns>
         public T Pick(Random random)
         {
             return WeightedRandom.Pick(_entries, e => e.Value, e => e.Weight, random);
@@ -115,6 +127,8 @@ namespace ArcanumLib.Randomization
         /// <summary>
         /// Pick a value or return default when the table is empty or total weight is zero.
         /// </summary>
+        /// <param name="random">The random number generator.</param>
+        /// <returns>The pick or default, or null if none is found.</returns>
         public T? PickOrDefault(Random random)
         {
             if (Count == 0) return default;
@@ -132,6 +146,12 @@ namespace ArcanumLib.Randomization
         /// <summary>
         /// Pick a value from a weighted list. Returns the first item if all weights are zero.
         /// </summary>
+        /// <typeparam name="T">The type of the t value.</typeparam>
+        /// <param name="items">The collection of items values.</param>
+        /// <param name="weightSelector">The weight selector value.</param>
+        /// <param name="random">The random number generator.</param>
+        /// <returns>The pick, or null if none is found.</returns>
+        /// <exception cref="ArgumentNullException">Thrown when <paramref name="items" /> is <see langword="null" />.</exception>
         public static T Pick<T>(IEnumerable<T> items, System.Func<T, float> weightSelector, Random random)
         {
             if (items == null) throw new ArgumentNullException(nameof(items));
@@ -164,6 +184,14 @@ namespace ArcanumLib.Randomization
         /// <summary>
         /// Pick a value from a list of entries.
         /// </summary>
+        /// <typeparam name="TEntry">The type of the tentry value.</typeparam>
+        /// <typeparam name="T">The type of the t value.</typeparam>
+        /// <param name="entries">The collection of entries values.</param>
+        /// <param name="valueSelector">The value selector value.</param>
+        /// <param name="weightSelector">The weight selector value.</param>
+        /// <param name="random">The random number generator.</param>
+        /// <returns>The pick, or null if none is found.</returns>
+        /// <exception cref="ArgumentNullException">Thrown when <paramref name="entries" /> is <see langword="null" />.</exception>
         public static T Pick<TEntry, T>(IEnumerable<TEntry> entries, System.Func<TEntry, T> valueSelector, System.Func<TEntry, float> weightSelector, Random random)
         {
             if (entries == null) throw new ArgumentNullException(nameof(entries));
@@ -197,6 +225,10 @@ namespace ArcanumLib.Randomization
         /// <summary>
         /// Pick from a list of weighted entries.
         /// </summary>
+        /// <typeparam name="T">The type of the t value.</typeparam>
+        /// <param name="items">The collection of items values.</param>
+        /// <param name="random">The random number generator.</param>
+        /// <returns>The pick.</returns>
         public static WeightedEntry<T> Pick<T>(IEnumerable<WeightedEntry<T>> items, Random random)
         {
             return Pick(items, v => v.Weight, random);
@@ -205,6 +237,11 @@ namespace ArcanumLib.Randomization
         /// <summary>
         /// Pick or return default when the list is empty or all weights are zero.
         /// </summary>
+        /// <typeparam name="T">The type of the t value.</typeparam>
+        /// <param name="items">The collection of items values.</param>
+        /// <param name="weightSelector">The weight selector value.</param>
+        /// <param name="random">The random number generator.</param>
+        /// <returns>The pick or default, or null if none is found.</returns>
         public static T? PickOrDefault<T>(IEnumerable<T> items, System.Func<T, float> weightSelector, Random random)
         {
             if (items == null || weightSelector == null || random == null) return default;
@@ -224,6 +261,13 @@ namespace ArcanumLib.Randomization
         /// Roll a weighted table and pick a specific number of distinct winners without replacement.
         /// If there are fewer unique entries than requested count, all are returned.
         /// </summary>
+        /// <typeparam name="T">The type of the t value.</typeparam>
+        /// <param name="items">The collection of items values.</param>
+        /// <param name="weightSelector">The weight selector value.</param>
+        /// <param name="random">The random number generator.</param>
+        /// <param name="count">The number of items.</param>
+        /// <returns>A collection of pick distinct values.</returns>
+        /// <exception cref="ArgumentNullException">Thrown when <paramref name="items" /> is <see langword="null" />.</exception>
         public static IReadOnlyList<T> PickDistinct<T>(IEnumerable<T> items, System.Func<T, float> weightSelector, Random random, int count)
         {
             if (items == null) throw new ArgumentNullException(nameof(items));
@@ -250,6 +294,11 @@ namespace ArcanumLib.Randomization
         /// Computes each item's percentage share of the total weight (negative weights treated as zero).
         /// Returns a list aligned with the input enumeration order.
         /// </summary>
+        /// <typeparam name="T">The type of the t value.</typeparam>
+        /// <param name="items">The collection of items values.</param>
+        /// <param name="weightSelector">The weight selector value.</param>
+        /// <returns>A collection of percentages values.</returns>
+        /// <exception cref="ArgumentNullException">Thrown when <paramref name="items" /> is <see langword="null" />.</exception>
         public static IReadOnlyList<(T Item, float Percentage)> GetPercentages<T>(IEnumerable<T> items, System.Func<T, float> weightSelector)
         {
             if (items == null) throw new ArgumentNullException(nameof(items));

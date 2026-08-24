@@ -70,7 +70,7 @@ namespace ArcanumLib.Persistence
         }
 
         /// <summary>
-        /// Marks the store as dirty so the next <see cref="Save"/> will persist the data.
+        /// Marks the store as dirty so the next <see cref="Save" /> will persist the data.
         /// </summary>
         public void MarkDirty()
         {
@@ -109,9 +109,6 @@ namespace ArcanumLib.Persistence
         /// <param name="storeId">The store id.</param>
         /// <param name="dataVersion">The current schema version.</param>
         /// <param name="factory">Factory for creating a fresh data instance.</param>
-        /// <exception cref="ArgumentException">Thrown when <paramref name="modId"/> or <paramref name="storeId"/> is empty.</exception>
-        /// <exception cref="ArgumentOutOfRangeException">Thrown when <paramref name="dataVersion"/> is less than 1.</exception>
-        /// <exception cref="ArgumentNullException">Thrown when <paramref name="factory"/> is null.</exception>
         public ModDataStoreInstance(ICoreServerAPI? sapi, string modId, string storeId, int dataVersion, Func<T> factory)
         {
             if (string.IsNullOrWhiteSpace(modId))
@@ -136,7 +133,6 @@ namespace ArcanumLib.Persistence
         /// </summary>
         /// <param name="fromVersion">The source schema version.</param>
         /// <param name="migration">A function that transforms the previous JSON payload into the next version.</param>
-        /// <exception cref="ArgumentNullException">Thrown when <paramref name="migration"/> is null.</exception>
         public void RegisterMigration(int fromVersion, Func<JToken, JToken> migration)
         {
             if (migration == null) throw new ArgumentNullException(nameof(migration));
@@ -236,7 +232,7 @@ namespace ArcanumLib.Persistence
         }
 
         /// <summary>
-        /// Saves the current data into the current savegame if <see cref="IsDirty"/> is true.
+        /// Saves the current data into the current savegame if <see cref="IsDirty" /> is true.
         /// Resets the dirty flag on success.
         /// </summary>
         public void Save()

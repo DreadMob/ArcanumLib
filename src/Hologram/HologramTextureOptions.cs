@@ -15,7 +15,7 @@ public class HologramTextureOptions
     /// <summary>Texture width in pixels. The generator will expand if any line does not fit.</summary>
     public float LineWidth { get; set; } = 520f;
 
-    /// <summary>Multiplier applied to <see cref="FontSize"/> to determine vertical spacing.</summary>
+    /// <summary>Multiplier applied to <see cref="FontSize" /> to determine vertical spacing.</summary>
     public float LineHeightMultiplier { get; set; } = 1.45f;
 
     /// <summary>Maximum number of lines to render. 0 means unlimited.</summary>
@@ -33,10 +33,10 @@ public class HologramTextureOptions
     /// <summary>Whether to center the text horizontally.</summary>
     public bool Centered { get; set; } = true;
 
-    /// <summary>Background RGBA color (0-1 range). Used when <see cref="DrawBackground"/> is true.</summary>
+    /// <summary>Background RGBA color (0-1 range). Used when <see cref="DrawBackground" /> is true.</summary>
     public RGBA? BackgroundColor { get; set; } = new RGBA(0.06, 0.07, 0.10, 0.72);
 
-    /// <summary>Border RGBA color (0-1 range). Used when <see cref="DrawBackground"/> is true.</summary>
+    /// <summary>Border RGBA color (0-1 range). Used when <see cref="DrawBackground" /> is true.</summary>
     public RGBA? BorderColor { get; set; } = new RGBA(0.85, 0.7, 0.25, 0.35);
 
     /// <summary>Text RGBA color (0-1 range), or null to use the default light text.</summary>
@@ -58,13 +58,14 @@ public class HologramTextureOptions
     public FontSlant FontSlant { get; set; } = FontSlant.Normal;
 
     /// <summary>
-    /// Optional per-line renderer. Return <c>true</c> from <see cref="IHologramLineRenderer.RenderLine"/> to skip the default centered draw.
+    /// Optional per-line renderer. Return <c>true</c> from <see cref="IHologramLineRenderer.RenderLine" /> to skip the default centered draw.
     /// </summary>
     public IHologramLineRenderer? RenderLine { get; set; }
 
     /// <summary>
     /// Creates a shallow copy of these options. Useful for applying per-source overrides.
     /// </summary>
+    /// <returns>The clone.</returns>
     public HologramTextureOptions Clone() => new()
     {
         FontSize = FontSize,

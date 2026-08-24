@@ -8,6 +8,7 @@
         <ModReleaseDir>$(MSBuildThisFileDirectory)..\Releases</ModReleaseDir>
         <Nullable>enable</Nullable>
         <ImplicitUsings>enable</ImplicitUsings>
+        <DefaultItemExcludes>$(DefaultItemExcludes);tests\**;.doctool\**</DefaultItemExcludes>
     </PropertyGroup>
 
     <ItemGroup>

@@ -14,6 +14,9 @@ namespace ArcanumLib.Common
         /// Sets a boolean on the entity's watched attributes and marks the path dirty,
         /// but only if the value actually changed. Reduces unnecessary network sync.
         /// </summary>
+        /// <param name="entity">The entity.</param>
+        /// <param name="key">The key to look up.</param>
+        /// <param name="value">The value to set or compare.</param>
         public static void SetWatchedBoolDirty(this Entity entity, string key, bool value)
         {
             var wa = entity?.WatchedAttributes;
@@ -28,9 +31,12 @@ namespace ArcanumLib.Common
 
         /// <summary>
         /// Updates a player's walkSpeed only if the blended value has changed by more than
-        /// <paramref name="epsilon"/>. Reduces network sync spam from frequent walkSpeed updates.
+        /// <paramref name="epsilon" />. Reduces network sync spam from frequent walkSpeed updates.
         /// Returns true if walkSpeed was updated.
         /// </summary>
+        /// <param name="player">The player.</param>
+        /// <param name="epsilon">The epsilon value.</param>
+        /// <returns>true if the operation succeeds; otherwise, false.</returns>
         public static bool UpdatePlayerWalkSpeed(this EntityPlayer player, float epsilon = 0.001f)
         {
             if (player?.Stats == null) return false;

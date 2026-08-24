@@ -25,6 +25,9 @@ namespace ArcanumLib.Items
         /// then legacy keys, then explicitly configured suffixed charge keys.
         /// Returns null if no charge key is found.
         /// </summary>
+        /// <param name="stack">The item stack.</param>
+        /// <param name="config">The config value.</param>
+        /// <returns>The find charge key, or null if none is found.</returns>
         public static string? FindChargeKey(ItemStack? stack, ItemChargeConfig? config = null)
         {
             config ??= DefaultConfig;
@@ -42,6 +45,9 @@ namespace ArcanumLib.Items
         /// <summary>
         /// Returns the short (unprefixed) name of the charge attribute, or null if none.
         /// </summary>
+        /// <param name="stack">The item stack.</param>
+        /// <param name="config">The config value.</param>
+        /// <returns>The charge short key, or null if none is found.</returns>
         public static string? GetChargeShortKey(ItemStack? stack, ItemChargeConfig? config = null)
         {
             config ??= DefaultConfig;
@@ -64,6 +70,9 @@ namespace ArcanumLib.Items
         /// <summary>
         /// Current charge value.
         /// </summary>
+        /// <param name="stack">The item stack.</param>
+        /// <param name="config">The config value.</param>
+        /// <returns>The charge value.</returns>
         public static float GetChargeValue(ItemStack? stack, ItemChargeConfig? config = null)
         {
             config ??= DefaultConfig;
@@ -75,6 +84,9 @@ namespace ArcanumLib.Items
         /// <summary>
         /// Sets the current charge value, clamped to [0, max].
         /// </summary>
+        /// <param name="stack">The item stack.</param>
+        /// <param name="value">The value to set or compare.</param>
+        /// <param name="config">The config value.</param>
         public static void SetChargeValue(ItemStack? stack, float value, ItemChargeConfig? config = null)
         {
             config ??= DefaultConfig;
@@ -90,12 +102,18 @@ namespace ArcanumLib.Items
         /// <summary>
         /// Maximum charge capacity for the stack.
         /// </summary>
+        /// <param name="stack">The item stack.</param>
+        /// <param name="config">The config value.</param>
+        /// <returns>The charge max.</returns>
         public static float GetChargeMax(ItemStack? stack, ItemChargeConfig? config = null)
             => GetMetaFloat(stack, "chargemax", config?.DefaultChargeMax ?? DefaultConfig.DefaultChargeMax, config);
 
         /// <summary>
         /// Returns the current charge as a percentage of the maximum (0..100).
         /// </summary>
+        /// <param name="stack">The item stack.</param>
+        /// <param name="config">The config value.</param>
+        /// <returns>The charge percentage.</returns>
         public static float GetChargePercentage(ItemStack? stack, ItemChargeConfig? config = null)
         {
             float max = GetChargeMax(stack, config);
@@ -106,12 +124,18 @@ namespace ArcanumLib.Items
         /// <summary>
         /// Charge restored per unit of refuel material.
         /// </summary>
+        /// <param name="stack">The item stack.</param>
+        /// <param name="config">The config value.</param>
+        /// <returns>The charge per unit.</returns>
         public static float GetChargePerUnit(ItemStack? stack, ItemChargeConfig? config = null)
             => GetMetaFloat(stack, "chargeperunit", config?.DefaultChargePerUnit ?? DefaultConfig.DefaultChargePerUnit, config);
 
         /// <summary>
         /// List of refuel material patterns accepted by this stack.
         /// </summary>
+        /// <param name="stack">The item stack.</param>
+        /// <param name="config">The config value.</param>
+        /// <returns>The charge materials.</returns>
         public static List<string> GetChargeMaterials(ItemStack? stack, ItemChargeConfig? config = null)
         {
             config ??= DefaultConfig;
@@ -135,18 +159,28 @@ namespace ArcanumLib.Items
         /// <summary>
         /// Returns true if the stack has at least one refuel material.
         /// </summary>
+        /// <param name="stack">The item stack.</param>
+        /// <param name="config">The config value.</param>
+        /// <returns>true if the operation has charge materials; otherwise, false.</returns>
         public static bool HasChargeMaterials(ItemStack? stack, ItemChargeConfig? config = null)
             => GetChargeMaterials(stack, config).Count > 0;
 
         /// <summary>
         /// Returns true if the stack currently has a charge attribute.
         /// </summary>
+        /// <param name="stack">The item stack.</param>
+        /// <param name="config">The config value.</param>
+        /// <returns>true if charged; otherwise, false.</returns>
         public static bool IsCharged(ItemStack? stack, ItemChargeConfig? config = null)
             => FindChargeKey(stack, config) != null;
 
         /// <summary>
         /// Returns the display name for a charge attribute, optionally with the first refuel material in parentheses.
         /// </summary>
+        /// <param name="stack">The item stack.</param>
+        /// <param name="shortKey">The short key value.</param>
+        /// <param name="config">The config value.</param>
+        /// <returns>The charge display name, or null if none is found.</returns>
         public static string? GetChargeDisplayName(ItemStack? stack, string? shortKey, ItemChargeConfig? config = null)
         {
             config ??= DefaultConfig;
@@ -169,6 +203,9 @@ namespace ArcanumLib.Items
         /// <summary>
         /// Resolves the display name for the first refuel material pattern, if any.
         /// </summary>
+        /// <param name="stack">The item stack.</param>
+        /// <param name="config">The config value.</param>
+        /// <returns>The first charge material display name, or null if none is found.</returns>
         public static string? GetFirstChargeMaterialDisplayName(ItemStack? stack, ItemChargeConfig? config = null)
         {
             config ??= DefaultConfig;
@@ -188,6 +225,9 @@ namespace ArcanumLib.Items
         /// <summary>
         /// Returns the unit suffix for a charge attribute, or empty string if none.
         /// </summary>
+        /// <param name="shortKey">The short key value.</param>
+        /// <param name="config">The config value.</param>
+        /// <returns>The charge unit string, or null if none is found.</returns>
         public static string GetChargeUnit(string? shortKey, ItemChargeConfig? config = null)
         {
             config ??= DefaultConfig;
@@ -204,6 +244,10 @@ namespace ArcanumLib.Items
         /// <summary>
         /// Determines whether the source item can refill the sink item's charge pool.
         /// </summary>
+        /// <param name="sinkStack">The item stack.</param>
+        /// <param name="sourceStack">The item stack.</param>
+        /// <param name="config">The config value.</param>
+        /// <returns>true if the operation can recharge with; otherwise, false.</returns>
         public static bool CanRechargeWith(ItemStack? sinkStack, ItemStack? sourceStack, ItemChargeConfig? config = null)
         {
             config ??= DefaultConfig;
@@ -237,8 +281,12 @@ namespace ArcanumLib.Items
 
         /// <summary>
         /// Adds one unit of charge to the sink item and returns whether charge changed.
-        /// <paramref name="consumedQuantity"/> is set to 1 if charge was added, 0 otherwise.
+        /// <paramref name="consumedQuantity" /> is set to 1 if charge was added, 0 otherwise.
         /// </summary>
+        /// <param name="sinkStack">The item stack.</param>
+        /// <param name="consumedQuantity">When this method returns, contains the <paramref name="consumedQuantity" /> value.</param>
+        /// <param name="config">The config value.</param>
+        /// <returns>true if the operation succeeded; otherwise, false.</returns>
         public static bool TryRecharge(ItemStack? sinkStack, out int consumedQuantity, ItemChargeConfig? config = null)
         {
             consumedQuantity = 0;
@@ -264,6 +312,10 @@ namespace ArcanumLib.Items
         /// Tries to consume a flat amount of charge from the stack.
         /// Returns true if any charge was consumed.
         /// </summary>
+        /// <param name="stack">The item stack.</param>
+        /// <param name="amount">The amount value.</param>
+        /// <param name="config">The config value.</param>
+        /// <returns>true if the operation succeeded; otherwise, false.</returns>
         public static bool TryConsumeCharge(ItemStack? stack, float amount, ItemChargeConfig? config = null)
         {
             config ??= DefaultConfig;
@@ -284,6 +336,11 @@ namespace ArcanumLib.Items
         /// Returns the stat multiplier from active charge gating, or false if the attribute is not gated.
         /// Only time-based charges gate other stats by default.
         /// </summary>
+        /// <param name="stack">The item stack.</param>
+        /// <param name="attributeName">The attribute name value.</param>
+        /// <param name="multiplier">When this method returns, contains the <paramref name="multiplier" /> value.</param>
+        /// <param name="config">The config value.</param>
+        /// <returns>true if the operation succeeded; otherwise, false.</returns>
         public static bool TryGetChargeGatingMultiplier(ItemStack? stack, string? attributeName, out float multiplier, ItemChargeConfig? config = null)
         {
             multiplier = 1f;
@@ -348,6 +405,10 @@ namespace ArcanumLib.Items
         /// Drains time-based charge from all '*chargehours' attributes on the stack.
         /// Returns true if any charge changed.
         /// </summary>
+        /// <param name="stack">The item stack.</param>
+        /// <param name="elapsedHours">The elapsed hours value.</param>
+        /// <param name="config">The config value.</param>
+        /// <returns>true if the operation succeeded; otherwise, false.</returns>
         public static bool TryDrainTimeCharge(ItemStack? stack, float elapsedHours, ItemChargeConfig? config = null)
         {
             config ??= DefaultConfig;
@@ -372,6 +433,9 @@ namespace ArcanumLib.Items
         /// <summary>
         /// Gets all time-based charge attribute keys present on the stack.
         /// </summary>
+        /// <param name="stack">The item stack.</param>
+        /// <param name="config">The config value.</param>
+        /// <returns>The time charge keys.</returns>
         public static List<string> GetTimeChargeKeys(ItemStack? stack, ItemChargeConfig? config = null)
         {
             config ??= DefaultConfig;
@@ -388,6 +452,9 @@ namespace ArcanumLib.Items
         /// <summary>
         /// Returns true if the stack has any time-based charge remaining.
         /// </summary>
+        /// <param name="stack">The item stack.</param>
+        /// <param name="config">The config value.</param>
+        /// <returns>true if the operation has any time charge; otherwise, false.</returns>
         public static bool HasAnyTimeCharge(ItemStack? stack, ItemChargeConfig? config = null)
         {
             foreach (var key in GetTimeChargeKeys(stack, config))
@@ -399,6 +466,11 @@ namespace ArcanumLib.Items
         /// <summary>
         /// Reads a float from the first matching metadata key.
         /// </summary>
+        /// <param name="stack">The item stack.</param>
+        /// <param name="shortKey">The short key value.</param>
+        /// <param name="defaultValue">The default value to use when none is found.</param>
+        /// <param name="config">The config value.</param>
+        /// <returns>The meta float.</returns>
         public static float GetMetaFloat(ItemStack? stack, string shortKey, float defaultValue, ItemChargeConfig? config = null)
         {
             config ??= DefaultConfig;
@@ -416,6 +488,10 @@ namespace ArcanumLib.Items
         /// <summary>
         /// Reads a string from the first matching metadata key.
         /// </summary>
+        /// <param name="stack">The item stack.</param>
+        /// <param name="shortKey">The short key value.</param>
+        /// <param name="config">The config value.</param>
+        /// <returns>The meta string, or null if none is found.</returns>
         public static string? GetMetaString(ItemStack? stack, string shortKey, ItemChargeConfig? config = null)
         {
             config ??= DefaultConfig;

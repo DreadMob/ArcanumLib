@@ -37,18 +37,25 @@ namespace ArcanumLib.Gui.Controls
         private double DividerPad => scaled(8.0);
         private double LineHeightMul => 1.35;
 
-        // Scrollbar callback — set by the composer
+        /// <summary>
+        /// Scrollbar callback set by the composer.
+        /// </summary>
         public Action<float>? OnScroll;
 
         /// <summary>
         /// Optional localization resolver. If set, called to resolve localization keys
-        /// (strings containing ':'). If null, falls back to <see cref="Lang.Get"/>.
+        /// (strings containing ':'). If null, falls back to <see cref="Lang.Get" />.
         /// Consumers with custom localization systems should set this.
         /// </summary>
         public static Func<string, string>? Resolver { get; set; }
 
+        /// <summary>Gets the total content height.</summary>
         public double TotalContentHeight => totalContentHeight;
 
+        /// <summary>Performs the gui element custom tab content operation.</summary>
+        /// <param name="capi">The client API instance.</param>
+        /// <param name="bounds">The bounds value.</param>
+        /// <param name="data">The associated data.</param>
         public GuiElementCustomTabContent(ICoreClientAPI capi, ElementBounds bounds, CustomTabData data)
             : base(capi, bounds)
         {
@@ -56,22 +63,32 @@ namespace ArcanumLib.Gui.Controls
             contentTexture = new LoadedTexture(capi);
         }
 
+        /// <summary>Performs the compose elements operation.</summary>
+        /// <param name="ctxStatic">The ctx static value.</param>
+        /// <param name="surfaceStatic">The surface static value.</param>
         public override void ComposeElements(Context ctxStatic, ImageSurface surfaceStatic)
         {
             RegenerateTexture();
         }
 
+        /// <summary>Sets scroll.</summary>
+        /// <param name="value">The value to set or compare.</param>
         public void SetScroll(double value)
         {
             scrollY = Math.Max(0, Math.Min(maxScrollY, value));
         }
 
+        /// <summary>Updates scrollbar.</summary>
+        /// <param name="sb">The sb value.</param>
         public void UpdateScrollbar(ArcanumScrollbar sb)
         {
             if (sb == null) return;
             sb.SetHeights((float)Bounds.InnerHeight, (float)totalContentHeight);
         }
 
+        /// <summary>Performs the on mouse wheel operation.</summary>
+        /// <param name="api">The client API instance.</param>
+        /// <param name="args">The arguments.</param>
         public override void OnMouseWheel(ICoreClientAPI api, MouseWheelEventArgs args)
         {
             if (args.IsHandled) return;
@@ -389,12 +406,15 @@ namespace ArcanumLib.Gui.Controls
             return curY - y;
         }
 
+        /// <summary>Performs the render interactive elements operation.</summary>
+        /// <param name="deltaTime">The delta time value.</param>
         public override void RenderInteractiveElements(float deltaTime)
         {
             if (contentTexture == null || contentTexture.TextureId == 0) return;
             api.Render.Render2DLoadedTexture(contentTexture, (float)Bounds.absX, (float)(Bounds.absY - scrollY));
         }
 
+        /// <summary>Releases all resources used by the current object.</summary>
         public override void Dispose()
         {
             contentTexture?.Dispose();

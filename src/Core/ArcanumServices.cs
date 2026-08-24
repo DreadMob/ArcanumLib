@@ -7,7 +7,7 @@ using Vintagestory.API.Server;
 namespace ArcanumLib.Core;
 
 /// <summary>
-/// The scope of a service registered in <see cref="ArcanumServices"/>.
+/// The scope of a service registered in <see cref="ArcanumServices" />.
 /// </summary>
 public enum ArcanumServiceScope
 {
@@ -44,12 +44,11 @@ public static class ArcanumServices
     private static readonly object _syncLock = new();
 
     /// <summary>
-    /// Registers or replaces a service of type <typeparamref name="T"/> in the given <paramref name="scope"/>.
+    /// Registers or replaces a service of type <typeparamref name="T" /> in the given <paramref name="scope" />.
     /// </summary>
     /// <typeparam name="T">The service type.</typeparam>
     /// <param name="service">The service instance to register.</param>
     /// <param name="scope">The scope the service belongs to.</param>
-    /// <exception cref="ArgumentNullException">Thrown when <paramref name="service"/> is null.</exception>
     public static void Register<T>(T service, ArcanumServiceScope scope = ArcanumServiceScope.Global) where T : class
     {
         if (service == null) throw new ArgumentNullException(nameof(service));
@@ -61,7 +60,7 @@ public static class ArcanumServices
     }
 
     /// <summary>
-    /// Removes the registered service of type <typeparamref name="T"/> from the given <paramref name="scope"/> and disposes it if it is disposable.
+    /// Removes the registered service of type <typeparamref name="T" /> from the given <paramref name="scope" /> and disposes it if it is disposable.
     /// </summary>
     /// <typeparam name="T">The service type.</typeparam>
     /// <param name="scope">The scope to remove the service from.</param>
@@ -77,8 +76,8 @@ public static class ArcanumServices
     }
 
     /// <summary>
-    /// Returns the registered service of type <typeparamref name="T"/> from the requested <paramref name="scope"/>, or null.
-    /// If <paramref name="scope"/> is <c>null</c>, any scope is accepted and the first match is returned.
+    /// Returns the registered service of type <typeparamref name="T" /> from the requested <paramref name="scope" />, or null.
+    /// If <paramref name="scope" /> is <c>null</c>, any scope is accepted and the first match is returned.
     /// </summary>
     /// <typeparam name="T">The service type.</typeparam>
     /// <param name="scope">The scope to search, or <c>null</c> to search all scopes.</param>
@@ -104,7 +103,7 @@ public static class ArcanumServices
     }
 
     /// <summary>
-    /// Tries to return the registered service of type <typeparamref name="T"/>.
+    /// Tries to return the registered service of type <typeparamref name="T" />.
     /// </summary>
     /// <typeparam name="T">The service type.</typeparam>
     /// <param name="service">When this method returns, contains the registered service, or <c>null</c> if no service is registered.</param>
@@ -117,14 +116,12 @@ public static class ArcanumServices
     }
 
     /// <summary>
-    /// Returns the existing service of type <typeparamref name="T"/> or creates and registers a new one.
+    /// Returns the existing service of type <typeparamref name="T" /> or creates and registers a new one.
     /// </summary>
     /// <typeparam name="T">The service type.</typeparam>
     /// <param name="factory">Factory used to create the service if it is not already registered.</param>
     /// <param name="scope">The scope to register the service in.</param>
     /// <returns>The existing or newly created service instance.</returns>
-    /// <exception cref="ArgumentNullException">Thrown when <paramref name="factory"/> is null.</exception>
-    /// <exception cref="InvalidOperationException">Thrown when <paramref name="factory"/> returns null.</exception>
     public static T EnsureInitialized<T>(Func<T> factory, ArcanumServiceScope scope = ArcanumServiceScope.Global) where T : class
     {
         if (factory == null) throw new ArgumentNullException(nameof(factory));
@@ -144,12 +141,11 @@ public static class ArcanumServices
     }
 
     /// <summary>
-    /// Returns the registered service of the given <paramref name="type"/>, or null.
+    /// Returns the registered service of the given <paramref name="type" />, or null.
     /// </summary>
     /// <param name="type">The service type.</param>
     /// <param name="scope">The scope to search, or <c>null</c> to search all scopes.</param>
     /// <returns>The registered service instance, or <c>null</c> if no service is registered.</returns>
-    /// <exception cref="ArgumentNullException">Thrown when <paramref name="type"/> is null.</exception>
     public static object? Get(Type type, ArcanumServiceScope? scope = null)
     {
         if (type == null) throw new ArgumentNullException(nameof(type));
@@ -172,8 +168,8 @@ public static class ArcanumServices
     }
 
     /// <summary>
-    /// Clears all registered services in the given <paramref name="scope"/> and disposes them if possible.
-    /// If <paramref name="scope"/> is <c>null</c>, all scopes are cleared. Intended for world shutdown.
+    /// Clears all registered services in the given <paramref name="scope" /> and disposes them if possible.
+    /// If <paramref name="scope" /> is <c>null</c>, all scopes are cleared. Intended for world shutdown.
     /// </summary>
     /// <param name="scope">The scope to clear, or <c>null</c> to clear all.</param>
     public static void Shutdown(ArcanumServiceScope? scope = null)
@@ -210,10 +206,10 @@ public static class ArcanumServices
     }
 
     /// <summary>
-    /// Returns the scope that should be used for a service owned by the given <paramref name="api"/>.
+    /// Returns the scope that should be used for a service owned by the given <paramref name="api" />.
     /// </summary>
     /// <param name="api">The API whose side is being tested.</param>
-    /// <returns><see cref="ArcanumServiceScope.Client"/> for client APIs, <see cref="ArcanumServiceScope.Server"/> for server APIs, or <see cref="ArcanumServiceScope.Global"/> if unknown.</returns>
+    /// <returns><see cref="ArcanumServiceScope.Client" /> for client APIs, <see cref="ArcanumServiceScope.Server" /> for server APIs, or <see cref="ArcanumServiceScope.Global" /> if unknown.</returns>
     public static ArcanumServiceScope ScopeFor(ICoreAPI? api)
     {
         if (api is ICoreServerAPI) return ArcanumServiceScope.Server;

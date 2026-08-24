@@ -6,7 +6,7 @@ using Vintagestory.API.Client;
 namespace ArcanumLib.Hologram;
 
 /// <summary>
-/// Generates a <see cref="HologramTexture"/> from a string using Cairo.
+/// Generates a <see cref="HologramTexture" /> from a string using Cairo.
 /// </summary>
 public static class HologramTextureGenerator
 {
@@ -17,7 +17,8 @@ public static class HologramTextureGenerator
     /// <param name="text">The multi-line text to render.</param>
     /// <param name="options">Texture generation options.</param>
     /// <param name="version">Version to store on the returned texture.</param>
-    /// <returns>A hologram texture. The underlying <see cref="LoadedTexture"/> may be null if the text is empty.</returns>
+    /// <returns>A hologram texture. The underlying <see cref="LoadedTexture" /> may be null if the text is empty.</returns>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="capi" /> is <see langword="null" />.</exception>
     public static HologramTexture Generate(ICoreClientAPI capi, string? text, HologramTextureOptions options, long version)
     {
         if (capi == null) throw new ArgumentNullException(nameof(capi));

@@ -11,7 +11,7 @@ namespace ArcanumLib.Items
     public class ItemMode
     {
         /// <summary>
-        /// Unique mode identifier. Also used as the <see cref="Vintagestory.API.Common.AssetLocation"/> code for tool modes.
+        /// Unique mode identifier. Also used as the <see cref="Vintagestory.API.Common.AssetLocation" /> code for tool modes.
         /// </summary>
         [JsonProperty("id")]
         public string Id { get; set; } = "";
@@ -23,7 +23,7 @@ namespace ArcanumLib.Items
         public string Name { get; set; } = "";
 
         /// <summary>
-        /// Optional icon path/code. If empty, the first letter of <see cref="Name"/> is used.
+        /// Optional icon path/code. If empty, the first letter of <see cref="Name" /> is used.
         /// </summary>
         [JsonProperty("icon")]
         public string Icon { get; set; } = "";

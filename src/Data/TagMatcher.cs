@@ -44,6 +44,7 @@ public sealed class TagMatcher
     /// <summary>
     /// Creates a matcher with the given include tag-set.
     /// </summary>
+    /// <param name="includeTags">The include tags value.</param>
     public TagMatcher(TagSet includeTags) : this()
     {
         AddInclude(includeTags);
@@ -52,6 +53,8 @@ public sealed class TagMatcher
     /// <summary>
     /// Creates a matcher with include and exclude tag-sets.
     /// </summary>
+    /// <param name="includeTags">The include tags value.</param>
+    /// <param name="excludeTags">The exclude tags value.</param>
     public TagMatcher(TagSet includeTags, TagSet excludeTags = default) : this()
     {
         AddInclude(includeTags);
@@ -60,8 +63,10 @@ public sealed class TagMatcher
 
     /// <summary>
     /// Adds a tag-set that a collectible must match (at least one tag) to be included.
-    /// Multiple include sets are combined according to <see cref="TagMode"/>.
+    /// Multiple include sets are combined according to <see cref="MatchMode" />.
     /// </summary>
+    /// <param name="tags">The tags value.</param>
+    /// <returns>The add include.</returns>
     public TagMatcher AddInclude(TagSet tags)
     {
         _includeAny.Add(tags);
@@ -71,6 +76,8 @@ public sealed class TagMatcher
     /// <summary>
     /// Adds a tag-set that excludes any collectible matching at least one tag.
     /// </summary>
+    /// <param name="tags">The tags value.</param>
+    /// <returns>The add exclude.</returns>
     public TagMatcher AddExclude(TagSet tags)
     {
         _excludeAny.Add(tags);
@@ -82,6 +89,8 @@ public sealed class TagMatcher
     /// Multiple patterns are OR-combined: matching any one is sufficient.
     /// If no patterns are added, code matching is skipped.
     /// </summary>
+    /// <param name="pattern">The pattern value.</param>
+    /// <returns>The add code pattern.</returns>
     public TagMatcher AddCodePattern(string pattern)
     {
         if (!string.IsNullOrWhiteSpace(pattern))
@@ -92,6 +101,8 @@ public sealed class TagMatcher
     /// <summary>
     /// Sets how multiple include tag-sets are combined (Any = OR, All = AND).
     /// </summary>
+    /// <param name="mode">The mode value.</param>
+    /// <returns>The set tag mode.</returns>
     public TagMatcher SetTagMode(MatchMode mode)
     {
         _tagMode = mode;
@@ -101,6 +112,8 @@ public sealed class TagMatcher
     /// <summary>
     /// Returns true if the collectible matches all configured criteria.
     /// </summary>
+    /// <param name="collectible">The collectible value.</param>
+    /// <returns>true if the operation succeeds; otherwise, false.</returns>
     public bool Matches(CollectibleObject? collectible)
     {
         if (collectible == null) return false;
@@ -153,6 +166,8 @@ public sealed class TagMatcher
     /// <summary>
     /// Returns true if the item stack's collectible matches all configured criteria.
     /// </summary>
+    /// <param name="stack">The item stack.</param>
+    /// <returns>true if the operation succeeds; otherwise, false.</returns>
     public bool Matches(ItemStack? stack)
     {
         return Matches(stack?.Collectible);
@@ -161,6 +176,8 @@ public sealed class TagMatcher
     /// <summary>
     /// Filters a sequence of collectibles, returning only those that match.
     /// </summary>
+    /// <param name="collectibles">The collection of collectibles values.</param>
+    /// <returns>A collection of filter values.</returns>
     public IEnumerable<CollectibleObject> Filter(IEnumerable<CollectibleObject> collectibles)
     {
         if (collectibles == null) return Enumerable.Empty<CollectibleObject>();
@@ -170,6 +187,8 @@ public sealed class TagMatcher
     /// <summary>
     /// Filters a sequence of item stacks, returning only those whose collectible matches.
     /// </summary>
+    /// <param name="stacks">The item stack.</param>
+    /// <returns>A collection of filter stacks values.</returns>
     public IEnumerable<ItemStack> FilterStacks(IEnumerable<ItemStack> stacks)
     {
         if (stacks == null) return Enumerable.Empty<ItemStack>();
@@ -179,6 +198,9 @@ public sealed class TagMatcher
     /// <summary>
     /// Returns true if the collectible has at least one tag from the given set.
     /// </summary>
+    /// <param name="collectible">The collectible value.</param>
+    /// <param name="tags">The tags value.</param>
+    /// <returns>true if the operation has any tag; otherwise, false.</returns>
     private static bool HasAnyTag(CollectibleObject collectible, TagSet tags)
     {
         if (collectible == null) return false;

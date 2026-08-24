@@ -6,7 +6,7 @@ using Vintagestory.API.MathTools;
 namespace ArcanumLib.Hologram;
 
 /// <summary>
-/// Renders a single floating hologram above one <see cref="IHologramTextSource"/>.
+/// Renders a single floating hologram above one <see cref="IHologramTextSource" />.
 /// </summary>
 public class SingleHologramRenderer : IRenderer, IDisposable
 {
@@ -29,6 +29,7 @@ public class SingleHologramRenderer : IRenderer, IDisposable
     /// <param name="source">The hologram data source.</param>
     /// <param name="options">Texture generation options.</param>
     /// <param name="renderKey">Optional render key. When provided the renderer is registered automatically.</param>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="capi" /> is <see langword="null" />.</exception>
     public SingleHologramRenderer(ICoreClientAPI capi, IHologramTextSource source, HologramTextureOptions options, string? renderKey = null)
     {
         _capi = capi ?? throw new ArgumentNullException(nameof(capi));
@@ -41,6 +42,8 @@ public class SingleHologramRenderer : IRenderer, IDisposable
     }
 
     /// <summary>Renders the hologram for this frame.</summary>
+    /// <param name="deltaTime">The delta time value.</param>
+    /// <param name="stage">The stage value.</param>
     public void OnRenderFrame(float deltaTime, EnumRenderStage stage)
     {
         if (stage != EnumRenderStage.Ortho) return;

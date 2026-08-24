@@ -14,69 +14,107 @@ namespace ArcanumLib.Gui.Theme
         // Surface palette - vanilla brown with a slightly warmer parchment feel
         // so the toolkit reads as part of the base game, not a different mod.
         // --------------------------------------------------------------------
+        /// <summary>The surface deepest value.</summary>
         public static readonly RGBA SurfaceDeepest    = RGBA.From(0x1F, 0x18, 0x10, 0.96);
+        /// <summary>The surface base value.</summary>
         public static readonly RGBA SurfaceBase       = RGBA.From(0x2E, 0x24, 0x19, 0.95);
+        /// <summary>The surface elevated value.</summary>
         public static readonly RGBA SurfaceElevated   = RGBA.From(0x40, 0x35, 0x29, 0.98);
+        /// <summary>The surface card value.</summary>
         public static readonly RGBA SurfaceCard       = RGBA.From(0x4A, 0x3C, 0x2C, 0.92);
+        /// <summary>The surface card hover value.</summary>
         public static readonly RGBA SurfaceCardHover  = RGBA.From(0x5A, 0x47, 0x32, 0.96);
+        /// <summary>The surface card active value.</summary>
         public static readonly RGBA SurfaceCardActive = RGBA.From(0x6E, 0x57, 0x3C, 0.98);
 
         // --------------------------------------------------------------------
         // Border / divider palette.  We layer a dark inner shadow + a silvered
         // outer rim - same recipe vanilla uses on every dialog.
         // --------------------------------------------------------------------
+        /// <summary>The border shadow value.</summary>
         public static readonly RGBA BorderShadow     = RGBA.From(0x12, 0x0C, 0x07, 0.65);
+        /// <summary>The border subtle value.</summary>
         public static readonly RGBA BorderSubtle     = RGBA.From(0xE9, 0xDD, 0xCE, 0.10);
+        /// <summary>The border default value.</summary>
         public static readonly RGBA BorderDefault    = RGBA.From(0xE9, 0xDD, 0xCE, 0.18);
+        /// <summary>The border strong value.</summary>
         public static readonly RGBA BorderStrong     = RGBA.From(0xE9, 0xDD, 0xCE, 0.35);
+        /// <summary>The border silver value.</summary>
         public static readonly RGBA BorderSilver     = RGBA.From(0xC9, 0xB7, 0x8F, 0.55);
+        /// <summary>The border silver bright value.</summary>
         public static readonly RGBA BorderSilverBright = RGBA.From(0xE9, 0xDD, 0xCE, 0.85);
 
         // --------------------------------------------------------------------
         // Accent (vanilla "active button" copper) and a warm highlight.
         // --------------------------------------------------------------------
+        /// <summary>The accent value.</summary>
         public static readonly RGBA Accent           = RGBA.From(0xC5, 0x89, 0x48, 1.00);
+        /// <summary>The accent soft value.</summary>
         public static readonly RGBA AccentSoft       = RGBA.From(0xC5, 0x89, 0x48, 0.40);
+        /// <summary>The accent dim value.</summary>
         public static readonly RGBA AccentDim        = RGBA.From(0xC5, 0x89, 0x48, 0.18);
+        /// <summary>The accent bright value.</summary>
         public static readonly RGBA AccentBright     = RGBA.From(0xE3, 0xA8, 0x6A, 1.00);
+        /// <summary>The highlight value.</summary>
         public static readonly RGBA Highlight        = RGBA.From(0xA8, 0x8B, 0x6C, 1.00);
 
         // --------------------------------------------------------------------
         // Status palette - tuned to read against the brown surface.
         // --------------------------------------------------------------------
+        /// <summary>The status available value.</summary>
         public static readonly RGBA StatusAvailable  = RGBA.From(0xC5, 0x89, 0x48, 1.00); // copper
+        /// <summary>The status active value.</summary>
         public static readonly RGBA StatusActive     = RGBA.From(0x9B, 0xC5, 0xE6, 1.00); // pale steel blue
+        /// <summary>The status complete value.</summary>
         public static readonly RGBA StatusComplete   = RGBA.From(0x9F, 0xCB, 0x6E, 1.00); // muted leaf green
+        /// <summary>The status locked value.</summary>
         public static readonly RGBA StatusLocked     = RGBA.From(0x8A, 0x7C, 0x68, 1.00); // dim parchment
+        /// <summary>The status cooldown value.</summary>
         public static readonly RGBA StatusCooldown   = RGBA.From(0x8A, 0x7C, 0x68, 1.00); // gray parchment
+        /// <summary>The status failed value.</summary>
         public static readonly RGBA StatusFailed     = RGBA.From(0xCD, 0x66, 0x5C, 1.00); // muted iron-rust
 
         // --------------------------------------------------------------------
         // Text palette - vanilla parchment cream as the base.
         // --------------------------------------------------------------------
+        /// <summary>The text primary value.</summary>
         public static readonly RGBA TextPrimary      = RGBA.From(0xE9, 0xDD, 0xCE, 1.00);
+        /// <summary>The text secondary value.</summary>
         public static readonly RGBA TextSecondary    = RGBA.From(0xC9, 0xB7, 0x9C, 1.00);
+        /// <summary>The text muted value.</summary>
         public static readonly RGBA TextMuted        = RGBA.From(0x8F, 0x80, 0x6A, 1.00);
+        /// <summary>The text disabled value.</summary>
         public static readonly RGBA TextDisabled     = RGBA.From(0x55, 0x47, 0x36, 1.00);
 
         // --------------------------------------------------------------------
         // Sizing tokens (already wrapped in GuiElement.scaled where used).
         // Keep these unscaled so callers explicitly opt into HiDPI scaling.
         // --------------------------------------------------------------------
+        /// <summary>Represents radius.</summary>
         public static class Radius
         {
+            /// <summary>The small value.</summary>
             public const double Small  =  4.0;
+            /// <summary>The medium value.</summary>
             public const double Medium =  8.0;
+            /// <summary>The large value.</summary>
             public const double Large  = 12.0;
+            /// <summary>The pill value.</summary>
             public const double Pill   = 20.0;
         }
 
+        /// <summary>Represents spacing.</summary>
         public static class Spacing
         {
+            /// <summary>The xs value.</summary>
             public const double Xs =  4.0;
+            /// <summary>The sm value.</summary>
             public const double Sm =  8.0;
+            /// <summary>The md value.</summary>
             public const double Md = 12.0;
+            /// <summary>The lg value.</summary>
             public const double Lg = 18.0;
+            /// <summary>The xl value.</summary>
             public const double Xl = 28.0;
         }
 
@@ -87,6 +125,7 @@ namespace ArcanumLib.Gui.Theme
         /// <summary>
         /// Background bounds for a typical Arcanum block-entity config dialog.
         /// </summary>
+        /// <returns>The arcanum config background bounds.</returns>
         public static ElementBounds ArcanumConfigBackgroundBounds()
         {
             var bg = ElementBounds.Fill.WithFixedPadding(GuiStyle.ElementToDialogPadding);
@@ -97,6 +136,7 @@ namespace ArcanumLib.Gui.Theme
         /// <summary>
         /// Dialog bounds for a right-middle anchored Arcanum config dialog.
         /// </summary>
+        /// <returns>The arcanum config dialog bounds.</returns>
         public static ElementBounds ArcanumConfigDialogBounds()
         {
             return ElementStdBounds.AutosizedMainDialog
@@ -111,6 +151,12 @@ namespace ArcanumLib.Gui.Theme
         /// <summary>
         /// Trace a rounded rectangle path. Caller decides whether to fill / stroke.
         /// </summary>
+        /// <param name="ctx">The ctx value.</param>
+        /// <param name="x">The X coordinate.</param>
+        /// <param name="y">The Y coordinate.</param>
+        /// <param name="w">The w value.</param>
+        /// <param name="h">The h value.</param>
+        /// <param name="r">The r value.</param>
         public static void RoundedRectPath(Context ctx, double x, double y, double w, double h, double r)
         {
             r = Math.Min(r, Math.Min(w, h) / 2.0);
@@ -131,6 +177,13 @@ namespace ArcanumLib.Gui.Theme
         /// <summary>
         /// Filled rounded rectangle.
         /// </summary>
+        /// <param name="ctx">The ctx value.</param>
+        /// <param name="x">The X coordinate.</param>
+        /// <param name="y">The Y coordinate.</param>
+        /// <param name="w">The w value.</param>
+        /// <param name="h">The h value.</param>
+        /// <param name="r">The r value.</param>
+        /// <param name="color">The color value.</param>
         public static void FillRoundedRect(Context ctx, double x, double y, double w, double h, double r, RGBA color)
         {
             color.Apply(ctx);
@@ -141,6 +194,13 @@ namespace ArcanumLib.Gui.Theme
         /// <summary>
         /// Filled rounded rectangle using a Cairo color.
         /// </summary>
+        /// <param name="ctx">The ctx value.</param>
+        /// <param name="x">The X coordinate.</param>
+        /// <param name="y">The Y coordinate.</param>
+        /// <param name="w">The w value.</param>
+        /// <param name="h">The h value.</param>
+        /// <param name="r">The r value.</param>
+        /// <param name="color">The color value.</param>
         public static void FillRoundedRect(Context ctx, double x, double y, double w, double h, double r, Color color)
         {
             ctx.SetSourceRGBA(color.R, color.G, color.B, color.A);
@@ -151,6 +211,14 @@ namespace ArcanumLib.Gui.Theme
         /// <summary>
         /// Stroked rounded rectangle (outline only).
         /// </summary>
+        /// <param name="ctx">The ctx value.</param>
+        /// <param name="x">The X coordinate.</param>
+        /// <param name="y">The Y coordinate.</param>
+        /// <param name="w">The w value.</param>
+        /// <param name="h">The h value.</param>
+        /// <param name="r">The r value.</param>
+        /// <param name="color">The color value.</param>
+        /// <param name="lineWidth">The line width value.</param>
         public static void StrokeRoundedRect(Context ctx, double x, double y, double w, double h, double r, RGBA color, double lineWidth)
         {
             color.Apply(ctx);
@@ -162,6 +230,14 @@ namespace ArcanumLib.Gui.Theme
         /// <summary>
         /// Stroked rounded rectangle using a Cairo color.
         /// </summary>
+        /// <param name="ctx">The ctx value.</param>
+        /// <param name="x">The X coordinate.</param>
+        /// <param name="y">The Y coordinate.</param>
+        /// <param name="w">The w value.</param>
+        /// <param name="h">The h value.</param>
+        /// <param name="r">The r value.</param>
+        /// <param name="color">The color value.</param>
+        /// <param name="lineWidth">The line width value.</param>
         public static void StrokeRoundedRect(Context ctx, double x, double y, double w, double h, double r, Color color, double lineWidth)
         {
             ctx.SetSourceRGBA(color.R, color.G, color.B, color.A);
@@ -173,6 +249,11 @@ namespace ArcanumLib.Gui.Theme
         /// <summary>
         /// Fills and strokes a standard Arcanum card for the supplied bounds.
         /// </summary>
+        /// <param name="ctx">The ctx value.</param>
+        /// <param name="b">The b value.</param>
+        /// <param name="fill">The fill value.</param>
+        /// <param name="stroke">The stroke value.</param>
+        /// <param name="lineWidth">The line width value.</param>
         public static void DrawCardBounds(Context ctx, ElementBounds b, RGBA fill, RGBA stroke, double lineWidth)
         {
             double r = GuiElement.scaled(ArcanumGuiTheme.Radius.Medium);
@@ -184,6 +265,14 @@ namespace ArcanumLib.Gui.Theme
         /// <summary>
         /// Vertical linear gradient fill of a rounded rectangle.
         /// </summary>
+        /// <param name="ctx">The ctx value.</param>
+        /// <param name="x">The X coordinate.</param>
+        /// <param name="y">The Y coordinate.</param>
+        /// <param name="w">The w value.</param>
+        /// <param name="h">The h value.</param>
+        /// <param name="r">The r value.</param>
+        /// <param name="top">The top value.</param>
+        /// <param name="bottom">The bottom value.</param>
         public static void FillRoundedRectVerticalGradient(Context ctx, double x, double y, double w, double h, double r, RGBA top, RGBA bottom)
         {
             using var grad = new LinearGradient(x, y, x, y + h);
@@ -197,6 +286,14 @@ namespace ArcanumLib.Gui.Theme
         /// <summary>
         /// Horizontal linear gradient fill of a rounded rectangle.
         /// </summary>
+        /// <param name="ctx">The ctx value.</param>
+        /// <param name="x">The X coordinate.</param>
+        /// <param name="y">The Y coordinate.</param>
+        /// <param name="w">The w value.</param>
+        /// <param name="h">The h value.</param>
+        /// <param name="r">The r value.</param>
+        /// <param name="left">The left value.</param>
+        /// <param name="right">The right value.</param>
         public static void FillRoundedRectHorizontalGradient(Context ctx, double x, double y, double w, double h, double r, RGBA left, RGBA right)
         {
             using var grad = new LinearGradient(x, y, x + w, y);
@@ -210,6 +307,16 @@ namespace ArcanumLib.Gui.Theme
         /// <summary>
         /// Draws a standard Arcanum card background: vertical gradient fill plus a thin border.
         /// </summary>
+        /// <param name="ctx">The ctx value.</param>
+        /// <param name="x">The X coordinate.</param>
+        /// <param name="y">The Y coordinate.</param>
+        /// <param name="w">The w value.</param>
+        /// <param name="h">The h value.</param>
+        /// <param name="r">The r value.</param>
+        /// <param name="top">The top value.</param>
+        /// <param name="bottom">The bottom value.</param>
+        /// <param name="border">The border value.</param>
+        /// <param name="lineWidth">The line width value.</param>
         public static void DrawCardBackground(Context ctx, double x, double y, double w, double h, double r, RGBA top, RGBA bottom, RGBA border, double lineWidth)
         {
             FillRoundedRectVerticalGradient(ctx, x, y, w, h, r, top, bottom);
@@ -219,6 +326,18 @@ namespace ArcanumLib.Gui.Theme
         /// <summary>
         /// Draws a standard Arcanum card background with an additional inner border stroke.
         /// </summary>
+        /// <param name="ctx">The ctx value.</param>
+        /// <param name="x">The X coordinate.</param>
+        /// <param name="y">The Y coordinate.</param>
+        /// <param name="w">The w value.</param>
+        /// <param name="h">The h value.</param>
+        /// <param name="r">The r value.</param>
+        /// <param name="top">The top value.</param>
+        /// <param name="bottom">The bottom value.</param>
+        /// <param name="outerBorder">The outer border value.</param>
+        /// <param name="outerLineWidth">The outer line width value.</param>
+        /// <param name="innerBorder">The inner border value.</param>
+        /// <param name="innerLineWidth">The inner line width value.</param>
         public static void DrawCardBackground(Context ctx, double x, double y, double w, double h, double r, RGBA top, RGBA bottom, RGBA outerBorder, double outerLineWidth, RGBA innerBorder, double innerLineWidth)
         {
             FillRoundedRectVerticalGradient(ctx, x, y, w, h, r, top, bottom);
@@ -227,10 +346,15 @@ namespace ArcanumLib.Gui.Theme
             StrokeRoundedRect(ctx, x + innerOffset, y + innerOffset, w - innerOffset * 2, h - innerOffset * 2, Math.Max(1.0, r - innerOffset), innerBorder, innerLineWidth);
         }
 
-        /// <summary>
-        /// Soft drop shadow - approximated by drawing several rounded rects with growing radius
-        /// and decreasing alpha. Cheap & looks acceptable for static dialog backgrounds.
-        /// </summary>
+        /// <summary>Performs the draw soft shadow operation.</summary>
+        /// <param name="ctx">The ctx value.</param>
+        /// <param name="x">The X coordinate.</param>
+        /// <param name="y">The Y coordinate.</param>
+        /// <param name="w">The w value.</param>
+        /// <param name="h">The h value.</param>
+        /// <param name="r">The r value.</param>
+        /// <param name="spread">The spread value.</param>
+        /// <param name="maxAlpha">The max alpha value.</param>
         public static void DrawSoftShadow(Context ctx, double x, double y, double w, double h, double r, double spread, double maxAlpha)
         {
             // Reduced to 2 steps for profile FPS optimization. Still looks fine at UI scale.
@@ -251,6 +375,14 @@ namespace ArcanumLib.Gui.Theme
         /// <summary>
         /// Soft glow halo around a rectangle - similar to shadow but uses a colour.
         /// </summary>
+        /// <param name="ctx">The ctx value.</param>
+        /// <param name="x">The X coordinate.</param>
+        /// <param name="y">The Y coordinate.</param>
+        /// <param name="w">The w value.</param>
+        /// <param name="h">The h value.</param>
+        /// <param name="r">The r value.</param>
+        /// <param name="spread">The spread value.</param>
+        /// <param name="color">The color value.</param>
         public static void DrawGlow(Context ctx, double x, double y, double w, double h, double r, double spread, RGBA color)
         {
             const int steps = 2;
@@ -270,6 +402,11 @@ namespace ArcanumLib.Gui.Theme
         /// <summary>
         /// Filled circle.
         /// </summary>
+        /// <param name="ctx">The ctx value.</param>
+        /// <param name="cx">The cx value.</param>
+        /// <param name="cy">The cy value.</param>
+        /// <param name="r">The r value.</param>
+        /// <param name="color">The color value.</param>
         public static void FillCircle(Context ctx, double cx, double cy, double r, RGBA color)
         {
             color.Apply(ctx);
@@ -281,6 +418,12 @@ namespace ArcanumLib.Gui.Theme
         /// <summary>
         /// Stroked circle outline.
         /// </summary>
+        /// <param name="ctx">The ctx value.</param>
+        /// <param name="cx">The cx value.</param>
+        /// <param name="cy">The cy value.</param>
+        /// <param name="r">The r value.</param>
+        /// <param name="color">The color value.</param>
+        /// <param name="lineWidth">The line width value.</param>
         public static void StrokeCircle(Context ctx, double cx, double cy, double r, RGBA color, double lineWidth)
         {
             color.Apply(ctx);
@@ -293,6 +436,13 @@ namespace ArcanumLib.Gui.Theme
         /// <summary>
         /// One-pixel inner highlight along the top edge - the classic "glass" rim look.
         /// </summary>
+        /// <param name="ctx">The ctx value.</param>
+        /// <param name="x">The X coordinate.</param>
+        /// <param name="y">The Y coordinate.</param>
+        /// <param name="w">The w value.</param>
+        /// <param name="h">The h value.</param>
+        /// <param name="r">The r value.</param>
+        /// <param name="alpha">The alpha value.</param>
         public static void DrawInnerHighlight(Context ctx, double x, double y, double w, double h, double r, double alpha = 0.10)
         {
             ctx.SetSourceRGBA(1.0, 1.0, 1.0, alpha);
@@ -306,6 +456,8 @@ namespace ArcanumLib.Gui.Theme
         /// <summary>
         /// Pixel-snap a coordinate - reduces blurry sub-pixel edges on rounded rects.
         /// </summary>
+        /// <param name="v">The v value.</param>
+        /// <returns>The snap.</returns>
         public static double Snap(double v) => Math.Round(v) + 0.5;
 
         // ====================================================================
@@ -316,6 +468,13 @@ namespace ArcanumLib.Gui.Theme
         /// Draw a small "L" corner ornament - silver inner stroke with a darker
         /// outer shadow.  Positions itself at the corner of (x,y,w,h).
         /// </summary>
+        /// <param name="ctx">The ctx value.</param>
+        /// <param name="x">The X coordinate.</param>
+        /// <param name="y">The Y coordinate.</param>
+        /// <param name="w">The w value.</param>
+        /// <param name="h">The h value.</param>
+        /// <param name="size">The size.</param>
+        /// <param name="color">The color value.</param>
         public static void DrawCornerOrnament(Context ctx, double x, double y, double w, double h, double size, RGBA color)
         {
             double inset = 6.0;
@@ -353,6 +512,11 @@ namespace ArcanumLib.Gui.Theme
         /// diamond marker centered on it.  Looks like the dividers in the vanilla
         /// handbook / character creation screens.
         /// </summary>
+        /// <param name="ctx">The ctx value.</param>
+        /// <param name="x">The X coordinate.</param>
+        /// <param name="y">The Y coordinate.</param>
+        /// <param name="w">The w value.</param>
+        /// <param name="color">The color value.</param>
         public static void DrawSilverDivider(Context ctx, double x, double y, double w, RGBA color)
         {
             // Line.

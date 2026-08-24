@@ -20,6 +20,14 @@ public class ArcanumCard : GuiElement
     /// <summary>
     /// Creates a card with customizable fill, border, accent strip, inner border, corner ornament and custom content drawing.
     /// </summary>
+    /// <param name="capi">The client API instance.</param>
+    /// <param name="bounds">The bounds value.</param>
+    /// <param name="fill">The fill value.</param>
+    /// <param name="border">The border value.</param>
+    /// <param name="accent">The accent value.</param>
+    /// <param name="drawInnerBorder">The draw inner border value.</param>
+    /// <param name="drawOrnament">The draw ornament value.</param>
+    /// <param name="drawContent">The callback to invoke.</param>
     public ArcanumCard(
         ICoreClientAPI capi,
         ElementBounds bounds,
@@ -40,6 +48,8 @@ public class ArcanumCard : GuiElement
     }
 
     /// <summary>Composes the card background with optional accent strip, ornament and custom content.</summary>
+    /// <param name="ctx">The ctx value.</param>
+    /// <param name="surface">The surface value.</param>
     public override void ComposeElements(Context ctx, ImageSurface surface)
     {
         Bounds.CalcWorldBounds();
@@ -95,11 +105,22 @@ public class ArcanumCard : GuiElement
     }
 }
 
+/// <summary>Represents arcanum card composer helpers.</summary>
 public static class ArcanumCardComposerHelpers
 {
     /// <summary>
     /// Adds a card background element.
     /// </summary>
+    /// <param name="composer">The composer value.</param>
+    /// <param name="bounds">The bounds value.</param>
+    /// <param name="fill">The fill value.</param>
+    /// <param name="border">The border value.</param>
+    /// <param name="accent">The accent value.</param>
+    /// <param name="drawInnerBorder">The draw inner border value.</param>
+    /// <param name="drawOrnament">The draw ornament value.</param>
+    /// <param name="drawContent">The callback to invoke.</param>
+    /// <param name="key">The key to look up.</param>
+    /// <returns>The add arcanum card.</returns>
     public static GuiComposer AddArcanumCard(
         this GuiComposer composer,
         ElementBounds bounds,

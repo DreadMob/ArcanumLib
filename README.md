@@ -63,7 +63,7 @@ store.MarkDirty();
 store.Save(); // no-op if nothing changed
 ```
 
-See the [`docs/`](docs) folder for full API documentation and examples.
+See [`docs/GettingStarted.md`](docs/GettingStarted.md) for a hands-on introduction, and the [`docs/`](docs) folder for the full API reference.
 
 ---
 

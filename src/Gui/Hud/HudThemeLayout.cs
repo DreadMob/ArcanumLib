@@ -61,6 +61,8 @@ public class HudThemeLayout
     };
 
     /// <summary>Merges the other spacing values over this instance, returning a new layout.</summary>
+    /// <param name="other">The other value.</param>
+    /// <returns>The merge.</returns>
     public HudThemeLayout Merge(HudThemeLayout other)
     {
         if (other == null) return this;

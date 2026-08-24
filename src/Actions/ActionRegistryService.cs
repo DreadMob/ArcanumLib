@@ -5,9 +5,9 @@ using Vintagestory.API.Common;
 namespace ArcanumLib.Actions;
 
 /// <summary>
-/// Instance-based registry for <see cref="IActionHandler"/> implementations.
+/// Instance-based registry for <see cref="IActionHandler" /> implementations.
 /// Mods register their handlers during startup; the registry is then used to
-/// execute <see cref="ActionDescriptor"/> instances loaded from JSON assets.
+/// execute <see cref="ActionDescriptor" /> instances loaded from JSON assets.
 /// </summary>
 internal sealed class ActionRegistryService
 {
@@ -18,6 +18,9 @@ internal sealed class ActionRegistryService
     /// <summary>
     /// Registers an action handler. Replaces any existing handler with the same id.
     /// </summary>
+    /// <param name="handler">The handler value.</param>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="handler" /> is <see langword="null" />.</exception>
+    /// <exception cref="ArgumentException">Thrown when <paramref name="handler" /> is invalid.</exception>
     public void Register(IActionHandler handler)
     {
         if (handler == null) throw new ArgumentNullException(nameof(handler));
@@ -33,6 +36,7 @@ internal sealed class ActionRegistryService
     /// <summary>
     /// Registers multiple action handlers.
     /// </summary>
+    /// <param name="handlers">The collection of handlers values.</param>
     public void RegisterAll(IEnumerable<IActionHandler> handlers)
     {
         if (handlers == null) return;
@@ -42,6 +46,8 @@ internal sealed class ActionRegistryService
     /// <summary>
     /// Unregisters a handler by id.
     /// </summary>
+    /// <param name="id">The identifier.</param>
+    /// <returns>true if the operation succeeds; otherwise, false.</returns>
     public bool Unregister(string id)
     {
         if (string.IsNullOrWhiteSpace(id)) return false;
@@ -54,6 +60,8 @@ internal sealed class ActionRegistryService
     /// <summary>
     /// Returns the handler for the given id, or null if not registered.
     /// </summary>
+    /// <param name="id">The identifier.</param>
+    /// <returns>The handler, or null if none is found.</returns>
     public IActionHandler? GetHandler(string id)
     {
         if (string.IsNullOrWhiteSpace(id)) return null;
@@ -66,6 +74,8 @@ internal sealed class ActionRegistryService
     /// <summary>
     /// Returns true if a handler with the given id is registered.
     /// </summary>
+    /// <param name="id">The identifier.</param>
+    /// <returns>true if registered; otherwise, false.</returns>
     public bool IsRegistered(string id)
     {
         if (string.IsNullOrWhiteSpace(id)) return false;
@@ -78,6 +88,7 @@ internal sealed class ActionRegistryService
     /// <summary>
     /// Returns a snapshot of all registered handler ids.
     /// </summary>
+    /// <returns>A collection of registered ids values.</returns>
     public IReadOnlyList<string> GetRegisteredIds()
     {
         lock (_syncLock)
@@ -88,8 +99,11 @@ internal sealed class ActionRegistryService
 
     /// <summary>
     /// Validates that an action descriptor can be executed: the handler must
-    /// exist and <see cref="IActionHandler.IsAvailable"/> must return true.
+    /// exist and <see cref="IActionHandler.IsAvailable" /> must return true.
     /// </summary>
+    /// <param name="descriptor">The descriptor value.</param>
+    /// <param name="context">The operation context.</param>
+    /// <returns>The validate.</returns>
     public ActionResult Validate(ActionDescriptor descriptor, ActionContext context)
     {
         if (descriptor == null) return ActionResult.Invalid("Action descriptor is null.");
@@ -115,8 +129,11 @@ internal sealed class ActionRegistryService
 
     /// <summary>
     /// Executes an action descriptor. Validates first, then calls the handler.
-    /// Exceptions in the handler are caught and returned as <see cref="ActionOutcome.Failed"/>.
+    /// Exceptions in the handler are caught and returned as <see cref="ActionOutcome.Failed" />.
     /// </summary>
+    /// <param name="descriptor">The descriptor value.</param>
+    /// <param name="context">The operation context.</param>
+    /// <returns>The execute.</returns>
     public ActionResult Execute(ActionDescriptor descriptor, ActionContext context)
     {
         if (descriptor == null) return ActionResult.Invalid("Action descriptor is null.");
@@ -149,8 +166,11 @@ internal sealed class ActionRegistryService
 
     /// <summary>
     /// Executes a sequence of action descriptors in order. Stops at the first failure
-    /// unless <paramref name="continueOnError"/> is true.
+    /// unless <paramref name="continueOnError" /> is true.
     /// </summary>
+    /// <param name="descriptors">The collection of descriptors values.</param>
+    /// <param name="context">The operation context.</param>
+    /// <param name="continueOnError">The continue on error value.</param>
     /// <returns>The list of results, one per descriptor.</returns>
     public List<ActionResult> ExecuteAll(
         IEnumerable<ActionDescriptor> descriptors,

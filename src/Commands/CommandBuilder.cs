@@ -19,7 +19,7 @@ public sealed class CommandArgument
     /// <summary>Whether the argument is required.</summary>
     public bool Required { get; init; } = true;
 
-    /// <summary>Default value used when the argument is omitted and <see cref="Required"/> is false.</summary>
+    /// <summary>Default value used when the argument is omitted and <see cref="Required" /> is false.</summary>
     public object? Default { get; init; }
 
     /// <summary>Optional autocomplete values for this argument.</summary>
@@ -67,35 +67,35 @@ public sealed class CommandArgs
     public bool Bool(string name) => _values[name] is bool v && v;
 
     /// <summary>
-    /// Gets an optional string argument, returning <paramref name="fallback"/> if absent.
+    /// Gets an optional string argument, returning <paramref name="fallback" /> if absent.
     /// </summary>
     /// <param name="name">The argument name.</param>
     /// <param name="fallback">The default value to return when the argument is missing.</param>
-    /// <returns>The string value, or <paramref name="fallback"/> if the argument is missing or not a string.</returns>
+    /// <returns>The string value, or <paramref name="fallback" /> if the argument is missing or not a string.</returns>
     public string StringOr(string name, string fallback) => _values.TryGetValue(name, out var v) ? v as string ?? fallback : fallback;
 
     /// <summary>
-    /// Gets an optional int argument, returning <paramref name="fallback"/> if absent.
+    /// Gets an optional int argument, returning <paramref name="fallback" /> if absent.
     /// </summary>
     /// <param name="name">The argument name.</param>
     /// <param name="fallback">The default value to return when the argument is missing.</param>
-    /// <returns>The int value, or <paramref name="fallback"/> if the argument is missing or not an int.</returns>
+    /// <returns>The int value, or <paramref name="fallback" /> if the argument is missing or not an int.</returns>
     public int IntOr(string name, int fallback) => _values.TryGetValue(name, out var v) && v is int iv ? iv : fallback;
 
     /// <summary>
-    /// Gets an optional float argument, returning <paramref name="fallback"/> if absent.
+    /// Gets an optional float argument, returning <paramref name="fallback" /> if absent.
     /// </summary>
     /// <param name="name">The argument name.</param>
     /// <param name="fallback">The default value to return when the argument is missing.</param>
-    /// <returns>The float value, or <paramref name="fallback"/> if the argument is missing or not a float.</returns>
+    /// <returns>The float value, or <paramref name="fallback" /> if the argument is missing or not a float.</returns>
     public float FloatOr(string name, float fallback) => _values.TryGetValue(name, out var v) && v is float fv ? fv : fallback;
 
     /// <summary>
-    /// Gets an optional bool argument, returning <paramref name="fallback"/> if absent.
+    /// Gets an optional bool argument, returning <paramref name="fallback" /> if absent.
     /// </summary>
     /// <param name="name">The argument name.</param>
     /// <param name="fallback">The default value to return when the argument is missing.</param>
-    /// <returns>The bool value, or <paramref name="fallback"/> if the argument is missing or not a bool.</returns>
+    /// <returns>The bool value, or <paramref name="fallback" /> if the argument is missing or not a bool.</returns>
     public bool BoolOr(string name, bool fallback) => _values.TryGetValue(name, out var v) && v is bool bv ? bv : fallback;
 
     /// <summary>
@@ -131,8 +131,7 @@ public sealed class CommandBuilder
     /// </summary>
     /// <param name="sapi">The server API.</param>
     /// <param name="name">The command name, including a mod prefix.</param>
-    /// <returns>A new <see cref="CommandBuilder"/> instance.</returns>
-    /// <exception cref="ArgumentNullException">Thrown when <paramref name="sapi"/> or <paramref name="name"/> is null.</exception>
+    /// <returns>A new <see cref="CommandBuilder" /> instance.</returns>
     public static CommandBuilder Create(ICoreServerAPI sapi, string name) => new(sapi, name);
 
     /// <summary>
@@ -206,7 +205,6 @@ public sealed class CommandBuilder
     /// </summary>
     /// <param name="handler">The command handler.</param>
     /// <returns>The current builder for method chaining.</returns>
-    /// <exception cref="ArgumentNullException">Thrown when <paramref name="handler"/> is null.</exception>
     public CommandBuilder OnExecute(Action<ICoreServerAPI, IServerPlayer, CommandArgs> handler)
     {
         _handler = handler ?? throw new ArgumentNullException(nameof(handler));
@@ -216,7 +214,6 @@ public sealed class CommandBuilder
     /// <summary>
     /// Registers the command with the server API. Can only be called once per builder.
     /// </summary>
-    /// <exception cref="InvalidOperationException">Thrown when the command has already been registered or no handler was set.</exception>
     public void Register()
     {
         if (_registered) throw new InvalidOperationException("Command already registered.");

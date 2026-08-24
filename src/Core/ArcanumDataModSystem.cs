@@ -10,8 +10,8 @@ namespace ArcanumLib.Core;
 
 /// <summary>
 /// Consolidated server-side data lifecycle ModSystem.
-/// Initializes and disposes <see cref="ModDataStore"/>, <see cref="PlaytimeTracker"/>,
-/// <see cref="PityTracker"/> and the action registry/executor services.
+/// Initializes and disposes <see cref="ModDataStore" />, <see cref="PlaytimeTracker" />,
+/// <see cref="PityTracker" /> and the action registry/executor services.
 /// </summary>
 public class ArcanumDataModSystem : ModSystem
 {
@@ -40,8 +40,8 @@ public class ArcanumDataModSystem : ModSystem
         PlaytimeTracker.Current ??= new PlaytimeTracker(sapi);
         PityTracker.Current ??= new PityTracker(sapi);
 
-        ArcanumServices.Register(new ActionRegistryService());
-        ArcanumServices.Register(new ActionExecutorService(sapi));
+        ArcanumServices.Register(new ActionRegistryService(), ArcanumServiceScope.Server);
+        ArcanumServices.Register(new ActionExecutorService(sapi), ArcanumServiceScope.Server);
 
         sapi.Event.PlayerDisconnect += OnPlayerDisconnect;
     }
@@ -71,8 +71,8 @@ public class ArcanumDataModSystem : ModSystem
         if (ArcanumServices.Get<ActionRegistryService>() is { } registry)
             registry.Clear();
 
-        ArcanumServices.Unregister<ActionExecutorService>();
-        ArcanumServices.Unregister<ActionRegistryService>();
+        ArcanumServices.Unregister<ActionExecutorService>(ArcanumServiceScope.Server);
+        ArcanumServices.Unregister<ActionRegistryService>(ArcanumServiceScope.Server);
 
         ModDataStore.Sapi = null;
         ModDataStore.Clear();

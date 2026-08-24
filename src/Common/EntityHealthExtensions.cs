@@ -10,9 +10,12 @@ namespace ArcanumLib.Common
     public static class EntityHealthExtensions
     {
         /// <summary>
-        /// Returns the current health as a fraction of max health, or <paramref name="defaultValue"/> when not available.
+        /// Returns the current health as a fraction of max health, or <paramref name="defaultValue" /> when not available.
         /// First checks top-level <c>health</c> and <c>maxHealth</c> watched attributes, then falls back to the <c>health</c> tree.
         /// </summary>
+        /// <param name="entity">The entity.</param>
+        /// <param name="defaultValue">The default value to use when none is found.</param>
+        /// <returns>The health percent.</returns>
         public static float GetHealthPercent(this Entity entity, float defaultValue = 0f)
         {
             if (entity == null) return defaultValue;
@@ -34,6 +37,9 @@ namespace ArcanumLib.Common
         /// <summary>
         /// Tries to get the current health as a fraction of max health.
         /// </summary>
+        /// <param name="entity">The entity.</param>
+        /// <param name="fraction">When this method returns, contains the <paramref name="fraction" /> value.</param>
+        /// <returns>true if the operation succeeded; otherwise, false.</returns>
         public static bool TryGetHealthFraction(this Entity entity, out float fraction)
         {
             fraction = 1f;
@@ -57,6 +63,11 @@ namespace ArcanumLib.Common
         /// <summary>
         /// Tries to read the health tree and current/max values.
         /// </summary>
+        /// <param name="entity">The entity.</param>
+        /// <param name="healthTree">When this method returns, contains the <paramref name="healthTree" /> value.</param>
+        /// <param name="currentHealth">When this method returns, contains the <paramref name="currentHealth" /> value.</param>
+        /// <param name="maxHealth">When this method returns, contains the <paramref name="maxHealth" /> value.</param>
+        /// <returns>true if the operation succeeded; otherwise, false.</returns>
         public static bool TryGetHealth(this Entity entity, out ITreeAttribute? healthTree, out float currentHealth, out float maxHealth)
         {
             healthTree = null;
@@ -81,6 +92,9 @@ namespace ArcanumLib.Common
         /// Scales the entity's max health by the given multiplier and sets current health to the new max.
         /// Returns true when the health tree was found and updated.
         /// </summary>
+        /// <param name="entity">The entity.</param>
+        /// <param name="mult">The mult value.</param>
+        /// <returns>true if the operation succeeds; otherwise, false.</returns>
         public static bool ScaleHealth(this Entity entity, float mult)
         {
             if (entity == null || mult <= 0f || mult == 1f) return false;

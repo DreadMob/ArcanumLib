@@ -6,7 +6,7 @@ namespace ArcanumLib.Common
 {
     /// <summary>
     /// Collects event subscriptions and unsubscribes them in reverse order when disposed.
-    /// Use this in <see cref="ModSystem.Dispose"/> or <c>IDisposable</c> implementations
+    /// Use this in <see cref="ModSystem.Dispose" /> or <c>IDisposable</c> implementations
     /// to avoid leaking callbacks when a mod system unloads.
     /// </summary>
     public sealed class EventScope : IDisposable
@@ -18,6 +18,7 @@ namespace ArcanumLib.Common
         /// <summary>
         /// Creates a new scope with an optional logger source.
         /// </summary>
+        /// <param name="api">The core API instance.</param>
         public EventScope(ICoreAPI? api = null)
         {
             _api = api;
@@ -28,6 +29,9 @@ namespace ArcanumLib.Common
         /// </summary>
         /// <param name="subscribe">Called immediately to add the handler.</param>
         /// <param name="unsubscribe">Called in reverse order on dispose.</param>
+        /// <returns>The add.</returns>
+        /// <exception cref="ArgumentNullException">Thrown when <paramref name="subscribe" /> is <see langword="null" />.</exception>
+        /// <exception cref="ObjectDisposedException">Thrown when the object has been disposed.</exception>
         public EventScope Add(Action subscribe, Action unsubscribe)
         {
             if (subscribe == null) throw new ArgumentNullException(nameof(subscribe));
@@ -40,8 +44,11 @@ namespace ArcanumLib.Common
         }
 
         /// <summary>
-        /// Alias for <see cref="Add"/>.
+        /// Alias for <see cref="Add" />.
         /// </summary>
+        /// <param name="subscribe">The subscribe value.</param>
+        /// <param name="unsubscribe">The unsubscribe value.</param>
+        /// <returns>The on.</returns>
         public EventScope On(Action subscribe, Action unsubscribe) => Add(subscribe, unsubscribe);
 
         /// <summary>
@@ -75,8 +82,11 @@ namespace ArcanumLib.Common
     public static class EventScopeExtensions
     {
         /// <summary>
-        /// Creates a new <see cref="EventScope"/> tied to the given API.
+        /// Creates a new <see cref="EventScope" /> tied to the given API.
         /// </summary>
+        /// <param name="api">The core API instance.</param>
+        /// <returns>The event scope.</returns>
+        /// <exception cref="ArgumentNullException">Thrown when <paramref name="api" /> is <see langword="null" />.</exception>
         public static EventScope CreateEventScope(this ICoreAPI api)
         {
             if (api == null) throw new ArgumentNullException(nameof(api));

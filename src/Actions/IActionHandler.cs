@@ -42,16 +42,34 @@ public readonly struct ActionResult
     /// </summary>
     public string? Message { get; }
 
+    /// <summary>Performs the action result operation.</summary>
+    /// <param name="outcome">The outcome value.</param>
+    /// <param name="message">The message.</param>
     public ActionResult(ActionOutcome outcome, string? message = null)
     {
         Outcome = outcome;
         Message = message;
     }
 
+    /// <summary>Performs the success operation.</summary>
+    /// <param name="msg">The msg value.</param>
+    /// <returns>The success.</returns>
     public static ActionResult Success(string? msg = null) => new(ActionOutcome.Success, msg);
+    /// <summary>Performs the not available operation.</summary>
+    /// <param name="msg">The msg value.</param>
+    /// <returns>The not available.</returns>
     public static ActionResult NotAvailable(string? msg = null) => new(ActionOutcome.NotAvailable, msg);
+    /// <summary>Performs the invalid operation.</summary>
+    /// <param name="msg">The msg value.</param>
+    /// <returns>The invalid.</returns>
     public static ActionResult Invalid(string? msg = null) => new(ActionOutcome.Invalid, msg);
+    /// <summary>Performs the handler not found operation.</summary>
+    /// <param name="msg">The msg value.</param>
+    /// <returns>The handler not found.</returns>
     public static ActionResult HandlerNotFound(string? msg = null) => new(ActionOutcome.HandlerNotFound, msg);
+    /// <summary>Performs the failed operation.</summary>
+    /// <param name="msg">The msg value.</param>
+    /// <returns>The failed.</returns>
     public static ActionResult Failed(string? msg = null) => new(ActionOutcome.Failed, msg);
 }
 
@@ -97,6 +115,12 @@ public sealed class ActionContext
     /// </summary>
     public Dictionary<string, object> Extra { get; } = new();
 
+    /// <summary>Performs the action context operation.</summary>
+    /// <param name="sapi">The server API instance.</param>
+    /// <param name="player">The server player.</param>
+    /// <param name="itemSlot">The item stack.</param>
+    /// <param name="targetPos">The block position.</param>
+    /// <param name="args">The arguments.</param>
     public ActionContext(
         ICoreServerAPI sapi,
         IServerPlayer? player = null,
@@ -113,9 +137,9 @@ public sealed class ActionContext
 }
 
 /// <summary>
-/// Handles a single action type identified by its <see cref="Id"/>.
-/// Implementations are registered in <see cref="ActionRegistry"/> and invoked
-/// when an <see cref="ActionDescriptor"/> with a matching id is executed.
+/// Handles a single action type identified by its <see cref="Id" />.
+/// Implementations are registered in <see cref="ActionRegistry" /> and invoked
+/// when an <see cref="ActionDescriptor" /> with a matching id is executed.
 /// </summary>
 public interface IActionHandler
 {
@@ -126,13 +150,17 @@ public interface IActionHandler
 
     /// <summary>
     /// Returns true if the action can currently be executed in the given context.
-    /// Called before <see cref="Execute"/>. Use this for cooldown, permission, and
+    /// Called before <see cref="Execute" />. Use this for cooldown, permission, and
     /// resource checks. Server-side only.
     /// </summary>
+    /// <param name="context">The operation context.</param>
+    /// <returns>true if available; otherwise, false.</returns>
     bool IsAvailable(ActionContext context);
 
     /// <summary>
-    /// Executes the action. Called only when <see cref="IsAvailable"/> returned true.
+    /// Executes the action. Called only when <see cref="IsAvailable" /> returned true.
     /// </summary>
+    /// <param name="context">The operation context.</param>
+    /// <returns>The execute.</returns>
     ActionResult Execute(ActionContext context);
 }

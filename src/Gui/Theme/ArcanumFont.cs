@@ -4,7 +4,7 @@ using Vintagestory.API.Client;
 namespace ArcanumLib.Gui.Theme;
 
 /// <summary>
-/// Preset <see cref="CairoFont"/> configurations for the Arcanum GUI toolkit.
+/// Preset <see cref="CairoFont" /> configurations for the Arcanum GUI toolkit.
 /// </summary>
 public static class ArcanumFont
 {
@@ -41,6 +41,10 @@ public static class ArcanumFont
     /// <summary>
     /// Create a CairoFont with the given color and size.
     /// </summary>
+    /// <param name="color">The color value.</param>
+    /// <param name="size">The size.</param>
+    /// <param name="weight">The weight value.</param>
+    /// <returns>The colored.</returns>
     public static CairoFont Colored(RGBA color, double size, FontWeight weight = FontWeight.Normal)
     {
         return CairoFont.WhiteSmallishText()
@@ -52,6 +56,9 @@ public static class ArcanumFont
     /// <summary>
     /// Configure an existing font with an Arcanum color.
     /// </summary>
+    /// <param name="font">The font value.</param>
+    /// <param name="color">The color value.</param>
+    /// <returns>The with arcanum color.</returns>
     public static CairoFont WithArcanumColor(this CairoFont font, RGBA color)
     {
         return font.WithColor(new[] { color.R, color.G, color.B, color.A });

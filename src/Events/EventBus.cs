@@ -6,14 +6,14 @@ using ArcanumLib.Core;
 namespace ArcanumLib.Events;
 
 /// <summary>
-/// Marker interface for events published through <see cref="EventBus"/>.
+/// Marker interface for events published through <see cref="EventBus" />.
 /// Implement on a plain class or record carrying event data.
 /// </summary>
 public interface IEvent;
 
 /// <summary>
-/// Subscription token returned by <see cref="EventBus.Subscribe{T}"/>.
-/// Dispose it to unsubscribe. Also works with <see cref="Common.CleanupScope"/>.
+/// Subscription token returned by <see cref="EventBus.Subscribe{T}(Action{T}, EventBusPriority)" />.
+/// Dispose it to unsubscribe. Also works with <see cref="Common.CleanupScope" />.
 /// </summary>
 public sealed class EventBusSubscription : IDisposable
 {
@@ -47,15 +47,19 @@ public sealed class EventBusSubscription : IDisposable
 /// </summary>
 public enum EventBusPriority
 {
+    /// <summary>Low.</summary>
     Low = 0,
+    /// <summary>Normal.</summary>
     Normal = 100,
+    /// <summary>High.</summary>
     High = 200,
+    /// <summary>Highest.</summary>
     Highest = 300
 }
 
 /// <summary>
 /// Diagnostic record for a single active EventBus subscription.
-/// Used by <see cref="EventBus.GetDiagnostics"/> to report subscription health.
+/// Used by <see cref="EventBus.GetDiagnostics" /> to report subscription health.
 /// </summary>
 public sealed class EventBusSubscriptionInfo
 {
@@ -102,18 +106,28 @@ public static class EventBus
 
     private readonly struct EventKey : IEquatable<EventKey>
     {
+        /// <summary>The event type value.</summary>
         public readonly Type EventType;
+        /// <summary>The tag value.</summary>
         public readonly string Tag;
 
+        /// <summary>Performs the event key operation.</summary>
+        /// <param name="eventType">The event type value.</param>
+        /// <param name="tag">The tag value.</param>
         public EventKey(Type eventType, string tag)
         {
             EventType = eventType;
             Tag = tag ?? "";
         }
 
+        /// <summary>Determines whether the specified object is equal to the current object.</summary>
+        /// <param name="other">The other value.</param>
+        /// <returns>true if the specified object is equal to the current object; otherwise, false.</returns>
         public bool Equals(EventKey other)
             => EventType == other.EventType && string.Equals(Tag, other.Tag, StringComparison.OrdinalIgnoreCase);
 
+        /// <summary>Returns a hash code for the current object.</summary>
+        /// <returns>A hash code for the current object.</returns>
         public override int GetHashCode()
             => System.HashCode.Combine(EventType, Tag?.ToLowerInvariant() ?? "");
     }
@@ -127,17 +141,23 @@ public static class EventBus
     // ── Type-only subscriptions (tag = "") — IEvent constrained ──
 
     /// <summary>
-    /// Subscribes a handler to events of type <typeparamref name="T"/>.
-    /// The returned <see cref="EventBusSubscription"/> unsubscribes on dispose.
+    /// Subscribes a handler to events of type <typeparamref name="T" />.
+    /// The returned <see cref="EventBusSubscription" /> unsubscribes on dispose.
     /// </summary>
+    /// <typeparam name="T">The type of the t value.</typeparam>
+    /// <param name="handler">The callback to invoke.</param>
+    /// <param name="priority">The priority value.</param>
+    /// <returns>The subscribe.</returns>
     public static EventBusSubscription Subscribe<T>(Action<T> handler, EventBusPriority priority = EventBusPriority.Normal) where T : IEvent
         => SubscribeTyped("", handler, priority);
 
     /// <summary>
-    /// Publishes an event to all subscribers of type <typeparamref name="T"/>.
+    /// Publishes an event to all subscribers of type <typeparamref name="T" />.
     /// Handlers run synchronously in priority order. Exceptions in one handler
     /// do not block subsequent handlers.
     /// </summary>
+    /// <typeparam name="T">The type of the t value.</typeparam>
+    /// <param name="evt">The evt value.</param>
     /// <returns>The number of handlers invoked.</returns>
     public static int Publish<T>(T evt) where T : IEvent
         => PublishTyped("", evt);
@@ -145,27 +165,43 @@ public static class EventBus
     /// <summary>
     /// Publishes an event on the next server or client game tick.
     /// </summary>
+    /// <typeparam name="T">The type of the t value.</typeparam>
+    /// <param name="evt">The evt value.</param>
+    /// <returns>The publish async.</returns>
     public static int PublishAsync<T>(T evt) where T : IEvent
         => PublishTypedAsync("", evt);
 
     // ── String-tagged typed subscriptions — IEvent constrained ──
 
     /// <summary>
-    /// Subscribes a handler to events of type <typeparamref name="T"/> with the given tag.
+    /// Subscribes a handler to events of type <typeparamref name="T" /> with the given tag.
     /// Allows multiple distinct events sharing the same payload type.
     /// </summary>
+    /// <typeparam name="T">The type of the t value.</typeparam>
+    /// <param name="tag">The tag value.</param>
+    /// <param name="handler">The callback to invoke.</param>
+    /// <param name="priority">The priority value.</param>
+    /// <returns>The subscribe.</returns>
     public static EventBusSubscription Subscribe<T>(string tag, Action<T> handler, EventBusPriority priority = EventBusPriority.Normal) where T : IEvent
         => SubscribeTyped(tag, handler, priority);
 
     /// <summary>
-    /// Publishes a tagged event to all subscribers of type <typeparamref name="T"/> with matching tag.
+    /// Publishes a tagged event to all subscribers of type <typeparamref name="T" /> with matching tag.
     /// </summary>
+    /// <typeparam name="T">The type of the t value.</typeparam>
+    /// <param name="tag">The tag value.</param>
+    /// <param name="evt">The evt value.</param>
+    /// <returns>The publish.</returns>
     public static int Publish<T>(string tag, T evt) where T : IEvent
         => PublishTyped(tag, evt);
 
     /// <summary>
     /// Publishes a tagged event on the next game tick, marshalled to the main thread.
     /// </summary>
+    /// <typeparam name="T">The type of the t value.</typeparam>
+    /// <param name="tag">The tag value.</param>
+    /// <param name="evt">The evt value.</param>
+    /// <returns>The publish async.</returns>
     public static int PublishAsync<T>(string tag, T evt) where T : IEvent
         => PublishTypedAsync(tag, evt);
 
@@ -267,9 +303,14 @@ public static class EventBus
 
     /// <summary>
     /// Subscribes a handler to events by name only, without type constraints.
-    /// The handler receives the payload as <see cref="object"/>.
+    /// The handler receives the payload as <see cref="object" />.
     /// Use this for integrating with existing string-based event systems.
     /// </summary>
+    /// <param name="tag">The tag value.</param>
+    /// <param name="handler">The callback to invoke.</param>
+    /// <param name="priority">The priority value.</param>
+    /// <returns>The subscribe.</returns>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="handler" /> is <see langword="null" />.</exception>
     public static EventBusSubscription Subscribe(string tag, Action<object?> handler, EventBusPriority priority = EventBusPriority.Normal)
     {
         if (handler == null) throw new ArgumentNullException(nameof(handler));
@@ -323,11 +364,14 @@ public static class EventBus
 
     /// <summary>
     /// Publishes a payload to all subscribers of the given name, regardless of type.
-    /// Also dispatches to typed subscribers whose <typeparamref name="T"/> matches
-    /// the runtime type of <paramref name="payload"/>, so external mods using
-    /// <see cref="Subscribe{T}(string, Action{T})"/> receive events published through
+    /// Also dispatches to typed subscribers whose event type matches
+    /// the runtime type of <paramref name="payload" />, so external mods using
+    /// <see cref="Subscribe{T}(string, Action{T}, EventBusPriority)" /> receive events published through
     /// this untyped overload.
     /// </summary>
+    /// <param name="tag">The tag value.</param>
+    /// <param name="payload">The payload value.</param>
+    /// <returns>The number of subscribers that received the event.</returns>
     public static int Publish(string tag, object? payload)
     {
         if (string.IsNullOrEmpty(tag)) return 0;
@@ -393,14 +437,17 @@ public static class EventBus
     }
 
     /// <summary>
-    /// Removes all subscriptions for event type <typeparamref name="T"/>.
+    /// Removes all subscriptions for event type <typeparamref name="T" />.
     /// </summary>
+    /// <typeparam name="T">The type of the t value.</typeparam>
     public static void Clear<T>() where T : IEvent
         => Clear<T>("");
 
     /// <summary>
-    /// Removes all subscriptions for event type <typeparamref name="T"/> with the given tag.
+    /// Removes all subscriptions for event type <typeparamref name="T" /> with the given tag.
     /// </summary>
+    /// <typeparam name="T">The type of the t value.</typeparam>
+    /// <param name="tag">The tag value.</param>
     public static void Clear<T>(string tag) where T : IEvent
     {
         lock (_syncLock)
@@ -426,6 +473,7 @@ public static class EventBus
     /// <summary>
     /// Records a tag as having been published. Used for dangling-handler detection.
     /// </summary>
+    /// <param name="tag">The tag value.</param>
     private static void RecordPublishedTag(string tag)
     {
         if (string.IsNullOrEmpty(tag)) return;
@@ -437,6 +485,7 @@ public static class EventBus
     /// Returns a diagnostic snapshot of all known EventBus subscriptions,
     /// including invocation counts, timing, and errors.
     /// </summary>
+    /// <returns>The diagnostics.</returns>
     public static List<EventBusSubscriptionInfo> GetDiagnostics()
     {
         var result = new List<EventBusSubscriptionInfo>();
@@ -458,6 +507,7 @@ public static class EventBus
     /// Returns tags that have active subscribers but were never published.
     /// Useful for detecting typo'd event names.
     /// </summary>
+    /// <returns>The dangling subscriptions.</returns>
     public static List<string> GetDanglingSubscriptions()
     {
         var result = new List<string>();
@@ -478,6 +528,7 @@ public static class EventBus
     /// <summary>
     /// Returns the number of active (non-disposed) subscriptions.
     /// </summary>
+    /// <returns>The active subscription count.</returns>
     public static int ActiveSubscriptionCount()
     {
         lock (_syncLock)
@@ -490,14 +541,19 @@ public static class EventBus
     }
 
     /// <summary>
-    /// Returns the number of active subscriptions for event type <typeparamref name="T"/>.
+    /// Returns the number of active subscriptions for event type <typeparamref name="T" />.
     /// </summary>
+    /// <typeparam name="T">The type of the t value.</typeparam>
+    /// <returns>The subscriber count.</returns>
     public static int SubscriberCount<T>() where T : IEvent
         => SubscriberCount<T>("");
 
     /// <summary>
-    /// Returns the number of active subscriptions for event type <typeparamref name="T"/> with the given tag.
+    /// Returns the number of active subscriptions for event type <typeparamref name="T" /> with the given tag.
     /// </summary>
+    /// <typeparam name="T">The type of the t value.</typeparam>
+    /// <param name="tag">The tag value.</param>
+    /// <returns>The subscriber count.</returns>
     public static int SubscriberCount<T>(string tag) where T : IEvent
     {
         lock (_syncLock)

@@ -9,7 +9,7 @@ namespace ArcanumLib.Particles
 {
     /// <summary>
     /// Fluent builder for creating custom particle effects.
-    /// Wraps <see cref="SimpleParticleProperties"/> with a chainable API
+    /// Wraps <see cref="SimpleParticleProperties" /> with a chainable API
     /// for count, color, position, velocity, life, gravity, size, and model.
     /// </summary>
     public class ParticleEffectBuilder
@@ -33,6 +33,9 @@ namespace ArcanumLib.Particles
         private Vec3d? _followOffset;
 
         /// <summary>Sets the minimum and maximum particle count.</summary>
+        /// <param name="min">The minimum value.</param>
+        /// <param name="max">The maximum value.</param>
+        /// <returns>The count.</returns>
         public ParticleEffectBuilder Count(int min, int max)
         {
             minCount = min;
@@ -41,13 +44,18 @@ namespace ArcanumLib.Particles
         }
 
         /// <summary>Sets the RGBA color of the particles.</summary>
+        /// <param name="rgba">The rgba value.</param>
+        /// <returns>The color.</returns>
         public ParticleEffectBuilder Color(int rgba)
         {
             color = rgba;
             return this;
         }
 
-        /// <summary>Sets the spawn area as a cube centered on <paramref name="center"/> with the given <paramref name="spread"/>.</summary>
+        /// <summary>Sets the spawn area as a cube centered on <paramref name="center" /> with the given <paramref name="spread" />.</summary>
+        /// <param name="center">The center position.</param>
+        /// <param name="spread">The spread value.</param>
+        /// <returns>The position.</returns>
         public ParticleEffectBuilder Position(Vec3d center, float spread = 0.5f)
         {
             minPos = center.AddCopy(-spread, -spread, -spread);
@@ -56,6 +64,9 @@ namespace ArcanumLib.Particles
         }
 
         /// <summary>Sets the spawn area as an explicit min/max bounding box.</summary>
+        /// <param name="min">The minimum value.</param>
+        /// <param name="max">The maximum value.</param>
+        /// <returns>The position.</returns>
         public ParticleEffectBuilder Position(Vec3d min, Vec3d max)
         {
             minPos = min;
@@ -63,7 +74,10 @@ namespace ArcanumLib.Particles
             return this;
         }
 
-        /// <summary>Sets the spawn area around an entity's midpoint with the given <paramref name="spread"/>.</summary>
+        /// <summary>Sets the spawn area around an entity's midpoint with the given <paramref name="spread" />.</summary>
+        /// <param name="entity">The entity.</param>
+        /// <param name="spread">The spread value.</param>
+        /// <returns>The at entity.</returns>
         public ParticleEffectBuilder AtEntity(Entity entity, float spread = 0.5f)
         {
             if (entity != null)
@@ -76,6 +90,9 @@ namespace ArcanumLib.Particles
         }
 
         /// <summary>Sets the min and max velocity of the particles.</summary>
+        /// <param name="min">The minimum value.</param>
+        /// <param name="max">The maximum value.</param>
+        /// <returns>The velocity.</returns>
         public ParticleEffectBuilder Velocity(Vec3f min, Vec3f max)
         {
             minVelocity = min;
@@ -84,6 +101,9 @@ namespace ArcanumLib.Particles
         }
 
         /// <summary>Sets an upward velocity range with slight horizontal jitter.</summary>
+        /// <param name="min">The minimum value.</param>
+        /// <param name="max">The maximum value.</param>
+        /// <returns>The velocity up.</returns>
         public ParticleEffectBuilder VelocityUp(float min = 0.1f, float max = 0.4f)
         {
             minVelocity = new Vec3f(-0.05f, min, -0.05f);
@@ -91,7 +111,9 @@ namespace ArcanumLib.Particles
             return this;
         }
 
-        /// <summary>Sets an outward velocity range with the given <paramref name="speed"/>.</summary>
+        /// <summary>Sets an outward velocity range with the given <paramref name="speed" />.</summary>
+        /// <param name="speed">The speed value.</param>
+        /// <returns>The velocity outward.</returns>
         public ParticleEffectBuilder VelocityOutward(float speed = 0.3f)
         {
             minVelocity = new Vec3f(-speed, -speed * 0.3f, -speed);
@@ -100,6 +122,8 @@ namespace ArcanumLib.Particles
         }
 
         /// <summary>Sets the particle lifetime in seconds.</summary>
+        /// <param name="seconds">The duration in seconds.</param>
+        /// <returns>The life.</returns>
         public ParticleEffectBuilder Life(float seconds)
         {
             lifeLength = seconds;
@@ -107,6 +131,8 @@ namespace ArcanumLib.Particles
         }
 
         /// <summary>Sets the gravity effect on the particles.</summary>
+        /// <param name="gravity">The gravity value.</param>
+        /// <returns>The gravity.</returns>
         public ParticleEffectBuilder Gravity(float gravity)
         {
             gravityEffect = gravity;
@@ -114,6 +140,9 @@ namespace ArcanumLib.Particles
         }
 
         /// <summary>Sets the min and max particle size.</summary>
+        /// <param name="min">The minimum value.</param>
+        /// <param name="max">The maximum value.</param>
+        /// <returns>The size.</returns>
         public ParticleEffectBuilder Size(float min, float max)
         {
             minSize = min;
@@ -122,6 +151,8 @@ namespace ArcanumLib.Particles
         }
 
         /// <summary>Sets a uniform particle size.</summary>
+        /// <param name="size">The size.</param>
+        /// <returns>The size.</returns>
         public ParticleEffectBuilder Size(float size)
         {
             minSize = size;
@@ -130,20 +161,24 @@ namespace ArcanumLib.Particles
         }
 
         /// <summary>Sets the particle model.</summary>
+        /// <param name="particleModel">The particle model value.</param>
+        /// <returns>The model.</returns>
         public ParticleEffectBuilder Model(EnumParticleModel particleModel)
         {
             model = particleModel;
             return this;
         }
 
-        /// <summary>Sets the particle model to <see cref="EnumParticleModel.Cube"/>.</summary>
+        /// <summary>Sets the particle model to <see cref="EnumParticleModel.Cube" />.</summary>
+        /// <returns>The cube.</returns>
         public ParticleEffectBuilder Cube()
         {
             model = EnumParticleModel.Cube;
             return this;
         }
 
-        /// <summary>Sets the particle model to <see cref="EnumParticleModel.Quad"/>.</summary>
+        /// <summary>Sets the particle model to <see cref="EnumParticleModel.Quad" />.</summary>
+        /// <returns>The quad.</returns>
         public ParticleEffectBuilder Quad()
         {
             model = EnumParticleModel.Quad;
@@ -152,8 +187,10 @@ namespace ArcanumLib.Particles
 
         /// <summary>
         /// Delays the first spawn by the given number of seconds.
-        /// Only affects <see cref="Spawn(ICoreServerAPI)"/> and <see cref="Spawn(IWorldAccessor)"/>.
+        /// Only affects <see cref="Spawn(ICoreServerAPI)" /> and <see cref="Spawn(IWorldAccessor)" />.
         /// </summary>
+        /// <param name="seconds">The duration in seconds.</param>
+        /// <returns>The delay.</returns>
         public ParticleEffectBuilder Delay(float seconds)
         {
             _delaySeconds = Math.Max(0, seconds);
@@ -162,10 +199,11 @@ namespace ArcanumLib.Particles
 
         /// <summary>
         /// Repeats the spawn at the given interval for the given total duration.
-        /// Only affects <see cref="Spawn(ICoreServerAPI)"/> and <see cref="Spawn(IWorldAccessor)"/>.
+        /// Only affects <see cref="Spawn(ICoreServerAPI)" /> and <see cref="Spawn(IWorldAccessor)" />.
         /// </summary>
         /// <param name="intervalSec">Seconds between each spawn.</param>
         /// <param name="durationSec">Total duration in seconds. The effect stops repeating after this.</param>
+        /// <returns>The repeat.</returns>
         public ParticleEffectBuilder Repeat(float intervalSec, float durationSec)
         {
             _repeatInterval = Math.Max(0.05f, intervalSec);
@@ -179,6 +217,8 @@ namespace ArcanumLib.Particles
         /// </summary>
         /// <param name="entity">The entity to follow.</param>
         /// <param name="offset">Optional offset from the entity's midpoint.</param>
+        /// <returns>The follow entity.</returns>
+        /// <exception cref="ArgumentNullException">Thrown when <paramref name="entity" /> is <see langword="null" />.</exception>
         public ParticleEffectBuilder FollowEntity(Entity entity, Vec3d? offset = null)
         {
             _followEntity = entity ?? throw new ArgumentNullException(nameof(entity));
@@ -186,7 +226,8 @@ namespace ArcanumLib.Particles
             return this;
         }
 
-        /// <summary>Builds the <see cref="SimpleParticleProperties"/> object.</summary>
+        /// <summary>Builds the <see cref="SimpleParticleProperties" /> object.</summary>
+        /// <returns>The value.</returns>
         public SimpleParticleProperties Build()
         {
             return new SimpleParticleProperties(
@@ -200,6 +241,7 @@ namespace ArcanumLib.Particles
         }
 
         /// <summary>Builds and immediately spawns the particles on the server.</summary>
+        /// <param name="sapi">The server API instance.</param>
         public void Spawn(ICoreServerAPI sapi)
         {
             if (sapi == null) return;
@@ -207,6 +249,7 @@ namespace ArcanumLib.Particles
         }
 
         /// <summary>Builds and immediately spawns the particles on the given world.</summary>
+        /// <param name="world">The world accessor.</param>
         public void Spawn(IWorldAccessor world)
         {
             if (world == null) return;

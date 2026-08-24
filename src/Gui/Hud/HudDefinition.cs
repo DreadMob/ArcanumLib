@@ -7,6 +7,7 @@ namespace ArcanumLib.Gui.Hud;
 /// Generic data-driven HUD layout definition.
 /// Specific mod definitions can inherit and use their own element type via the generic argument.
 /// </summary>
+/// <typeparam name="TElement">The type of the telement value.</typeparam>
 [Serializable]
 public class HudDefinition<TElement> where TElement : HudElementDefinition
 {
@@ -19,7 +20,7 @@ public class HudDefinition<TElement> where TElement : HudElementDefinition
     /// <summary>Visual style or fallback theme name.</summary>
     public required string style;
 
-    /// <summary>Theme name referencing an external theme source. Takes priority over <see cref="style"/>.</summary>
+    /// <summary>Theme name referencing an external theme source. Takes priority over <see cref="style" />.</summary>
     public required string theme;
 
     /// <summary>Override the theme's panel width (in pixels). Null = use theme's panelWidth.</summary>
@@ -37,7 +38,7 @@ public class HudDefinition<TElement> where TElement : HudElementDefinition
     /// <summary>Ordered list of HUD elements to render.</summary>
     public required List<TElement> elements;
 
-    /// <summary>Resolves the effective theme name: <see cref="theme"/> → <see cref="style"/> → "default".</summary>
+    /// <summary>Resolves the effective theme name: <see cref="theme" /> → <see cref="style" /> → "default".</summary>
     public string EffectiveTheme => !string.IsNullOrWhiteSpace(theme) ? theme
         : !string.IsNullOrWhiteSpace(style) ? style
         : "default";

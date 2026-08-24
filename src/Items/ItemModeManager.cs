@@ -22,6 +22,10 @@ namespace ArcanumLib.Items
         /// <summary>
         /// Tries to parse the mode list from the given attributes.
         /// </summary>
+        /// <param name="attributes">The attributes value.</param>
+        /// <param name="modes">When this method returns, contains the <paramref name="modes" /> value.</param>
+        /// <param name="config">The config value.</param>
+        /// <returns>true if the operation succeeded; otherwise, false.</returns>
         public static bool TryGetModes(ITreeAttribute? attributes, out List<ItemMode> modes, ItemModeConfig? config = null)
         {
             config ??= DefaultConfig;
@@ -47,14 +51,22 @@ namespace ArcanumLib.Items
         }
 
         /// <summary>
-        /// Convenience overload for <see cref="ItemStack"/>.
+        /// Convenience overload for <see cref="ItemStack" />.
         /// </summary>
+        /// <param name="stack">The item stack.</param>
+        /// <param name="modes">When this method returns, contains the <paramref name="modes" /> value.</param>
+        /// <param name="config">The config value.</param>
+        /// <returns>true if the operation succeeded; otherwise, false.</returns>
         public static bool TryGetModes(ItemStack? stack, out List<ItemMode> modes, ItemModeConfig? config = null)
             => TryGetModes(stack?.Attributes, out modes, config);
 
         /// <summary>
         /// Returns the active mode index, clamped to [0, modeCount - 1] if modeCount is greater than zero.
         /// </summary>
+        /// <param name="attributes">The attributes value.</param>
+        /// <param name="modeCount">The mode count value.</param>
+        /// <param name="config">The config value.</param>
+        /// <returns>The active mode index.</returns>
         public static int GetActiveModeIndex(ITreeAttribute? attributes, int modeCount, ItemModeConfig? config = null)
         {
             config ??= DefaultConfig;
@@ -69,6 +81,10 @@ namespace ArcanumLib.Items
         /// <summary>
         /// Returns the active mode from the parsed list, or null if no modes are present.
         /// </summary>
+        /// <param name="attributes">The attributes value.</param>
+        /// <param name="modes">The modes value.</param>
+        /// <param name="config">The config value.</param>
+        /// <returns>The active mode, or null if none is found.</returns>
         public static ItemMode? GetActiveMode(ITreeAttribute? attributes, List<ItemMode>? modes, ItemModeConfig? config = null)
         {
             if (modes == null || modes.Count == 0) return null;
@@ -79,6 +95,10 @@ namespace ArcanumLib.Items
         /// <summary>
         /// Tries to get the active mode and its id.
         /// </summary>
+        /// <param name="attributes">The attributes value.</param>
+        /// <param name="activeModeId">When this method returns, contains the <paramref name="activeModeId" /> value.</param>
+        /// <param name="config">The config value.</param>
+        /// <returns>true if the operation succeeded; otherwise, false.</returns>
         public static bool TryGetActiveModeId(ITreeAttribute? attributes, out string? activeModeId, ItemModeConfig? config = null)
         {
             activeModeId = null;
@@ -92,6 +112,10 @@ namespace ArcanumLib.Items
         /// <summary>
         /// Tries to get the actions of the active mode. Returns false if there are no modes or the active mode has no actions.
         /// </summary>
+        /// <param name="attributes">The attributes value.</param>
+        /// <param name="actions">When this method returns, contains the <paramref name="actions" /> value.</param>
+        /// <param name="config">The config value.</param>
+        /// <returns>true if the operation succeeded; otherwise, false.</returns>
         public static bool TryGetActiveModeActions(ITreeAttribute? attributes, out List<ActionDescriptor> actions, ItemModeConfig? config = null)
         {
             actions = new List<ActionDescriptor>();
@@ -107,6 +131,9 @@ namespace ArcanumLib.Items
         /// <summary>
         /// Sets the active mode index on the attributes.
         /// </summary>
+        /// <param name="attributes">The attributes value.</param>
+        /// <param name="index">The zero-based index.</param>
+        /// <param name="config">The config value.</param>
         public static void SetActiveModeIndex(ITreeAttribute? attributes, int index, ItemModeConfig? config = null)
         {
             config ??= DefaultConfig;
@@ -116,6 +143,9 @@ namespace ArcanumLib.Items
         /// <summary>
         /// Convenience overload that writes the index and marks the slot dirty.
         /// </summary>
+        /// <param name="slot">The inventory slot.</param>
+        /// <param name="index">The zero-based index.</param>
+        /// <param name="config">The config value.</param>
         public static void SetActiveModeIndex(ItemSlot? slot, int index, ItemModeConfig? config = null)
         {
             if (slot?.Itemstack?.Attributes == null) return;
@@ -125,8 +155,11 @@ namespace ArcanumLib.Items
 
         /// <summary>
         /// Returns true when an effect or action should run for the given active mode.
-        /// An empty <paramref name="effectModeId"/> means "runs in any mode".
+        /// An empty <paramref name="effectModeId" /> means "runs in any mode".
         /// </summary>
+        /// <param name="effectModeId">The effect mode id value.</param>
+        /// <param name="activeModeId">The active mode id value.</param>
+        /// <returns>true if the operation should run for mode; otherwise, false.</returns>
         public static bool ShouldRunForMode(string? effectModeId, string? activeModeId)
         {
             if (string.IsNullOrWhiteSpace(effectModeId)) return true;
@@ -135,9 +168,13 @@ namespace ArcanumLib.Items
         }
 
         /// <summary>
-        /// Builds a <see cref="SkillItem"/> array for the vanilla tool mode UI.
+        /// Builds a <see cref="SkillItem" /> array for the vanilla tool mode UI.
         /// Returns null if there are no modes.
         /// </summary>
+        /// <param name="capi">The client API instance.</param>
+        /// <param name="modes">The modes value.</param>
+        /// <param name="config">The config value.</param>
+        /// <returns>A collection of tool mode skill items values, or null if none is found.</returns>
         public static SkillItem[]? GetToolModeSkillItems(ICoreClientAPI? capi, List<ItemMode> modes, ItemModeConfig? config = null)
         {
             if (capi == null || modes == null || modes.Count == 0) return null;
@@ -187,6 +224,9 @@ namespace ArcanumLib.Items
         /// Returns the current tool mode index for a slot, clamped to the available number of modes.
         /// Returns -1 when the stack has no modes.
         /// </summary>
+        /// <param name="slot">The inventory slot.</param>
+        /// <param name="config">The config value.</param>
+        /// <returns>The tool mode index.</returns>
         public static int GetToolModeIndex(ItemSlot? slot, ItemModeConfig? config = null)
         {
             if (slot?.Itemstack?.Attributes == null) return -1;
@@ -195,8 +235,12 @@ namespace ArcanumLib.Items
         }
 
         /// <summary>
-        /// Cycles the active mode by <paramref name="delta"/> (positive or negative) and returns the new mode id.
+        /// Cycles the active mode by <paramref name="delta" /> (positive or negative) and returns the new mode id.
         /// </summary>
+        /// <param name="attributes">The attributes value.</param>
+        /// <param name="delta">The delta value.</param>
+        /// <param name="config">The config value.</param>
+        /// <returns>The cycle active mode, or null if none is found.</returns>
         public static string? CycleActiveMode(ITreeAttribute? attributes, int delta, ItemModeConfig? config = null)
         {
             if (attributes == null) return null;

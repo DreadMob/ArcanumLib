@@ -2,7 +2,7 @@ namespace ArcanumLib.Gui.Hud;
 
 /// <summary>
 /// A network packet that carries a list of HUD entries to display.
-/// Used by <see cref="PacketIconHud{TPacket, TEntry}"/>.
+/// Used by <see cref="PacketIconHud{TPacket, TEntry}" />.
 /// </summary>
 /// <typeparam name="TEntry">Entry type contained in the packet.</typeparam>
 public interface IHudPacket<TEntry>

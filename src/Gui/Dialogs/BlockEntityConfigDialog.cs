@@ -10,9 +10,9 @@ using Vintagestory.API.Util;
 namespace ArcanumLib.Gui.Dialogs;
 
 /// <summary>
-/// Base class for a config dialog bound to a <see cref="BlockEntity"/> and a
-/// <see cref="ModConfig{T}"/>. Subclasses implement <see cref="BuildBody"/> to
-/// lay out config-specific controls and <see cref="ReadFields"/> to copy values
+/// Base class for a config dialog bound to a <see cref="BlockEntity" /> and a
+/// <see cref="ModConfig{T}" />. Subclasses implement <see cref="BuildBody" /> to
+/// lay out config-specific controls and <see cref="ReadFields" /> to copy values
 /// from the dialog back into the config before saving.
 /// </summary>
 /// <typeparam name="T">The config type.</typeparam>
@@ -42,6 +42,7 @@ public abstract class BlockEntityConfigDialog<T> : ArcanumGuiDialog where T : cl
     /// <param name="blockEntity">The block entity being configured.</param>
     /// <param name="config">The config wrapper to load/save.</param>
     /// <param name="titleKey">Lang key or literal title for the dialog title bar.</param>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="blockEntity" /> is <see langword="null" />.</exception>
     protected BlockEntityConfigDialog(ICoreClientAPI capi, BlockEntity blockEntity, ModConfig<T> config, string titleKey)
         : base(capi)
     {
@@ -53,14 +54,16 @@ public abstract class BlockEntityConfigDialog<T> : ArcanumGuiDialog where T : cl
 
     /// <summary>
     /// Override to build the body of the dialog (between the title bar and the
-    /// save/cancel buttons). The provided <paramref name="composer"/> is already
+    /// save/cancel buttons). The provided <paramref name="composer" /> is already
     /// inside the dialog's child elements.
     /// </summary>
+    /// <param name="composer">The composer value.</param>
+    /// <returns>The body.</returns>
     protected abstract GuiComposer BuildBody(GuiComposer composer);
 
     /// <summary>
     /// Override to read values from the dialog's input controls back into
-    /// <see cref="Editing"/>. Called before saving.
+    /// <see cref="Editing" />. Called before saving.
     /// </summary>
     protected abstract void ReadFields();
 
@@ -73,8 +76,10 @@ public abstract class BlockEntityConfigDialog<T> : ArcanumGuiDialog where T : cl
     /// <summary>
     /// Returns the dialog title, resolving the lang key if applicable.
     /// </summary>
+    /// <returns>The title string, or null if none is found.</returns>
     protected virtual string GetTitle() => Lang.Get(_titleKey) ?? _titleKey;
 
+    /// <summary>Builds composer.</summary>
     protected override void BuildComposer()
     {
         string title = GetTitle();
@@ -103,6 +108,7 @@ public abstract class BlockEntityConfigDialog<T> : ArcanumGuiDialog where T : cl
     /// Validates the edited config before saving. Override to add custom validation.
     /// Returns true by default.
     /// </summary>
+    /// <returns>true if the operation succeeds; otherwise, false.</returns>
     protected virtual bool Validate() => true;
 
     /// <summary>
@@ -146,6 +152,8 @@ public abstract class BlockEntityConfigDialog<T> : ArcanumGuiDialog where T : cl
     /// Creates a deep clone of the config for editing. Override if T is not
     /// trivially copyable. The default implementation uses JSON round-trip.
     /// </summary>
+    /// <param name="source">The source value.</param>
+    /// <returns>The clone config, or null if none is found.</returns>
     protected virtual T CloneConfig(T source)
     {
         if (source == null) return new T();
@@ -160,5 +168,6 @@ public abstract class BlockEntityConfigDialog<T> : ArcanumGuiDialog where T : cl
         }
     }
 
+    /// <summary>Gets the toggle key combination code.</summary>
     public override string ToggleKeyCombinationCode => "blockentityconfigdialog-" + BlockEntity.Pos;
 }

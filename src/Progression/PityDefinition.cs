@@ -54,6 +54,7 @@ namespace ArcanumLib.Progression
         /// Get the guaranteed quality for given pity state, or 0 if none.
         /// </summary>
         /// <param name="opensSinceQuality">Key = quality tier index, Value = opens since last drop.</param>
+        /// <returns>The guaranteed quality.</returns>
         public int GetGuaranteedQuality(Dictionary<int, int> opensSinceQuality)
         {
             if (opensSinceQuality == null) return 0;

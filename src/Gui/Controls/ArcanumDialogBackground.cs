@@ -19,6 +19,8 @@ public class ArcanumDialogBackground : GuiElement
     /// <summary>
     /// Creates a new dialog background.
     /// </summary>
+    /// <param name="capi">The client API instance.</param>
+    /// <param name="bounds">The bounds value.</param>
     /// <param name="withTitlebar">Whether the title-bar tint should be drawn.</param>
     /// <param name="drawAccentStrip">Whether a decorative accent line is drawn under the title bar.</param>
     public ArcanumDialogBackground(ICoreClientAPI capi, ElementBounds bounds, bool withTitlebar, bool drawAccentStrip)
@@ -29,6 +31,8 @@ public class ArcanumDialogBackground : GuiElement
     }
 
     /// <summary>Composes the dialog background with shadow, gradient, borders and decorative elements.</summary>
+    /// <param name="ctx">The ctx value.</param>
+    /// <param name="surface">The surface value.</param>
     public override void ComposeElements(Context ctx, ImageSurface surface)
     {
         Bounds.CalcWorldBounds();
@@ -100,13 +104,18 @@ public class ArcanumDialogBackground : GuiElement
 }
 
 /// <summary>
-/// Composer extension methods for adding <see cref="ArcanumDialogBackground"/> elements.
+/// Composer extension methods for adding <see cref="ArcanumDialogBackground" /> elements.
 /// </summary>
 public static class ArcanumDialogComposerHelpers
 {
     /// <summary>
     /// Adds an Arcanum-styled dialog background to the composer.
     /// </summary>
+    /// <param name="composer">The composer value.</param>
+    /// <param name="bounds">The bounds value.</param>
+    /// <param name="withTitleBar">The with title bar value.</param>
+    /// <param name="accentStrip">The accent strip value.</param>
+    /// <returns>The add arcanum dialog background.</returns>
     public static GuiComposer AddArcanumDialogBackground(
         this GuiComposer composer,
         ElementBounds bounds,

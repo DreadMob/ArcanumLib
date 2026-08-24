@@ -10,7 +10,7 @@ using Vintagestory.API.Server;
 namespace ArcanumLib.Core;
 
 /// <summary>
-/// Central lifecycle ModSystem that registers the current API with <see cref="ArcanumServices"/>
+/// Central lifecycle ModSystem that registers the current API with <see cref="ArcanumServices" />
 /// so other ArcanumLib modules can resolve the active client or server API without static coupling.
 /// </summary>
 public class ArcanumLibModSystem : ModSystem
@@ -44,8 +44,8 @@ public class ArcanumLibModSystem : ModSystem
     /// <param name="capi">The client API.</param>
     public override void StartClientSide(ICoreClientAPI capi)
     {
-        ArcanumServices.Register<ICoreAPI>(capi);
-        ArcanumServices.Register<ICoreClientAPI>(capi);
+        ArcanumServices.Register<ICoreAPI>(capi, ArcanumServiceScope.Client);
+        ArcanumServices.Register<ICoreClientAPI>(capi, ArcanumServiceScope.Client);
         ImageIconCache.Init(capi);
         CustomTabIconRenderer.RegisterGenericIcons();
     }
@@ -56,8 +56,8 @@ public class ArcanumLibModSystem : ModSystem
     /// <param name="sapi">The server API.</param>
     public override void StartServerSide(ICoreServerAPI sapi)
     {
-        ArcanumServices.Register<ICoreAPI>(sapi);
-        ArcanumServices.Register<ICoreServerAPI>(sapi);
+        ArcanumServices.Register<ICoreAPI>(sapi, ArcanumServiceScope.Server);
+        ArcanumServices.Register<ICoreServerAPI>(sapi, ArcanumServiceScope.Server);
     }
 
     /// <summary>

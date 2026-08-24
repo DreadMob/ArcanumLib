@@ -37,6 +37,7 @@ public static class CollectibleNameResolver
     /// Optional resolver for entity codes (e.g. <c>MobLocalizationUtils.GetMobDisplayName</c>).
     /// If null, entity names fall back to the code path.
     /// </param>
+    /// <returns>The display name string, or null if none is found.</returns>
     public static string GetDisplayName(ICoreAPI api, string code, System.Func<string?, string?>? mobNameResolver = null)
     {
         if (string.IsNullOrWhiteSpace(code)) return code ?? "";
@@ -80,6 +81,10 @@ public static class CollectibleNameResolver
     /// valid display name. Scans blocks, then items, then entity types.
     /// Uses a lazily-built prefix index to avoid full registry scans on every call.
     /// </summary>
+    /// <param name="api">The core API instance.</param>
+    /// <param name="prefix">The prefix value.</param>
+    /// <param name="mobNameResolver">The mob name resolver value.</param>
+    /// <returns>The resolve first matching name, or null if none is found.</returns>
     public static string? ResolveFirstMatchingName(ICoreAPI api, string prefix, System.Func<string?, string?>? mobNameResolver = null)
     {
         if (string.IsNullOrWhiteSpace(prefix)) return null;
@@ -133,6 +138,7 @@ public static class CollectibleNameResolver
     /// <param name="obj">The item or block.</param>
     /// <param name="tryItemStackName">Whether to allocate an <c>ItemStack</c> if lang keys are missing.</param>
     /// <param name="api">Optional API for logging non-critical exceptions.</param>
+    /// <returns>The collectible display name string, or null if none is found.</returns>
     public static string GetCollectibleDisplayName(CollectibleObject obj, bool tryItemStackName = true, ICoreAPI? api = null)
     {
         if (obj?.Code == null) return "";
@@ -194,9 +200,12 @@ public static class CollectibleNameResolver
     }
 
     /// <summary>
-    /// Returns true when <paramref name="name"/> is a real display name and not just
+    /// Returns true when <paramref name="name" /> is a real display name and not just
     /// the code, path, or a mechanical pretty-print of the path.
     /// </summary>
+    /// <param name="obj">The obj value.</param>
+    /// <param name="name">The name.</param>
+    /// <returns>true if valid display name; otherwise, false.</returns>
     public static bool IsValidDisplayName(CollectibleObject obj, string? name)
     {
         if (string.IsNullOrWhiteSpace(name) || obj?.Code == null) return false;
@@ -223,6 +232,9 @@ public static class CollectibleNameResolver
     /// Tries to resolve a wildcard target using generic language keys
     /// (e.g. <c>game:item-flower-*</c>). The key must be present in the language file.
     /// </summary>
+    /// <param name="code">The code value.</param>
+    /// <param name="prefix">The prefix value.</param>
+    /// <returns>The resolve name from lang key, or null if none is found.</returns>
     public static string? ResolveNameFromLangKey(string code, string prefix)
     {
         if (string.IsNullOrWhiteSpace(code) || string.IsNullOrWhiteSpace(prefix)) return null;
@@ -253,6 +265,9 @@ public static class CollectibleNameResolver
     /// Matches a collectible code against a pattern. Simple prefix patterns use
     /// <c>StartsWith</c>; patterns with a wildcard in the middle use full wildcard matching.
     /// </summary>
+    /// <param name="code">The code value.</param>
+    /// <param name="pattern">The pattern value.</param>
+    /// <returns>true if the operation succeeds; otherwise, false.</returns>
     public static bool MatchesPattern(string code, string pattern)
     {
         if (string.IsNullOrWhiteSpace(code) || string.IsNullOrWhiteSpace(pattern)) return false;
@@ -272,6 +287,9 @@ public static class CollectibleNameResolver
     /// Resolves a wildcard pattern to a concrete item or block code that can be used
     /// for an icon. Returns the original code if it already points to a real collectible.
     /// </summary>
+    /// <param name="api">The core API instance.</param>
+    /// <param name="code">The code value.</param>
+    /// <returns>The resolve icon code, or null if none is found.</returns>
     public static string? ResolveIconCode(ICoreAPI api, string code)
     {
         if (string.IsNullOrWhiteSpace(code)) return null;
@@ -328,6 +346,9 @@ public static class CollectibleNameResolver
     /// using a lazily-built prefix index. Falls back to a full scan if the index
     /// is not available or the pattern is not a simple prefix.
     /// </summary>
+    /// <param name="api">The core API instance.</param>
+    /// <param name="pattern">The pattern value.</param>
+    /// <returns>A collection of prefix candidates values.</returns>
     private static IEnumerable<string> GetPrefixCandidates(ICoreAPI api, string pattern)
     {
         if (Wildcard.IsSimplePrefix(pattern))
@@ -382,6 +403,7 @@ public static class CollectibleNameResolver
     /// full codes that share that prefix. This allows wildcard lookups to skip
     /// scanning the entire registry.
     /// </summary>
+    /// <param name="api">The core API instance.</param>
     private static void EnsurePrefixIndex(ICoreAPI api)
     {
         string lang = Lang.CurrentLocale ?? "en";

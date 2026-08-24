@@ -4,14 +4,14 @@ using Vintagestory.API.Client;
 namespace ArcanumLib.Hologram;
 
 /// <summary>
-/// Holds the generated <see cref="LoadedTexture"/> for a hologram, plus metadata used to track updates.
+/// Holds the generated <see cref="LoadedTexture" /> for a hologram, plus metadata used to track updates.
 /// </summary>
 public sealed class HologramTexture : IDisposable
 {
     /// <summary>The loaded OpenGL texture, or null if the generation failed.</summary>
     public LoadedTexture? Texture { get; internal set; }
 
-    /// <summary>Version that produced this texture. Compare with <see cref="IHologramTextSource.GetHologramVersion"/>.</summary>
+    /// <summary>Version that produced this texture. Compare with <see cref="IHologramTextSource.GetHologramVersion" />.</summary>
     public long Version { get; internal set; }
 
     /// <summary>True when the texture is loaded and has a valid id.</summary>

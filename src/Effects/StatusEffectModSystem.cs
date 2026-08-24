@@ -8,7 +8,7 @@ using Vintagestory.API.Server;
 namespace ArcanumLib.Effects;
 
 /// <summary>
-/// ModSystem that ticks the <see cref="StatusEffectService"/> each game tick.
+/// ModSystem that ticks the <see cref="StatusEffectService" /> each game tick.
 /// </summary>
 public class StatusEffectModSystem : ModSystem
 {
@@ -38,6 +38,7 @@ public class StatusEffectModSystem : ModSystem
     /// <summary>
     /// Registers the tick listener on the client.
     /// </summary>
+    /// <param name="capi">The client API instance.</param>
     public override void StartClientSide(ICoreClientAPI capi)
     {
         _capi = capi;
@@ -50,6 +51,7 @@ public class StatusEffectModSystem : ModSystem
     /// <summary>
     /// Registers the tick listener on the server.
     /// </summary>
+    /// <param name="sapi">The server API instance.</param>
     public override void StartServerSide(ICoreServerAPI sapi)
     {
         _sapi = sapi;

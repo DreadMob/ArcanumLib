@@ -9,7 +9,7 @@ using Vintagestory.API.MathTools;
 namespace ArcanumLib.Hologram;
 
 /// <summary>
-/// Renders multiple floating holograms in an area by scanning nearby chunks for <see cref="IHologramTextSource"/>.
+/// Renders multiple floating holograms in an area by scanning nearby chunks for <see cref="IHologramTextSource" />.
 /// </summary>
 public class AreaHologramRenderer : IRenderer, IDisposable
 {
@@ -47,6 +47,7 @@ public class AreaHologramRenderer : IRenderer, IDisposable
     /// <param name="yRange">Vertical scan range in blocks.</param>
     /// <param name="maxSources">Maximum number of holograms to keep in the cache.</param>
     /// <param name="renderKey">Optional render key. When provided the renderer is registered automatically.</param>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="capi" /> is <see langword="null" />.</exception>
     public AreaHologramRenderer(ICoreClientAPI capi, System.Func<BlockEntity, IHologramTextSource?> sourceFactory, HologramTextureOptions options, int range = 48, int yRange = 8, int maxSources = 20, string? renderKey = null)
     {
         _capi = capi ?? throw new ArgumentNullException(nameof(capi));
@@ -62,6 +63,8 @@ public class AreaHologramRenderer : IRenderer, IDisposable
     }
 
     /// <summary>Renders all visible holograms in the cache for this frame.</summary>
+    /// <param name="deltaTime">The delta time value.</param>
+    /// <param name="stage">The stage value.</param>
     public void OnRenderFrame(float deltaTime, EnumRenderStage stage)
     {
         if (stage != EnumRenderStage.Ortho) return;

@@ -5,16 +5,16 @@ using System.Reflection;
 namespace ArcanumLib.Gui.Icons
 {
     /// <summary>
-    /// Scans an assembly for classes decorated with <see cref="IconKeyAttribute"/>
-    /// that implement <see cref="ICustomIconRenderer"/> and registers them into
-    /// <see cref="CustomIconRegistry"/>. Call once during mod startup.
+    /// Scans an assembly for classes decorated with <see cref="IconKeyAttribute" />
+    /// that implement <see cref="ICustomIconRenderer" /> and registers them into
+    /// <see cref="CustomIconRegistry" />. Call once during mod startup.
     /// </summary>
     public static class IconRegistrar
     {
         /// <summary>
-        /// Scans the given assembly for <see cref="IconKeyAttribute"/>-decorated
+        /// Scans the given assembly for <see cref="IconKeyAttribute" />-decorated
         /// icon classes and registers each one (plus any aliases) into
-        /// <see cref="CustomIconRegistry"/>. Types without a parameterless
+        /// <see cref="CustomIconRegistry" />. Types without a parameterless
         /// constructor are skipped with a warning.
         /// </summary>
         /// <param name="assembly">The assembly to scan (e.g. typeof(MyMod).Assembly).</param>

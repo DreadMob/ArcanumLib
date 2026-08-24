@@ -5,12 +5,12 @@ namespace ArcanumLib.Actions
 {
     /// <summary>
     /// JSON-friendly descriptor for an action. Loaded from assets and executed
-    /// through <see cref="ActionRegistry"/>.
+    /// through <see cref="ActionRegistry" />.
     /// </summary>
     public class ActionDescriptor
     {
         /// <summary>
-        /// Action identifier used to select the handler in <see cref="ActionRegistry"/>.
+        /// Action identifier used to select the handler in <see cref="ActionRegistry" />.
         /// </summary>
         [JsonProperty("id")]
         public string Id { get; set; } = "";
@@ -38,7 +38,7 @@ namespace ArcanumLib.Actions
         /// <summary>
         /// Optional declarative condition evaluated before the handler runs.
         /// If the condition evaluates to false, the action returns
-        /// <see cref="ActionOutcome.NotAvailable"/> without calling the handler.
+        /// <see cref="ActionOutcome.NotAvailable" /> without calling the handler.
         /// </summary>
         [JsonProperty("condition")]
         public ActionCondition? Condition { get; set; }

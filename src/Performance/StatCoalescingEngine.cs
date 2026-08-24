@@ -8,7 +8,7 @@ using Vintagestory.API.Server;
 namespace ArcanumLib.Performance;
 
 /// <summary>
-/// Coalesces multiple <see cref="EntityStats.Set"/> calls within a time window into a
+/// Coalesces multiple <see cref="EntityStats.Set" /> calls within a time window into a
 /// single network sync. Useful for reducing packet spam when stats change rapidly
 /// (equipment swaps, buffs, debuffs).
 /// </summary>
@@ -23,7 +23,7 @@ public static class StatCoalescingEngine
     public static bool IsEnabled { get; set; } = true;
 
     /// <summary>
-    /// Default category used when none is supplied to <see cref="QueueStatUpdate"/>.
+    /// Default category used when none is supplied to <see cref="QueueStatUpdate" />.
     /// </summary>
     public static string DefaultCategory { get; set; } = "game";
 
@@ -55,6 +55,7 @@ public static class StatCoalescingEngine
     /// <summary>
     /// Starts the coalescing engine on the server and hooks player disconnect cleanup.
     /// </summary>
+    /// <param name="api">The server API instance.</param>
     public static void Start(ICoreServerAPI api)
     {
         _sapi = api;
@@ -91,6 +92,11 @@ public static class StatCoalescingEngine
     /// <summary>
     /// Queues a stat update for coalescing. It may not be applied immediately.
     /// </summary>
+    /// <param name="api">The server API instance.</param>
+    /// <param name="player">The player.</param>
+    /// <param name="stat">The stat value.</param>
+    /// <param name="value">The value to set or compare.</param>
+    /// <param name="category">The category value.</param>
     public static void QueueStatUpdate(
         ICoreServerAPI api,
         EntityPlayer player,
@@ -137,6 +143,10 @@ public static class StatCoalescingEngine
     /// <summary>
     /// Queues several stat updates at once.
     /// </summary>
+    /// <param name="api">The server API instance.</param>
+    /// <param name="player">The player.</param>
+    /// <param name="stats">The stats value.</param>
+    /// <param name="category">The category value.</param>
     public static void QueueStatUpdates(
         ICoreServerAPI api,
         EntityPlayer player,
@@ -184,6 +194,8 @@ public static class StatCoalescingEngine
     /// <summary>
     /// Forces an immediate flush for the given player.
     /// </summary>
+    /// <param name="api">The server API instance.</param>
+    /// <param name="entityId">The entity id value.</param>
     public static void ForceFlush(ICoreServerAPI api, long entityId)
     {
         if (!IsEnabled) return;
@@ -201,6 +213,10 @@ public static class StatCoalescingEngine
     /// <summary>
     /// Applies a single stat immediately, bypassing coalescing.
     /// </summary>
+    /// <param name="player">The player.</param>
+    /// <param name="stat">The stat value.</param>
+    /// <param name="value">The value to set or compare.</param>
+    /// <param name="category">The category value.</param>
     public static void ApplyStatImmediate(
         EntityPlayer player,
         string stat,
@@ -214,6 +230,8 @@ public static class StatCoalescingEngine
     /// <summary>
     /// Returns true if the player has pending stat updates.
     /// </summary>
+    /// <param name="entityId">The entity id value.</param>
+    /// <returns>true if the operation has pending updates; otherwise, false.</returns>
     public static bool HasPendingUpdates(long entityId)
     {
         lock (_syncLock)
@@ -225,6 +243,7 @@ public static class StatCoalescingEngine
     /// <summary>
     /// Total number of pending stat updates across all players.
     /// </summary>
+    /// <returns>The pending update count.</returns>
     public static int GetPendingUpdateCount()
     {
         lock (_syncLock)
@@ -236,6 +255,7 @@ public static class StatCoalescingEngine
     /// <summary>
     /// Clears all pending updates and cancels scheduled flushes.
     /// </summary>
+    /// <param name="api">The server API instance.</param>
     public static void ClearAllPending(ICoreServerAPI api)
     {
         List<long> keys;

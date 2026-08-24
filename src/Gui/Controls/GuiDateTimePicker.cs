@@ -66,6 +66,9 @@ namespace ArcanumLib.Gui.Controls
         }
 
         /// <summary>Sets the date/time from a string in "yyyy-MM-dd HH:mm" format.</summary>
+        /// <param name="composer">The composer value.</param>
+        /// <param name="prefix">The prefix value.</param>
+        /// <param name="value">The value to set or compare.</param>
         public static void SetDate(GuiComposer composer, string prefix, string value)
         {
             if (string.IsNullOrWhiteSpace(value) || !DateTime.TryParse(value, CultureInfo.InvariantCulture, DateTimeStyles.None, out var dt))
@@ -83,6 +86,9 @@ namespace ArcanumLib.Gui.Controls
         }
 
         /// <summary>Gets the date/time as a string in "yyyy-MM-dd HH:mm" format, or null if no year is set.</summary>
+        /// <param name="composer">The composer value.</param>
+        /// <param name="prefix">The prefix value.</param>
+        /// <returns>The date, or null if none is found.</returns>
         public static string? GetDate(GuiComposer composer, string prefix)
         {
             var yearInput = composer.GetNumberInput(YearKey(prefix));

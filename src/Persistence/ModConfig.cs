@@ -42,22 +42,39 @@ public readonly struct ConfigResult
     /// </summary>
     public string? Message { get; }
 
+    /// <summary>Performs the config result operation.</summary>
+    /// <param name="kind">The kind value.</param>
+    /// <param name="message">The message.</param>
     public ConfigResult(ConfigResultKind kind, string? message = null)
     {
         Kind = kind;
         Message = message;
     }
 
+    /// <summary>Performs the success operation.</summary>
+    /// <returns>The success.</returns>
     public static ConfigResult Success() => new(ConfigResultKind.Success);
+    /// <summary>Performs the defaults used operation.</summary>
+    /// <param name="msg">The msg value.</param>
+    /// <returns>The defaults used.</returns>
     public static ConfigResult DefaultsUsed(string? msg = null) => new(ConfigResultKind.DefaultsUsed, msg);
+    /// <summary>Parses failed.</summary>
+    /// <param name="msg">The msg value.</param>
+    /// <returns>The parse failed.</returns>
     public static ConfigResult ParseFailed(string? msg = null) => new(ConfigResultKind.ParseFailed, msg);
+    /// <summary>Performs the validation failed operation.</summary>
+    /// <param name="msg">The msg value.</param>
+    /// <returns>The validation failed.</returns>
     public static ConfigResult ValidationFailed(string? msg = null) => new(ConfigResultKind.ValidationFailed, msg);
+    /// <summary>Performs the io error operation.</summary>
+    /// <param name="msg">The msg value.</param>
+    /// <returns>The io error.</returns>
     public static ConfigResult IOError(string? msg = null) => new(ConfigResultKind.IOError, msg);
 }
 
 /// <summary>
 /// Typed wrapper around the Vintage Story mod config system.
-/// Loads and saves a JSON config of type <typeparamref name="T"/> with optional
+/// Loads and saves a JSON config of type <typeparamref name="T" /> with optional
 /// validation, default fallback, and automatic migration hooks.
 /// </summary>
 /// <typeparam name="T">The config type. Must be JSON-serializable with Newtonsoft.Json.</typeparam>
@@ -82,6 +99,8 @@ public sealed class ModConfig<T> where T : class, new()
     /// <param name="validate">Optional validation predicate. If it returns false, defaults are used.</param>
     /// <param name="onLoaded">Optional callback invoked after a successful load (including defaults).</param>
     /// <param name="serializerSettings">Optional JSON serializer settings. Defaults to standard VS settings.</param>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="api" /> is <see langword="null" />.</exception>
+    /// <exception cref="ArgumentException">Thrown when <paramref name="filename" /> is invalid.</exception>
     public ModConfig(
         ICoreAPI api,
         string filename,
@@ -108,6 +127,7 @@ public sealed class ModConfig<T> where T : class, new()
     /// Loads the config from disk. If the file is missing or invalid, falls back to
     /// <c>new T()</c> and logs a warning. Returns the load result.
     /// </summary>
+    /// <returns>The load.</returns>
     public ConfigResult Load()
     {
         try
@@ -145,6 +165,7 @@ public sealed class ModConfig<T> where T : class, new()
     /// <summary>
     /// Saves the current config to disk.
     /// </summary>
+    /// <returns>The save.</returns>
     public ConfigResult Save()
     {
         try
@@ -161,20 +182,24 @@ public sealed class ModConfig<T> where T : class, new()
     }
 
     /// <summary>
-    /// Reloads the config from disk, replacing <see cref="Current"/>.
+    /// Reloads the config from disk, replacing <see cref="Current" />.
     /// </summary>
+    /// <returns>The reload.</returns>
     public ConfigResult Reload() => Load();
 
     /// <summary>
     /// Serializes the current config to a JSON string.
     /// </summary>
+    /// <returns>The to json string, or null if none is found.</returns>
     public string ToJson()
         => JsonConvert.SerializeObject(Current, _serializerSettings);
 
     /// <summary>
     /// Replaces the current config with a deserialized JSON string and runs validation.
-    /// Returns false if validation fails; in that case <see cref="Current"/> is not changed.
+    /// Returns false if validation fails; in that case <see cref="Current" /> is not changed.
     /// </summary>
+    /// <param name="json">The json value.</param>
+    /// <returns>true if the operation succeeded; otherwise, false.</returns>
     public bool TryApplyJson(string json)
     {
         if (string.IsNullOrWhiteSpace(json)) return false;

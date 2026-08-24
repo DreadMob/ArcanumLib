@@ -9,9 +9,21 @@ namespace ArcanumLib.Gui.RadialMenu;
 /// </summary>
 public class DefaultRadialMenuStyle : IRadialMenuStyle
 {
+    /// <summary>Gets the key.</summary>
     /// <inheritdoc />
     public string Key => "default";
 
+    /// <summary>Performs the draw sector operation.</summary>
+    /// <param name="ctx">The ctx value.</param>
+    /// <param name="cx">The cx value.</param>
+    /// <param name="cy">The cy value.</param>
+    /// <param name="a0">The a 0 value.</param>
+    /// <param name="a1">The a 1 value.</param>
+    /// <param name="hovered">The hovered value.</param>
+    /// <param name="isActive">The is active value.</param>
+    /// <param name="disabled">The disabled value.</param>
+    /// <param name="outerRadius">The outer radius value.</param>
+    /// <param name="innerRadius">The inner radius value.</param>
     /// <inheritdoc />
     public virtual void DrawSector(Context ctx, float cx, float cy, float a0, float a1,
         bool hovered, bool isActive, bool disabled,
@@ -82,6 +94,11 @@ public class DefaultRadialMenuStyle : IRadialMenuStyle
         ctx.Stroke();
     }
 
+    /// <summary>Performs the draw center button operation.</summary>
+    /// <param name="ctx">The ctx value.</param>
+    /// <param name="cx">The cx value.</param>
+    /// <param name="cy">The cy value.</param>
+    /// <param name="innerRadius">The inner radius value.</param>
     /// <inheritdoc />
     public virtual void DrawCenterButton(Context ctx, float cx, float cy, float innerRadius)
     {
@@ -108,6 +125,9 @@ public class DefaultRadialMenuStyle : IRadialMenuStyle
         ctx.Stroke();
     }
 
+    /// <summary>Gets icon color.</summary>
+    /// <param name="disabled">The disabled value.</param>
+    /// <returns>The icon color.</returns>
     /// <inheritdoc />
     public virtual (float r, float g, float b, float a) GetIconColor(bool disabled)
     {

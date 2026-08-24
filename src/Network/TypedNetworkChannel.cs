@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using ArcanumLib.Common;
 using Vintagestory.API.Client;
 using Vintagestory.API.Common;
 using Vintagestory.API.Server;
@@ -25,7 +26,6 @@ namespace ArcanumLib.Network
         /// </summary>
         /// <param name="api">The core API, either client or server.</param>
         /// <param name="name">The channel name.</param>
-        /// <exception cref="ArgumentNullException">Thrown when <paramref name="api"/> or <paramref name="name"/> is null.</exception>
         public TypedNetworkChannel(ICoreAPI api, string name)
         {
             _api = api ?? throw new ArgumentNullException(nameof(api));
@@ -117,6 +117,44 @@ namespace ArcanumLib.Network
         {
             if (player == null) return;
             _serverChannel?.SendPacket(message, player);
+        }
+
+        /// <summary>
+        /// Sends a packet to a collection of players from the server.
+        /// </summary>
+        /// <typeparam name="T">The packet type.</typeparam>
+        /// <param name="message">The packet to send.</param>
+        /// <param name="players">The target players.</param>
+        public void SendToPlayers<T>(T message, IEnumerable<IServerPlayer> players)
+        {
+            if (players == null) return;
+            foreach (var player in players)
+            {
+                if (player != null)
+                {
+                    _serverChannel?.SendPacket(message, player);
+                }
+            }
+        }
+
+        /// <summary>
+        /// Broadcasts a packet to all online players except the given one.
+        /// </summary>
+        /// <typeparam name="T">The packet type.</typeparam>
+        /// <param name="message">The packet to send.</param>
+        /// <param name="exceptPlayer">The player to exclude, if any.</param>
+        public void SendToAllExcept<T>(T message, IServerPlayer? exceptPlayer)
+        {
+            if (_api is not ICoreServerAPI) return;
+
+            var exceptUid = exceptPlayer?.PlayerUID;
+            foreach (var player in OnlinePlayerCache.All)
+            {
+                if (player.PlayerUID != null && player.PlayerUID != exceptUid)
+                {
+                    _serverChannel?.SendPacket(message, player);
+                }
+            }
         }
 
         private void EnsureChannel()

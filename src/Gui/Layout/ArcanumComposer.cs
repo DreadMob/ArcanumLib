@@ -13,24 +13,24 @@ namespace ArcanumLib.Gui.Layout;
 /// <summary>
 /// Fluent, stack-based builder for Arcanum-themed Vintage Story GUIs.
 /// Tracks a cursor and nesting so you can write dialog composition without
-/// manual <see cref="ElementBounds.Fixed"/> arithmetic.
+/// manual <see cref="ElementBounds.Fixed(double, double, double, double)" /> arithmetic.
 /// </summary>
 public class ArcanumComposer
 {
     private readonly Stack<Container> _containers = new();
 
     /// <summary>
-    /// The client API passed to the underlying <see cref="GuiComposer"/>.
+    /// The client API passed to the underlying <see cref="GuiComposer" />.
     /// </summary>
     public ICoreClientAPI Api { get; }
 
     /// <summary>
-    /// The wrapped <see cref="GuiComposer"/>.
+    /// The wrapped <see cref="GuiComposer" />.
     /// </summary>
     public GuiComposer Underlying { get; }
 
     /// <summary>
-    /// The dialog key used to create the <see cref="GuiComposer"/>.
+    /// The dialog key used to create the <see cref="GuiComposer" />.
     /// </summary>
     public string DialogKey { get; }
 
@@ -45,7 +45,7 @@ public class ArcanumComposer
     public double DefaultRowHeight { get; set; } = 36.0;
 
     /// <summary>
-    /// Default height for <see cref="AddList{TItem}"/> when not specified.
+    /// Default height for <see cref="AddList{TItem}" /> when not specified.
     /// </summary>
     public double DefaultListHeight { get; set; } = 240.0;
 
@@ -62,6 +62,11 @@ public class ArcanumComposer
     /// <summary>
     /// Creates an Arcanum composer with the given dialog and background bounds.
     /// </summary>
+    /// <param name="capi">The client API instance.</param>
+    /// <param name="dialogKey">The dialog key value.</param>
+    /// <param name="dialogBounds">The dialog bounds value.</param>
+    /// <param name="backgroundBounds">The background bounds value.</param>
+    /// <param name="defaultItemWidth">The default item width value.</param>
     private ArcanumComposer(
         ICoreClientAPI capi,
         string dialogKey,
@@ -87,6 +92,12 @@ public class ArcanumComposer
     /// <summary>
     /// Creates a new composer using the standard Arcanum dialog shell.
     /// </summary>
+    /// <param name="capi">The client API instance.</param>
+    /// <param name="dialogKey">The dialog key value.</param>
+    /// <param name="dialogBounds">The dialog bounds value.</param>
+    /// <param name="backgroundBounds">The background bounds value.</param>
+    /// <param name="defaultItemWidth">The default item width value.</param>
+    /// <returns>The value.</returns>
     public static ArcanumComposer Create(
         ICoreClientAPI capi,
         string dialogKey,
@@ -104,6 +115,9 @@ public class ArcanumComposer
     /// <summary>
     /// Adds an Arcanum dialog background and title bar, then opens the root child scope.
     /// </summary>
+    /// <param name="title">The title value.</param>
+    /// <param name="onClose">The on close value.</param>
+    /// <returns>The with title bar.</returns>
     public ArcanumComposer WithTitleBar(string title, Action onClose)
     {
         Underlying
@@ -116,6 +130,7 @@ public class ArcanumComposer
     /// <summary>
     /// Adds a dialog background and opens the root child scope without a title bar.
     /// </summary>
+    /// <returns>The with background.</returns>
     public ArcanumComposer WithBackground()
     {
         Underlying
@@ -125,9 +140,14 @@ public class ArcanumComposer
     }
 
     /// <summary>
-    /// Starts a vertical container. If <paramref name="height"/> is null, the container
+    /// Starts a vertical container. If <paramref name="height" /> is null, the container
     /// sizes itself to fit its children.
     /// </summary>
+    /// <param name="padding">The padding value.</param>
+    /// <param name="gap">The gap value.</param>
+    /// <param name="width">The width.</param>
+    /// <param name="height">The height.</param>
+    /// <returns>The begin vertical.</returns>
     public ArcanumComposer BeginVertical(double padding = 0, double gap = 0, double? width = null, double? height = null)
     {
         double outerW = width ?? Current.AvailableWidth;
@@ -146,9 +166,14 @@ public class ArcanumComposer
     }
 
     /// <summary>
-    /// Starts a horizontal container. If <paramref name="width"/> is null, the container
+    /// Starts a horizontal container. If <paramref name="width" /> is null, the container
     /// sizes itself to fit its children.
     /// </summary>
+    /// <param name="padding">The padding value.</param>
+    /// <param name="gap">The gap value.</param>
+    /// <param name="width">The width.</param>
+    /// <param name="height">The height.</param>
+    /// <returns>The begin horizontal.</returns>
     public ArcanumComposer BeginHorizontal(double padding = 0, double gap = 0, double? width = null, double? height = null)
     {
         double outerH = height ?? Current.AvailableHeight;
@@ -169,6 +194,8 @@ public class ArcanumComposer
     /// <summary>
     /// Ends the current vertical or horizontal container.
     /// </summary>
+    /// <returns>The end container.</returns>
+    /// <exception cref="InvalidOperationException">Thrown when the operation is invalid for the current state.</exception>
     public ArcanumComposer EndContainer()
     {
         if (_containers.Count <= 1)
@@ -180,18 +207,26 @@ public class ArcanumComposer
     }
 
     /// <summary>
-    /// Alias for <see cref="EndContainer"/>.
+    /// Alias for <see cref="EndContainer" />.
     /// </summary>
+    /// <returns>The end vertical.</returns>
     public ArcanumComposer EndVertical() => EndContainer();
 
     /// <summary>
-    /// Alias for <see cref="EndContainer"/>.
+    /// Alias for <see cref="EndContainer" />.
     /// </summary>
+    /// <returns>The end horizontal.</returns>
     public ArcanumComposer EndHorizontal() => EndContainer();
 
     /// <summary>
     /// Adds a static text label. The height is computed automatically from the font and text.
     /// </summary>
+    /// <param name="text">The text value.</param>
+    /// <param name="font">The font value.</param>
+    /// <param name="width">The width.</param>
+    /// <param name="height">The height.</param>
+    /// <param name="key">The key to look up.</param>
+    /// <returns>The add text.</returns>
     public ArcanumComposer AddText(string text, CairoFont? font = null, double? width = null, double? height = null, string? key = null)
     {
         font ??= ArcanumFont.Body;
@@ -203,8 +238,15 @@ public class ArcanumComposer
     }
 
     /// <summary>
-    /// Adds a themed button with a <see cref="Func{Boolean}"/> click handler.
+    /// Adds a themed button with a <see cref="Func{Boolean}" /> click handler.
     /// </summary>
+    /// <param name="text">The text value.</param>
+    /// <param name="onClick">The on click value.</param>
+    /// <param name="height">The height.</param>
+    /// <param name="width">The width.</param>
+    /// <param name="style">The style value.</param>
+    /// <param name="key">The key to look up.</param>
+    /// <returns>The add button.</returns>
     public ArcanumComposer AddButton(string text, System.Func<bool> onClick, double? height = null, double? width = null, ArcanumButtonStyle style = ArcanumButtonStyle.Default, string? key = null)
     {
         double h = height ?? DefaultRowHeight;
@@ -215,14 +257,32 @@ public class ArcanumComposer
     }
 
     /// <summary>
-    /// Adds a themed button with an <see cref="Action"/> click handler.
+    /// Adds a themed button with an <see cref="Action" /> click handler.
     /// </summary>
+    /// <param name="text">The text value.</param>
+    /// <param name="onClick">The on click value.</param>
+    /// <param name="height">The height.</param>
+    /// <param name="width">The width.</param>
+    /// <param name="style">The style value.</param>
+    /// <param name="key">The key to look up.</param>
+    /// <returns>The add button.</returns>
     public ArcanumComposer AddButton(string text, Action onClick, double? height = null, double? width = null, ArcanumButtonStyle style = ArcanumButtonStyle.Default, string? key = null)
         => AddButton(text, () => { onClick?.Invoke(); return true; }, height, width, style, key);
 
     /// <summary>
     /// Adds two buttons side by side.
     /// </summary>
+    /// <param name="leftText">The left text value.</param>
+    /// <param name="left">The left value.</param>
+    /// <param name="rightText">The right text value.</param>
+    /// <param name="right">The right value.</param>
+    /// <param name="height">The height.</param>
+    /// <param name="gap">The gap value.</param>
+    /// <param name="leftStyle">The left style value.</param>
+    /// <param name="rightStyle">The right style value.</param>
+    /// <param name="leftKey">The left key value.</param>
+    /// <param name="rightKey">The right key value.</param>
+    /// <returns>The add button row.</returns>
     public ArcanumComposer AddButtonRow(
         string leftText,
         Action left,
@@ -249,6 +309,13 @@ public class ArcanumComposer
     /// <summary>
     /// Adds a static icon.
     /// </summary>
+    /// <param name="assetPath">The asset path value.</param>
+    /// <param name="size">The size.</param>
+    /// <param name="color">The color value.</param>
+    /// <param name="fit">The fit value.</param>
+    /// <param name="tint">The tint value.</param>
+    /// <param name="key">The key to look up.</param>
+    /// <returns>The add icon.</returns>
     public ArcanumComposer AddIcon(string assetPath, double size, RGBA? color = null, IconFit fit = IconFit.None, bool tint = false, string? key = null)
     {
         var bounds = Current.NextBounds(size, size);
@@ -257,9 +324,19 @@ public class ArcanumComposer
     }
 
     /// <summary>
-    /// Adds a themed card and runs the given builder inside it. If <paramref name="height"/> is null,
+    /// Adds a themed card and runs the given builder inside it. If <paramref name="height" /> is null,
     /// the card sizes itself to fit its content.
     /// </summary>
+    /// <param name="build">The callback to invoke.</param>
+    /// <param name="fill">The fill value.</param>
+    /// <param name="border">The border value.</param>
+    /// <param name="accent">The accent value.</param>
+    /// <param name="width">The width.</param>
+    /// <param name="height">The height.</param>
+    /// <param name="padding">The padding value.</param>
+    /// <param name="gap">The gap value.</param>
+    /// <param name="key">The key to look up.</param>
+    /// <returns>The add card.</returns>
     public ArcanumComposer AddCard(
         Action<ArcanumComposer> build,
         RGBA? fill = null,
@@ -294,6 +371,16 @@ public class ArcanumComposer
     /// <summary>
     /// Adds a scrollable, selectable list.
     /// </summary>
+    /// <typeparam name="TItem">The type of the titem value.</typeparam>
+    /// <param name="items">The collection of items values.</param>
+    /// <param name="label">The label value.</param>
+    /// <param name="rowHeight">The row height value.</param>
+    /// <param name="onSelected">The callback to invoke.</param>
+    /// <param name="height">The height.</param>
+    /// <param name="width">The width.</param>
+    /// <param name="font">The font value.</param>
+    /// <param name="key">The key to look up.</param>
+    /// <returns>The add list.</returns>
     public ArcanumComposer AddList<TItem>(
         IEnumerable<TItem> items,
         System.Func<TItem, string> label,
@@ -316,6 +403,12 @@ public class ArcanumComposer
     /// <summary>
     /// Adds a single-line text input.
     /// </summary>
+    /// <param name="onTextChanged">The callback to invoke.</param>
+    /// <param name="font">The font value.</param>
+    /// <param name="height">The height.</param>
+    /// <param name="width">The width.</param>
+    /// <param name="key">The key to look up.</param>
+    /// <returns>The add text input.</returns>
     public ArcanumComposer AddTextInput(
         Action<string> onTextChanged,
         CairoFont? font = null,
@@ -334,6 +427,12 @@ public class ArcanumComposer
     /// <summary>
     /// Adds a single-line number input.
     /// </summary>
+    /// <param name="onTextChanged">The callback to invoke.</param>
+    /// <param name="font">The font value.</param>
+    /// <param name="height">The height.</param>
+    /// <param name="width">The width.</param>
+    /// <param name="key">The key to look up.</param>
+    /// <returns>The add number input.</returns>
     public ArcanumComposer AddNumberInput(
         Action<string> onTextChanged,
         CairoFont? font = null,
@@ -352,6 +451,15 @@ public class ArcanumComposer
     /// <summary>
     /// Adds a dropdown selector.
     /// </summary>
+    /// <param name="values">The collection of values values.</param>
+    /// <param name="names">The collection of names values.</param>
+    /// <param name="selectedIndex">The selected index value.</param>
+    /// <param name="onSelected">The callback to invoke.</param>
+    /// <param name="font">The font value.</param>
+    /// <param name="height">The height.</param>
+    /// <param name="width">The width.</param>
+    /// <param name="key">The key to look up.</param>
+    /// <returns>The add dropdown.</returns>
     public ArcanumComposer AddDropdown(
         string[] values,
         string[] names,
@@ -374,6 +482,11 @@ public class ArcanumComposer
     /// <summary>
     /// Adds a themed vertical scrollbar. Useful when paired with a custom clipping area.
     /// </summary>
+    /// <param name="onNewValue">The callback to invoke.</param>
+    /// <param name="height">The height.</param>
+    /// <param name="width">The width.</param>
+    /// <param name="key">The key to look up.</param>
+    /// <returns>The add scrollbar.</returns>
     public ArcanumComposer AddScrollbar(Action<float> onNewValue, double? height = null, double? width = null, string? key = null)
     {
         double h = height ?? DefaultListHeight;
@@ -384,8 +497,9 @@ public class ArcanumComposer
     }
 
     /// <summary>
-    /// Finalises the composer and returns the wrapped <see cref="GuiComposer"/>.
+    /// Finalises the composer and returns the wrapped <see cref="GuiComposer" />.
     /// </summary>
+    /// <returns>The compose.</returns>
     public GuiComposer Compose()
     {
         while (_containers.Count > 1)
@@ -478,6 +592,7 @@ public class ArcanumComposer
         public ElementBounds? LastChild;
         public Container? Parent;
 
+        /// <summary>Gets the available width.</summary>
         public double AvailableWidth
         {
             get
@@ -493,6 +608,7 @@ public class ArcanumComposer
             }
         }
 
+        /// <summary>Gets the available height.</summary>
         public double AvailableHeight
         {
             get
@@ -508,6 +624,13 @@ public class ArcanumComposer
             }
         }
 
+        /// <summary>Performs the container operation.</summary>
+        /// <param name="composer">The composer value.</param>
+        /// <param name="bounds">The bounds value.</param>
+        /// <param name="orientation">The orientation value.</param>
+        /// <param name="padding">The padding value.</param>
+        /// <param name="gap">The gap value.</param>
+        /// <param name="parent">The parent value.</param>
         public Container(ArcanumComposer composer, ElementBounds bounds, ContainerOrientation orientation, double padding, double gap, Container? parent)
         {
             Composer = composer;
@@ -518,6 +641,10 @@ public class ArcanumComposer
             Parent = parent;
         }
 
+        /// <summary>Performs the next bounds operation.</summary>
+        /// <param name="width">The width.</param>
+        /// <param name="height">The height.</param>
+        /// <returns>The next bounds.</returns>
         public ElementBounds NextBounds(double? width = null, double? height = null)
         {
             double innerW = Math.Max(0, width ?? AvailableWidth);

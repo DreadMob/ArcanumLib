@@ -4,7 +4,7 @@ using Vintagestory.API.Common.Entities;
 namespace ArcanumLib.Effects
 {
     /// <summary>
-    /// A reusable status effect that modifies an <see cref="EntityStats"/> category.
+    /// A reusable status effect that modifies an <see cref="EntityStats" /> category.
     /// </summary>
     public class StatModifierEffect : IStatusEffect
     {
@@ -14,7 +14,7 @@ namespace ArcanumLib.Effects
         public string Code { get; }
 
         /// <summary>
-        /// The <see cref="EntityStats"/> category to modify (e.g. "walkspeed").
+        /// The <see cref="EntityStats" /> category to modify (e.g. "walkspeed").
         /// </summary>
         public string StatCategory { get; }
 
@@ -30,7 +30,7 @@ namespace ArcanumLib.Effects
         public EnumStackMode StackMode { get; set; } = EnumStackMode.Refresh;
 
         /// <summary>
-        /// Maximum number of stacks when <see cref="StackMode"/> is <see cref="EnumStackMode.Stack"/>.
+        /// Maximum number of stacks when <see cref="StackMode" /> is <see cref="EnumStackMode.Stack" />.
         /// </summary>
         public int MaxStacks { get; set; } = 1;
 
@@ -58,8 +58,10 @@ namespace ArcanumLib.Effects
         }
 
         /// <summary>
-        /// Applies the stat change. For stacking, the effective value is <see cref="Value"/> multiplied by the stack count.
+        /// Applies the stat change. For stacking, the effective value is <see cref="Value" /> multiplied by the stack count.
         /// </summary>
+        /// <param name="entity">The entity.</param>
+        /// <param name="instance">The instance value.</param>
         public void OnApply(Entity entity, IStatusEffectInstance instance)
         {
             if (entity?.Stats == null) return;
@@ -73,6 +75,8 @@ namespace ArcanumLib.Effects
         /// <summary>
         /// Removes the stat change.
         /// </summary>
+        /// <param name="entity">The entity.</param>
+        /// <param name="instance">The instance value.</param>
         public void OnRemove(Entity entity, IStatusEffectInstance instance)
         {
             if (entity?.Stats == null) return;
@@ -84,6 +88,9 @@ namespace ArcanumLib.Effects
         /// <summary>
         /// No per-tick behavior for a simple stat modifier.
         /// </summary>
+        /// <param name="entity">The entity.</param>
+        /// <param name="instance">The instance value.</param>
+        /// <param name="dt">The elapsed time in seconds.</param>
         public void OnTick(Entity entity, IStatusEffectInstance instance, float dt)
         {
         }

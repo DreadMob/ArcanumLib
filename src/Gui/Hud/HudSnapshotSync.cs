@@ -9,6 +9,7 @@ namespace ArcanumLib.Gui.Hud;
 /// Manages dirty players, rate-limited sends, and cleanup on disposal.
 /// Specific mod syncs can inherit and customize message type registration or logging.
 /// </summary>
+/// <typeparam name="TSnapshot">The type of the tsnapshot value.</typeparam>
 public class HudSnapshotSync<TSnapshot> : IDisposable
     where TSnapshot : class, IHudSnapshot, new()
 {
@@ -30,13 +31,18 @@ public class HudSnapshotSync<TSnapshot> : IDisposable
     /// <summary>Minimum interval between sends for a single player.</summary>
     protected readonly int rateLimitMs;
 
-    /// <summary>True after <see cref="Dispose"/> has been called.</summary>
+    /// <summary>True after <see cref="Dispose" /> has been called.</summary>
     protected bool disposed;
 
     /// <summary>
     /// Creates a snapshot sync for an already registered network channel.
-    /// The caller is responsible for registering <typeparamref name="TSnapshot"/> on the channel.
+    /// The caller is responsible for registering <typeparamref name="TSnapshot" /> on the channel.
     /// </summary>
+    /// <param name="sapi">The server API instance.</param>
+    /// <param name="channel">The channel value.</param>
+    /// <param name="buildSnapshot">The server player.</param>
+    /// <param name="rateLimitMs">The rate limit ms value.</param>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="sapi" /> is <see langword="null" />.</exception>
     public HudSnapshotSync(
         ICoreServerAPI sapi,
         IServerNetworkChannel channel,
@@ -53,6 +59,7 @@ public class HudSnapshotSync<TSnapshot> : IDisposable
     }
 
     /// <summary>Marks a player's snapshot as dirty so it is rebuilt on the next process tick.</summary>
+    /// <param name="playerUid">The unique player identifier.</param>
     public virtual void MarkDirty(string playerUid)
     {
         if (!string.IsNullOrWhiteSpace(playerUid))
@@ -60,6 +67,7 @@ public class HudSnapshotSync<TSnapshot> : IDisposable
     }
 
     /// <summary>Sends a removal snapshot to the player and clears their rate-limit state.</summary>
+    /// <param name="playerUid">The unique player identifier.</param>
     public virtual void SendRemoval(string playerUid)
     {
         if (string.IsNullOrWhiteSpace(playerUid)) return;
@@ -87,6 +95,8 @@ public class HudSnapshotSync<TSnapshot> : IDisposable
     /// <summary>
     /// Processes all dirty players and sends updated snapshots while respecting the rate limit.
     /// </summary>
+    /// <param name="nowMs">The now ms value.</param>
+    /// <param name="inRangeUids">The collection of in range uids values.</param>
     public virtual void ProcessUpdates(long nowMs, IEnumerable<string> inRangeUids)
     {
         if (disposed) return;
@@ -165,6 +175,8 @@ public class HudSnapshotSync<TSnapshot> : IDisposable
     }
 
     /// <summary>Builds a case-insensitive set of active player UIDs.</summary>
+    /// <param name="inRangeUids">The collection of in range uids values.</param>
+    /// <returns>The active set.</returns>
     protected HashSet<string> BuildActiveSet(IEnumerable<string> inRangeUids)
     {
         var set = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
@@ -179,6 +191,8 @@ public class HudSnapshotSync<TSnapshot> : IDisposable
     }
 
     /// <summary>Sends removal snapshots to players that are no longer in range.</summary>
+    /// <param name="activeSet">The active set value.</param>
+    /// <returns>true if the operation succeeds; otherwise, false.</returns>
     protected bool RemoveDepartedPlayers(HashSet<string> activeSet)
     {
         bool any = false;
@@ -198,6 +212,8 @@ public class HudSnapshotSync<TSnapshot> : IDisposable
     }
 
     /// <summary>Marks newly arrived players as dirty so they get a snapshot immediately.</summary>
+    /// <param name="activeSet">The active set value.</param>
+    /// <returns>true if the operation succeeds; otherwise, false.</returns>
     protected bool MarkNewArrivals(HashSet<string> activeSet)
     {
         bool any = false;
@@ -213,6 +229,8 @@ public class HudSnapshotSync<TSnapshot> : IDisposable
     }
 
     /// <summary>Sends a snapshot to a single player. Logs warnings on failure.</summary>
+    /// <param name="playerUid">The unique player identifier.</param>
+    /// <param name="snapshot">The snapshot value.</param>
     protected virtual void SendPacket(string playerUid, TSnapshot snapshot)
     {
         try

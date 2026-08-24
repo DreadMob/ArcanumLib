@@ -1,0 +1,8 @@
+<Solution>
+  <Folder Name="/tests/">
+    <Project Path="tests/ArcanumLib.AtlasFixture/ArcanumLib.AtlasFixture.csproj" />
+    <Project Path="tests/ArcanumLib.AtlasTests/ArcanumLib.AtlasTests.csproj" />
+    <Project Path="tests/ArcanumLib.Tests/ArcanumLib.Tests.csproj" />
+  </Folder>
+  <Project Path="ArcanumLib.csproj" />
+</Solution>

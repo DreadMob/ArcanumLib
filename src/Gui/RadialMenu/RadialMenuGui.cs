@@ -10,15 +10,22 @@ namespace ArcanumLib.Gui.RadialMenu
     /// <summary>
     /// Generic Cairo-styled radial (pie) menu. Sectors are arranged in a circle
     /// around a central cancel button. Each sector has an icon, label, and hover state.
-    /// Visual appearance is controlled by an <see cref="IRadialMenuStyle"/> resolved
-    /// from <see cref="RadialMenuStyleRegistry"/> via <see cref="SetStyle"/>.
+    /// Visual appearance is controlled by an <see cref="IRadialMenuStyle" /> resolved
+    /// from <see cref="RadialMenuStyleRegistry" /> via <see cref="SetStyle" />.
     /// </summary>
     public partial class RadialMenuGui : GuiDialog
     {
+        /// <summary>Gets the toggle key combination code.</summary>
         public override string? ToggleKeyCombinationCode => null;
+        /// <summary>Gets the draw order.</summary>
         public override double DrawOrder => 1.0;
+        /// <summary>Gets a value indicating whether the prefers ungrabbed mouse is enabled.</summary>
         public override bool PrefersUngrabbedMouse => true;
+        /// <summary>Returns a value indicating whether the operation should receive mouse events.</summary>
+        /// <returns>true if the operation should receive mouse events; otherwise, false.</returns>
         public override bool ShouldReceiveMouseEvents() => IsOpened();
+        /// <summary>Returns a value indicating whether the operation should receive keyboard events.</summary>
+        /// <returns>true if the operation should receive keyboard events; otherwise, false.</returns>
         public override bool ShouldReceiveKeyboardEvents() => IsOpened();
 
         private readonly List<RadialMenuItem> _items;
@@ -31,13 +38,14 @@ namespace ArcanumLib.Gui.RadialMenu
         /// <summary>Visual style for this menu, resolved from the style registry.</summary>
         public IRadialMenuStyle Style { get; set; }
 
+        /// <summary>Gets the items.</summary>
         protected List<RadialMenuItem> Items => _items;
 
         private GlKeys? _holdKey;
 
         /// <summary>
         /// Creates a radial menu with the given items and radii.
-        /// The style defaults to <c>"default"</c>; call <see cref="SetStyle"/> to change it.
+        /// The style defaults to <c>"default"</c>; call <see cref="SetStyle" /> to change it.
         /// </summary>
         /// <param name="capi">Client API.</param>
         /// <param name="title">Unused for rendering, kept for compatibility.</param>
@@ -56,11 +64,14 @@ namespace ArcanumLib.Gui.RadialMenu
         }
 
         /// <summary>Sets the hold-to-activate key for the radial menu.</summary>
+        /// <param name="key">The key to look up.</param>
         public void SetHoldKey(GlKeys key) => _holdKey = key;
 
         /// <summary>Sets the visual style by registry key.</summary>
+        /// <param name="key">The key to look up.</param>
         public void SetStyle(string key) => Style = RadialMenuStyleRegistry.GetOrDefault(key);
 
+        /// <summary>Performs the on gui opened operation.</summary>
         public override void OnGuiOpened()
         {
             base.OnGuiOpened();

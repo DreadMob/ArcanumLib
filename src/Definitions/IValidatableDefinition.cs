@@ -7,5 +7,6 @@ namespace ArcanumLib.Definitions;
 public interface IValidatableDefinition
 {
     /// <summary>Returns true when the definition is valid and can be used.</summary>
+    /// <returns>true if valid; otherwise, false.</returns>
     bool IsValid();
 }

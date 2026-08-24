@@ -7,7 +7,7 @@ using Vintagestory.API.Common;
 namespace ArcanumLib.Gui.Controls;
 
 /// <summary>
-/// Visual style of an <see cref="ArcanumButton"/>.
+/// Visual style of an <see cref="ArcanumButton" />.
 /// </summary>
 public enum ArcanumButtonStyle
 {
@@ -60,8 +60,13 @@ public class ArcanumButton : GuiElement
     }
 
     /// <summary>
-    /// Creates a themed button with one of the standard <see cref="ArcanumButtonStyle"/> styles.
+    /// Creates a themed button with one of the standard <see cref="ArcanumButtonStyle" /> styles.
     /// </summary>
+    /// <param name="capi">The client API instance.</param>
+    /// <param name="bounds">The bounds value.</param>
+    /// <param name="text">The text value.</param>
+    /// <param name="onClick">The on click value.</param>
+    /// <param name="style">The style value.</param>
     public ArcanumButton(ICoreClientAPI capi, ElementBounds bounds, string text, Func<bool> onClick, ArcanumButtonStyle style)
         : base(capi, bounds)
     {
@@ -74,9 +79,15 @@ public class ArcanumButton : GuiElement
 
     /// <summary>
     /// Creates a button with a custom background color and font for consumers that
-    /// need their own visual treatment. The <paramref name="onClick"/> callback is
-    /// an <see cref="Action"/> because the result is not used.
+    /// need their own visual treatment. The <paramref name="onClick" /> callback is
+    /// an <see cref="Action" /> because the result is not used.
     /// </summary>
+    /// <param name="capi">The client API instance.</param>
+    /// <param name="bounds">The bounds value.</param>
+    /// <param name="onClick">The on click value.</param>
+    /// <param name="text">The text value.</param>
+    /// <param name="font">The font value.</param>
+    /// <param name="bgColor">The bg color value.</param>
     public ArcanumButton(ICoreClientAPI capi, ElementBounds bounds, Action? onClick, string text, CairoFont font, int bgColor)
         : base(capi, bounds)
     {
@@ -90,6 +101,8 @@ public class ArcanumButton : GuiElement
     }
 
     /// <summary>Skips composition; the button texture is generated on first render.</summary>
+    /// <param name="ctxStatic">The ctx static value.</param>
+    /// <param name="surfaceStatic">The surface static value.</param>
     public override void ComposeElements(Context ctxStatic, ImageSurface surfaceStatic)
     {
         // Don't regenerate during composition - the rendering context may not be ready.
@@ -97,6 +110,7 @@ public class ArcanumButton : GuiElement
     }
 
     /// <summary>Handles hover state, regenerates the cached texture if needed, and renders the button.</summary>
+    /// <param name="deltaTime">The delta time value.</param>
     public override void RenderInteractiveElements(float deltaTime)
     {
         if (Bounds?.ParentBounds == null) return;
@@ -265,6 +279,8 @@ public class ArcanumButton : GuiElement
     }
 
     /// <summary>Sets the pressed state when the button is clicked.</summary>
+    /// <param name="api">The client API instance.</param>
+    /// <param name="args">The arguments.</param>
     public override void OnMouseDownOnElement(ICoreClientAPI api, MouseEvent args)
     {
         if (!enabled) return;
@@ -276,6 +292,8 @@ public class ArcanumButton : GuiElement
     }
 
     /// <summary>Triggers the click handler when the button is released while still inside the bounds.</summary>
+    /// <param name="api">The client API instance.</param>
+    /// <param name="args">The arguments.</param>
     public override void OnMouseUpOnElement(ICoreClientAPI api, MouseEvent args)
     {
         if (!enabled) return;
@@ -308,13 +326,20 @@ public class ArcanumButton : GuiElement
 }
 
 /// <summary>
-/// Composer extension methods for adding <see cref="ArcanumButton"/> elements.
+/// Composer extension methods for adding <see cref="ArcanumButton" /> elements.
 /// </summary>
 public static class ArcanumButtonComposerHelpers
 {
     /// <summary>
     /// Adds a standard themed button to the composer.
     /// </summary>
+    /// <param name="composer">The composer value.</param>
+    /// <param name="text">The text value.</param>
+    /// <param name="onClick">The on click value.</param>
+    /// <param name="bounds">The bounds value.</param>
+    /// <param name="style">The style value.</param>
+    /// <param name="key">The key to look up.</param>
+    /// <returns>The add arcanum button.</returns>
     public static GuiComposer AddArcanumButton(
         this GuiComposer composer,
         string text,
@@ -333,6 +358,14 @@ public static class ArcanumButtonComposerHelpers
     /// <summary>
     /// Adds a themed button with a custom font and background color to the composer.
     /// </summary>
+    /// <param name="composer">The composer value.</param>
+    /// <param name="text">The text value.</param>
+    /// <param name="onClick">The on click value.</param>
+    /// <param name="bounds">The bounds value.</param>
+    /// <param name="font">The font value.</param>
+    /// <param name="bgColor">The bg color value.</param>
+    /// <param name="key">The key to look up.</param>
+    /// <returns>The add arcanum button.</returns>
     public static GuiComposer AddArcanumButton(
         this GuiComposer composer,
         string text,

@@ -7,8 +7,8 @@ namespace ArcanumLib.Common
 {
     /// <summary>
     /// Collects disposable resources and cancels them in reverse order when disposed.
-    /// Use this to keep cleanup for <see cref="DeferredWork"/> keys, game tick listeners,
-    /// and nested <see cref="IDisposable"/> objects in one place.
+    /// Use this to keep cleanup for <see cref="DeferredWork" /> keys, game tick listeners,
+    /// and nested <see cref="IDisposable" /> objects in one place.
     /// </summary>
     public sealed class CleanupScope : IDisposable
     {
@@ -21,14 +21,19 @@ namespace ArcanumLib.Common
         /// <summary>
         /// Creates a new cleanup scope with an optional logger source.
         /// </summary>
+        /// <param name="api">The core API instance.</param>
         public CleanupScope(ICoreAPI? api = null)
         {
             _api = api;
         }
 
         /// <summary>
-        /// Registers a <see cref="DeferredWork"/> key to cancel on dispose.
+        /// Registers a <see cref="DeferredWork" /> key to cancel on dispose.
         /// </summary>
+        /// <param name="key">The key to look up.</param>
+        /// <returns>The add deferred.</returns>
+        /// <exception cref="ArgumentException">Thrown when <paramref name="key" /> is invalid.</exception>
+        /// <exception cref="ObjectDisposedException">Thrown when the object has been disposed.</exception>
         public CleanupScope AddDeferred(string key)
         {
             if (string.IsNullOrWhiteSpace(key)) throw new ArgumentException("Key cannot be empty.", nameof(key));
@@ -40,6 +45,10 @@ namespace ArcanumLib.Common
         /// <summary>
         /// Registers a game tick listener ID to unregister on dispose.
         /// </summary>
+        /// <param name="listenerId">The listener id value.</param>
+        /// <returns>The add listener.</returns>
+        /// <exception cref="ArgumentException">Thrown when <paramref name="listenerId" /> is invalid.</exception>
+        /// <exception cref="ObjectDisposedException">Thrown when the object has been disposed.</exception>
         public CleanupScope AddListener(long listenerId)
         {
             if (listenerId == 0) throw new ArgumentException("Listener ID cannot be zero.", nameof(listenerId));
@@ -51,6 +60,10 @@ namespace ArcanumLib.Common
         /// <summary>
         /// Registers a nested disposable to dispose on dispose.
         /// </summary>
+        /// <param name="disposable">The disposable value.</param>
+        /// <returns>The add.</returns>
+        /// <exception cref="ArgumentNullException">Thrown when <paramref name="disposable" /> is <see langword="null" />.</exception>
+        /// <exception cref="ObjectDisposedException">Thrown when the object has been disposed.</exception>
         public CleanupScope Add(IDisposable disposable)
         {
             if (disposable == null) throw new ArgumentNullException(nameof(disposable));
@@ -60,8 +73,10 @@ namespace ArcanumLib.Common
         }
 
         /// <summary>
-        /// Alias for <see cref="Add(IDisposable)"/>.
+        /// Alias for <see cref="Add(IDisposable)" />.
         /// </summary>
+        /// <param name="disposable">The disposable value.</param>
+        /// <returns>The use.</returns>
         public CleanupScope Use(IDisposable disposable) => Add(disposable);
 
         /// <summary>
@@ -121,8 +136,11 @@ namespace ArcanumLib.Common
     public static class CleanupScopeExtensions
     {
         /// <summary>
-        /// Creates a new <see cref="CleanupScope"/> tied to the given API.
+        /// Creates a new <see cref="CleanupScope" /> tied to the given API.
         /// </summary>
+        /// <param name="api">The core API instance.</param>
+        /// <returns>The cleanup scope.</returns>
+        /// <exception cref="ArgumentNullException">Thrown when <paramref name="api" /> is <see langword="null" />.</exception>
         public static CleanupScope CreateCleanupScope(this ICoreAPI api)
         {
             if (api == null) throw new ArgumentNullException(nameof(api));

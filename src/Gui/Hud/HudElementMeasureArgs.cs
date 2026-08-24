@@ -3,8 +3,8 @@ using Cairo;
 namespace ArcanumLib.Gui.Hud;
 
 /// <summary>
-/// Arguments passed to <see cref="IHudElementRenderer.MeasureHeight"/> and
-/// <see cref="IHudElementRenderer.MeasureMinWidth"/>. Provides the Cairo context
+/// Arguments passed to <see cref="IHudElementRenderer.MeasureHeight" /> and
+/// <see cref="IHudElementRenderer.MeasureMinWidth" />. Provides the Cairo context
 /// for text measuring, the element definition, the snapshot, the theme, and layout spacing.
 /// All values are unscaled — renderers apply <c>GuiElement.scaled()</c> during draw, not measure.
 /// </summary>

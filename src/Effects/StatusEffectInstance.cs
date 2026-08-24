@@ -5,7 +5,7 @@ namespace ArcanumLib.Effects
     /// <summary>
     /// Default implementation of a status effect instance.
     /// </summary>
-    public class StatusEffectInstance : IStatusEffectInstance
+    internal sealed class StatusEffectInstance : IStatusEffectInstance
     {
         /// <summary>
         /// Unique id of this instance.
@@ -54,6 +54,7 @@ namespace ArcanumLib.Effects
         /// <param name="effect">The effect definition.</param>
         /// <param name="durationMs">Duration in milliseconds.</param>
         /// <param name="data">Optional payload.</param>
+        /// <exception cref="ArgumentNullException">Thrown when <paramref name="effect" /> is <see langword="null" />.</exception>
         public StatusEffectInstance(long id, IStatusEffect effect, float durationMs, object? data = null)
         {
             Id = id;

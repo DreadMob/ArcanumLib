@@ -21,7 +21,7 @@ namespace ArcanumLib.Effects
         EnumStackMode StackMode { get; }
 
         /// <summary>
-        /// Maximum number of stacks when <see cref="StackMode"/> is <see cref="EnumStackMode.Stack"/>.
+        /// Maximum number of stacks when <see cref="StackMode" /> is <see cref="EnumStackMode.Stack" />.
         /// </summary>
         int MaxStacks { get; }
 
@@ -32,22 +32,22 @@ namespace ArcanumLib.Effects
 
         /// <summary>
         /// Effect category for dispel and resistance checks.
-        /// Defaults to <see cref="EffectCategory.None"/>.
+        /// Defaults to <see cref="EffectCategory.None" />.
         /// </summary>
         EffectCategory Category => EffectCategory.None;
 
         /// <summary>
         /// Tags used for immunity and resistance matching.
         /// e.g. "fire", "slow", "poison". An entity immune to "fire" will
-        /// reject any effect whose <see cref="Tags"/> contains "fire".
+        /// reject any effect whose <see cref="Tags" /> contains "fire".
         /// Defaults to an empty collection.
         /// </summary>
         IReadOnlyCollection<string> Tags => Array.Empty<string>();
 
         /// <summary>
-        /// Whether <see cref="OnTick"/> does meaningful work. When false, the manager
+        /// Whether <see cref="OnTick" /> does meaningful work. When false, the manager
         /// skips per-tick calls for this effect to avoid unnecessary overhead.
-        /// Default implementations should return false when <see cref="OnTick"/> is empty.
+        /// Default implementations should return false when <see cref="OnTick" /> is empty.
         /// Defaults to <c>true</c> for backwards compatibility with effects that do not
         /// declare this property explicitly.
         /// </summary>

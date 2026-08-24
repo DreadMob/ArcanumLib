@@ -5,7 +5,7 @@ namespace ArcanumLib.Gui.RadialMenu;
 /// <summary>
 /// Defines the visual appearance of a radial menu — sector backgrounds, borders,
 /// center cancel button, and icon tint. Implementations are registered with
-/// <see cref="RadialMenuStyleRegistry"/> and selected by string key.
+/// <see cref="RadialMenuStyleRegistry" /> and selected by string key.
 /// </summary>
 public interface IRadialMenuStyle
 {

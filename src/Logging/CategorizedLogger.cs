@@ -15,8 +15,8 @@ namespace ArcanumLib.Logging;
 /// <c>important.log</c>. Thread-safe, with periodic auto-flush and debug throttling.
 /// </summary>
 /// <remarks>
-/// Consumers should call <see cref="Init"/> during mod startup and
-/// <see cref="Dispose"/> (or let the singleton dispose itself) on shutdown.
+/// Consumers should call <see cref="Init" /> during mod startup and
+/// <see cref="Dispose" /> (or let the singleton dispose itself) on shutdown.
 /// Categories are arbitrary strings supplied by the consumer — for example
 /// <c>"combat"</c>, <c>"economy/trades"</c>, <c>"system/errors"</c>.
 /// Subcategories are created automatically using the forward slash separator.
@@ -24,8 +24,8 @@ namespace ArcanumLib.Logging;
 public class CategorizedLogger : IDisposable
 {
     /// <summary>
-    /// Singleton instance. Backed by <see cref="ArcanumServices"/>.
-    /// Set by <see cref="Init"/> and cleared by <see cref="Dispose"/>.
+    /// Singleton instance. Backed by <see cref="ArcanumServices" />.
+    /// Set by <see cref="Init" /> and cleared by <see cref="Dispose" />.
     /// </summary>
     public static CategorizedLogger? Instance
     {
@@ -44,7 +44,7 @@ public class CategorizedLogger : IDisposable
     /// Disposes any previous instance and creates fresh log files.
     /// </summary>
     /// <param name="api">The core API used to resolve the log directory and mirror to console.</param>
-    /// <param name="config">Optional config. Defaults to <see cref="LogMode.Production"/> with file logging enabled.</param>
+    /// <param name="config">Optional config. Defaults to <see cref="LogMode.Production" /> with file logging enabled.</param>
     /// <param name="logFolderName">Name of the subfolder inside the game's Logs directory.</param>
     /// <param name="consolePrefix">Prefix used in console mirror messages, e.g. <c>[ModName]</c>.</param>
     public static void Init(ICoreAPI api, LogConfig? config = null, string logFolderName = "mod", string consolePrefix = "CategorizedLogger")
@@ -58,6 +58,7 @@ public class CategorizedLogger : IDisposable
     /// <summary>
     /// Applies a new config to the current instance, updating the log path if needed.
     /// </summary>
+    /// <param name="config">The config value.</param>
     public static void ApplyConfig(LogConfig config)
     {
         if (Instance == null || config == null) return;
@@ -88,7 +89,7 @@ public class CategorizedLogger : IDisposable
     /// Creates a categorized logger.
     /// </summary>
     /// <param name="api">The core API used to resolve the log directory and mirror to console.</param>
-    /// <param name="config">Optional config. Defaults to <see cref="LogMode.Production"/> with file logging enabled.</param>
+    /// <param name="config">Optional config. Defaults to <see cref="LogMode.Production" /> with file logging enabled.</param>
     /// <param name="logFolderName">Name of the subfolder inside the game's Logs directory.</param>
     /// <param name="consolePrefix">Prefix used in console mirror messages, e.g. <c>[ModName]</c>.</param>
     public CategorizedLogger(ICoreAPI api, LogConfig? config = null, string logFolderName = "mod", string consolePrefix = "CategorizedLogger")
@@ -134,6 +135,9 @@ public class CategorizedLogger : IDisposable
     /// <summary>
     /// Write an explicitly important event. Goes to both the category file and the consolidated important.log.
     /// </summary>
+    /// <param name="category">The category value.</param>
+    /// <param name="message">The message.</param>
+    /// <param name="ex">The ex value.</param>
     public void Important(string category, string message, Exception? ex = null)
     {
         var fullMessage = BuildMessage(message, ex);
@@ -150,6 +154,9 @@ public class CategorizedLogger : IDisposable
     /// <summary>
     /// Write an error. Errors go to the category file, important.log and the console.
     /// </summary>
+    /// <param name="category">The category value.</param>
+    /// <param name="message">The message.</param>
+    /// <param name="ex">The ex value.</param>
     public void Error(string category, string message, Exception? ex = null)
     {
         var fullMessage = BuildMessage(message, ex);
@@ -164,6 +171,9 @@ public class CategorizedLogger : IDisposable
     /// <summary>
     /// Write a warning. Warnings go to the category file and the consolidated important.log.
     /// </summary>
+    /// <param name="category">The category value.</param>
+    /// <param name="message">The message.</param>
+    /// <param name="ex">The ex value.</param>
     public void Warning(string category, string message, Exception? ex = null)
     {
         var fullMessage = BuildMessage(message, ex);
@@ -179,6 +189,8 @@ public class CategorizedLogger : IDisposable
     /// <summary>
     /// Write an informational log entry to the category file only.
     /// </summary>
+    /// <param name="category">The category value.</param>
+    /// <param name="message">The message.</param>
     public void Info(string category, string message)
     {
         if (Config.EnableFileLog)
@@ -188,8 +200,10 @@ public class CategorizedLogger : IDisposable
     }
 
     /// <summary>
-    /// Write a debug log entry (throttled by <see cref="DebugThrottleMs"/> to avoid per-tick bloat).
+    /// Write a debug log entry (throttled by <see cref="DebugThrottleMs" /> to avoid per-tick bloat).
     /// </summary>
+    /// <param name="category">The category value.</param>
+    /// <param name="message">The message.</param>
     public void Debug(string category, string message)
     {
         if (Config.Mode != LogMode.Debug && Config.Mode != LogMode.Verbose)
@@ -205,6 +219,9 @@ public class CategorizedLogger : IDisposable
     /// <summary>
     /// Write a structured log entry with key-value pairs.
     /// </summary>
+    /// <param name="category">The category value.</param>
+    /// <param name="eventType">The event type value.</param>
+    /// <param name="fields">The collection of fields values.</param>
     public void Structured(string category, string eventType, params (string key, string value)[] fields)
     {
         var sb = new StringBuilder();
@@ -434,6 +451,7 @@ public class CategorizedLogger : IDisposable
         }
     }
 
+    /// <summary>Releases all resources used by the current object.</summary>
     public void Dispose()
     {
         if (disposed) return;

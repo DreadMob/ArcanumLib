@@ -38,15 +38,19 @@ public class DiagnosticsModSystem : ModSystem
     private const int MaxMonitorHistory = 60;
 
     /// <summary>Runs after all other ArcanumLib systems so registrations are complete.</summary>
+    /// <returns>The execute order.</returns>
     public override double ExecuteOrder() => 1000;
 
     /// <summary>Server-side only: diagnostics are authoritative on the server.</summary>
+    /// <param name="forSide">The for side value.</param>
+    /// <returns>true if the operation should load; otherwise, false.</returns>
     public override bool ShouldLoad(EnumAppSide forSide) => forSide == EnumAppSide.Server;
 
     /// <summary>
     /// Registers the diagnostics commands, starts runtime monitoring, and runs
     /// the first validation pass.
     /// </summary>
+    /// <param name="sapi">The server API instance.</param>
     public override void StartServerSide(ICoreServerAPI sapi)
     {
         _sapi = sapi;
@@ -67,6 +71,8 @@ public class DiagnosticsModSystem : ModSystem
     /// Runs a full diagnostics pass and logs the results to the server log and the
     /// diagnostics log file. Returns the report text.
     /// </summary>
+    /// <param name="sapi">The server API instance.</param>
+    /// <returns>The run diagnostics string, or null if none is found.</returns>
     public string RunDiagnostics(ICoreServerAPI sapi)
     {
         var report = new StringBuilder();
@@ -285,6 +291,8 @@ public class DiagnosticsModSystem : ModSystem
     /// Checks EventBus subscription health: active count, disposed-but-not-removed,
     /// dangling subscriptions (subscribed but never published), and slow handlers.
     /// </summary>
+    /// <param name="report">The report value.</param>
+    /// <returns>The check event bus.</returns>
     private int CheckEventBus(StringBuilder report)
     {
         int warnings = 0;
@@ -342,6 +350,9 @@ public class DiagnosticsModSystem : ModSystem
     /// Checks dependency chains: version conflicts against the loaded ArcanumLib,
     /// missing dependencies, and load-order issues.
     /// </summary>
+    /// <param name="sapi">The server API instance.</param>
+    /// <param name="report">The report value.</param>
+    /// <returns>The check dependencies.</returns>
     private int CheckDependencies(ICoreServerAPI sapi, StringBuilder report)
     {
         int errors = 0;
@@ -444,9 +455,12 @@ public class DiagnosticsModSystem : ModSystem
 
     /// <summary>
     /// Simple semver pre-release-aware version satisfaction check.
-    /// Returns true if <paramref name="installed"/> satisfies the <paramref name="required"/> minimum.
+    /// Returns true if <paramref name="installed" /> satisfies the <paramref name="required" /> minimum.
     /// Pre-release versions (e.g. "1.0.0-rc1") are considered lower than the release ("1.0.0").
     /// </summary>
+    /// <param name="installed">The installed value.</param>
+    /// <param name="required">The required value.</param>
+    /// <returns>true if version satisfied; otherwise, false.</returns>
     private static bool IsVersionSatisfied(string installed, string required)
     {
         if (string.IsNullOrEmpty(required)) return true;
@@ -511,14 +525,18 @@ public class DiagnosticsModSystem : ModSystem
         int _loadedChunks;
         int _playersOnline;
 
+        /// <summary>Gets or sets the active entities.</summary>
         public int ActiveEntities { get => _activeEntities; set => _activeEntities = value; }
+        /// <summary>Gets or sets the loaded chunks.</summary>
         public int LoadedChunks { get => _loadedChunks; set => _loadedChunks = value; }
+        /// <summary>Gets or sets the players online.</summary>
         public int PlayersOnline { get => _playersOnline; set => _playersOnline = value; }
     }
 
     /// <summary>
     /// Starts the periodic runtime monitor that samples tick time, memory, and entity counts.
     /// </summary>
+    /// <param name="sapi">The server API instance.</param>
     private void StartMonitoring(ICoreServerAPI sapi)
     {
         _lastMonitorTickMs = sapi.World.ElapsedMilliseconds;
@@ -528,6 +546,7 @@ public class DiagnosticsModSystem : ModSystem
     /// <summary>
     /// Called every 5 seconds to sample runtime metrics.
     /// </summary>
+    /// <param name="deltaTime">The delta time value.</param>
     private void OnMonitorTick(float deltaTime)
     {
         if (_sapi?.World == null) return;
@@ -568,6 +587,7 @@ public class DiagnosticsModSystem : ModSystem
     /// <summary>
     /// Returns a formatted runtime monitor report for the <c>/arcanum monitor</c> command.
     /// </summary>
+    /// <returns>The monitor report string, or null if none is found.</returns>
     public string GetMonitorReport()
     {
         var sb = new StringBuilder();
@@ -618,6 +638,7 @@ public class DiagnosticsModSystem : ModSystem
     /// <summary>
     /// Appends the report to the diagnostics log file.
     /// </summary>
+    /// <param name="text">The text value.</param>
     private void WriteLogFile(string text)
     {
         if (string.IsNullOrEmpty(_logPath)) return;
@@ -641,6 +662,7 @@ public class DiagnosticsModSystem : ModSystem
     /// <summary>
     /// Registers the <c>/arcanum diagnose</c> and <c>/arcanum monitor</c> chat commands.
     /// </summary>
+    /// <param name="sapi">The server API instance.</param>
     private void RegisterCommand(ICoreServerAPI sapi)
     {
         try
@@ -706,6 +728,8 @@ public class DiagnosticsModSystem : ModSystem
     /// <summary>
     /// Extracts the summary section from a full report for chat output.
     /// </summary>
+    /// <param name="report">The report value.</param>
+    /// <returns>The extract summary string, or null if none is found.</returns>
     private static string ExtractSummary(string report)
     {
         var summary = new StringBuilder();

@@ -10,10 +10,18 @@ public static class ArcanumLifecycle
 {
     private readonly struct Registration
     {
+        /// <summary>Gets the name.</summary>
         public string Name { get; }
+        /// <summary>Gets the init.</summary>
         public Action Init { get; }
+        /// <summary>Gets the dispose.</summary>
         public Action Dispose { get; }
 
+        /// <summary>Performs the registration operation.</summary>
+        /// <param name="name">The name.</param>
+        /// <param name="init">The init value.</param>
+        /// <param name="dispose">The dispose value.</param>
+        /// <exception cref="ArgumentNullException">Thrown when <paramref name="name" /> is <see langword="null" />.</exception>
         public Registration(string name, Action init, Action dispose)
         {
             Name = name ?? throw new ArgumentNullException(nameof(name));
@@ -28,12 +36,11 @@ public static class ArcanumLifecycle
 
     /// <summary>
     /// Registers a static registry that should be initialized/disposed alongside ArcanumLib.
-    /// If <see cref="InitializeAll"/> has already been called, <paramref name="init"/> is invoked immediately.
+    /// If <see cref="InitializeAll" /> has already been called, <paramref name="init" /> is invoked immediately.
     /// </summary>
     /// <param name="name">A human-readable name for the registration.</param>
     /// <param name="init">The action to invoke during initialization.</param>
     /// <param name="dispose">The action to invoke during disposal.</param>
-    /// <exception cref="ArgumentNullException">Thrown when <paramref name="name"/>, <paramref name="init"/>, or <paramref name="dispose"/> is null.</exception>
     public static void Register(string name, Action init, Action dispose)
     {
         lock (_syncLock)

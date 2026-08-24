@@ -9,6 +9,7 @@ namespace ArcanumLib.Assets;
 /// <summary>
 /// Describes an asset loaded from a specific mod.
 /// </summary>
+/// <typeparam name="T">The type of the t value.</typeparam>
 public sealed class ModAsset<T>
 {
     /// <summary>
@@ -26,6 +27,11 @@ public sealed class ModAsset<T>
     /// </summary>
     public string SourceModId { get; }
 
+    /// <summary>Performs the mod asset operation.</summary>
+    /// <param name="value">The value to set or compare.</param>
+    /// <param name="location">The asset location.</param>
+    /// <param name="sourceModId">The source mod id value.</param>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="location" /> is <see langword="null" />.</exception>
     public ModAsset(T value, AssetLocation location, string sourceModId)
     {
         Value = value;
@@ -54,6 +60,11 @@ public sealed class RawModAsset
     /// </summary>
     public string SourceModId { get; }
 
+    /// <summary>Performs the raw mod asset operation.</summary>
+    /// <param name="text">The text value.</param>
+    /// <param name="location">The asset location.</param>
+    /// <param name="sourceModId">The source mod id value.</param>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="text" /> is <see langword="null" />.</exception>
     public RawModAsset(string text, AssetLocation location, string sourceModId)
     {
         Text = text ?? throw new ArgumentNullException(nameof(text));
@@ -81,11 +92,15 @@ public enum MergeStrategy
 public static class ModAssetLoader
 {
     /// <summary>
-    /// Loads all typed assets at <paramref name="assetPath"/> from all loaded mods.
+    /// Loads all typed assets at <paramref name="assetPath" /> from all loaded mods.
     /// </summary>
+    /// <typeparam name="T">The type of the t value.</typeparam>
     /// <param name="api">Core API.</param>
     /// <param name="assetPath">Asset path, e.g. "config/encounters".</param>
     /// <param name="sourceModId">Optional mod ID to restrict loading to one mod/pack.</param>
+    /// <returns>A collection of load all values.</returns>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="api" /> is <see langword="null" />.</exception>
+    /// <exception cref="ArgumentException">Thrown when <paramref name="assetPath" /> is invalid.</exception>
     public static IEnumerable<ModAsset<T>> LoadAll<T>(ICoreAPI api, string assetPath, string? sourceModId = null)
     {
         if (api == null) throw new ArgumentNullException(nameof(api));
@@ -121,8 +136,14 @@ public static class ModAssetLoader
     }
 
     /// <summary>
-    /// Loads raw JSON text for all assets at <paramref name="assetPath"/>.
+    /// Loads raw JSON text for all assets at <paramref name="assetPath" />.
     /// </summary>
+    /// <param name="api">The core API instance.</param>
+    /// <param name="assetPath">The asset path value.</param>
+    /// <param name="domain">The domain value.</param>
+    /// <returns>A collection of load all raw values.</returns>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="api" /> is <see langword="null" />.</exception>
+    /// <exception cref="ArgumentException">Thrown when <paramref name="assetPath" /> is invalid.</exception>
     public static IEnumerable<RawModAsset> LoadAllRaw(ICoreAPI api, string assetPath, string? domain = null)
     {
         if (api == null) throw new ArgumentNullException(nameof(api));
@@ -164,8 +185,15 @@ public static class ModAssetLoader
 
     /// <summary>
     /// Loads a flattened dictionary from all mods. Each mod may supply one or more
-    /// JSON objects with string keys and <typeparamref name="TValue"/> values.
+    /// JSON objects with string keys and <typeparamref name="TValue" /> values.
     /// </summary>
+    /// <typeparam name="TValue">The type of the tvalue value.</typeparam>
+    /// <param name="api">The core API instance.</param>
+    /// <param name="assetPath">The asset path value.</param>
+    /// <param name="mergeStrategy">The merge strategy value.</param>
+    /// <returns>A dictionary of load flat dictionary.</returns>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="api" /> is <see langword="null" />.</exception>
+    /// <exception cref="ArgumentException">Thrown when <paramref name="assetPath" /> is invalid.</exception>
     public static IReadOnlyDictionary<string, TValue> LoadFlatDictionary<TValue>(
         ICoreAPI api,
         string assetPath,
@@ -195,6 +223,14 @@ public static class ModAssetLoader
     /// Loads all individual items and indexes them by a key selector.
     /// Useful when each mod supplies an array or object of definitions.
     /// </summary>
+    /// <typeparam name="TValue">The type of the tvalue value.</typeparam>
+    /// <param name="api">The core API instance.</param>
+    /// <param name="assetPath">The asset path value.</param>
+    /// <param name="keySelector">The key selector value.</param>
+    /// <param name="mergeStrategy">The merge strategy value.</param>
+    /// <returns>A dictionary of load dictionary by.</returns>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="api" /> is <see langword="null" />.</exception>
+    /// <exception cref="ArgumentException">Thrown when <paramref name="assetPath" /> is invalid.</exception>
     public static IReadOnlyDictionary<string, TValue> LoadDictionaryBy<TValue>(
         ICoreAPI api,
         string assetPath,
@@ -225,6 +261,13 @@ public static class ModAssetLoader
     /// <summary>
     /// Loads all individual items and returns them as a list.
     /// </summary>
+    /// <typeparam name="T">The type of the t value.</typeparam>
+    /// <param name="api">The core API instance.</param>
+    /// <param name="assetPath">The asset path value.</param>
+    /// <param name="sourceModId">The source mod id value.</param>
+    /// <returns>A collection of load list values.</returns>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="api" /> is <see langword="null" />.</exception>
+    /// <exception cref="ArgumentException">Thrown when <paramref name="assetPath" /> is invalid.</exception>
     public static IReadOnlyList<T> LoadList<T>(ICoreAPI api, string assetPath, string? sourceModId = null)
     {
         if (api == null) throw new ArgumentNullException(nameof(api));

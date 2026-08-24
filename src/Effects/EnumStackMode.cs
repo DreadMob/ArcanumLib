@@ -11,7 +11,7 @@ namespace ArcanumLib.Effects
         Refresh,
 
         /// <summary>
-        /// Increases the stack count up to <see cref="IStatusEffect.MaxStacks"/>, then refreshes.
+        /// Increases the stack count up to <see cref="IStatusEffect.MaxStacks" />, then refreshes.
         /// </summary>
         Stack,
 

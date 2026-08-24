@@ -14,6 +14,13 @@ namespace ArcanumLib.Geometry
         /// Counts block entities matching a predicate within the given radii around a position.
         /// Iterates chunk-by-chunk for efficiency.
         /// </summary>
+        /// <param name="pos">The position.</param>
+        /// <param name="radiusX">The radius x value.</param>
+        /// <param name="radiusY">The radius y value.</param>
+        /// <param name="radiusZ">The radius z value.</param>
+        /// <param name="blockAccessor">The block accessor value.</param>
+        /// <param name="matcher">The matcher value.</param>
+        /// <returns>The count block entities.</returns>
         public static int CountBlockEntities(Vec3i pos, int radiusX, int radiusY, int radiusZ, IBlockAccessor blockAccessor, System.Func<BlockEntity, bool> matcher)
         {
             int blockCount = 0;

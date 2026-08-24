@@ -39,7 +39,9 @@ public class HudTheme
     /// <summary>Layout spacing overrides. Individual fields are null when not specified.</summary>
     public required HudThemeLayout layout;
 
-    /// <summary>Create a copy of this theme with non-null fields from <paramref name="overlay"/> applied.</summary>
+    /// <summary>Create a copy of this theme with non-null fields from <paramref name="overlay" /> applied.</summary>
+    /// <param name="overlay">The overlay value.</param>
+    /// <returns>The merge.</returns>
     public virtual HudTheme Merge(HudTheme overlay)
     {
         if (overlay == null) return this;
@@ -59,6 +61,7 @@ public class HudTheme
     }
 
     /// <summary>Returns a default generic HUD theme.</summary>
+    /// <returns>The default.</returns>
     public static HudTheme CreateDefault()
     {
         return new HudTheme

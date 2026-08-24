@@ -6,8 +6,8 @@ namespace ArcanumLib.Performance;
 
 /// <summary>
 /// Consolidated lifecycle ModSystem for all performance/scheduling systems.
-/// Starts and disposes <see cref="DeferredWork"/>, <see cref="GameTimeScheduler"/> and
-/// <see cref="StatCoalescingEngine"/> on the appropriate side.
+/// Starts and disposes <see cref="DeferredWork" />, <see cref="GameTimeScheduler" /> and
+/// <see cref="StatCoalescingEngine" /> on the appropriate side.
 /// </summary>
 public class ArcanumPerformanceModSystem : ModSystem
 {

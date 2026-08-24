@@ -4,7 +4,7 @@ using Vintagestory.API.Common;
 namespace ArcanumLib.Gui
 {
     /// <summary>
-    /// Extension methods for <see cref="GuiComposer"/> to add common GUI elements
+    /// Extension methods for <see cref="GuiComposer" /> to add common GUI elements
     /// with less boilerplate.
     /// </summary>
     public static class GuiComposerSlotExtensions

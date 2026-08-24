@@ -11,6 +11,8 @@ namespace ArcanumLib.Assets;
 /// indexes them by a key and exposes the merged registry with source metadata.
 /// The registry can be reloaded after assets change.
 /// </summary>
+/// <typeparam name="TKey">The type of the tkey value.</typeparam>
+/// <typeparam name="TValue">The type of the tvalue value.</typeparam>
 public sealed class ModAssetRegistry<TKey, TValue> where TKey : notnull
 {
     private readonly ICoreAPI _api;
@@ -33,7 +35,7 @@ public sealed class ModAssetRegistry<TKey, TValue> where TKey : notnull
     public IReadOnlyDictionary<TKey, ModAsset<TValue>> Entries => _entries;
 
     /// <summary>
-    /// Values only, keyed by the selected key. Cached and rebuilt on <see cref="Reload"/>.
+    /// Values only, keyed by the selected key. Cached and rebuilt on <see cref="Reload" />.
     /// </summary>
     public IReadOnlyDictionary<TKey, TValue> Values
     {
@@ -57,6 +59,19 @@ public sealed class ModAssetRegistry<TKey, TValue> where TKey : notnull
     /// <summary>
     /// Creates a registry and optionally loads it immediately.
     /// </summary>
+    /// <param name="api">The core API instance.</param>
+    /// <param name="assetPath">The asset path value.</param>
+    /// <param name="keySelector">The key selector value.</param>
+    /// <param name="mergeStrategy">The merge strategy value.</param>
+    /// <param name="comparer">The equality comparer.</param>
+    /// <param name="sourceModId">The source mod id value.</param>
+    /// <param name="validate">The validate value.</param>
+    /// <param name="onError">The callback to invoke.</param>
+    /// <param name="initialize">The callback to invoke.</param>
+    /// <param name="loader">The core API instance.</param>
+    /// <param name="loadImmediately">The load immediately value.</param>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="api" /> is <see langword="null" />.</exception>
+    /// <exception cref="ArgumentException">Thrown when <paramref name="assetPath" /> is invalid.</exception>
     public ModAssetRegistry(
         ICoreAPI api,
         string assetPath,
@@ -156,6 +171,9 @@ public sealed class ModAssetRegistry<TKey, TValue> where TKey : notnull
     /// <summary>
     /// Tries to get a value by key.
     /// </summary>
+    /// <param name="key">The key to look up.</param>
+    /// <param name="value">The value to set or compare.</param>
+    /// <returns>true if the operation succeeded; otherwise, false.</returns>
     public bool TryGet(TKey key, [MaybeNullWhen(false)] out TValue value)
     {
         if (_entries.TryGetValue(key, out var entry))
@@ -169,14 +187,19 @@ public sealed class ModAssetRegistry<TKey, TValue> where TKey : notnull
     }
 
     /// <summary>
-    /// Tries to get the full <see cref="ModAsset{TValue}"/> entry by key.
+    /// Tries to get the full <see cref="ModAsset{TValue}" /> entry by key.
     /// </summary>
+    /// <param name="key">The key to look up.</param>
+    /// <param name="entry">When this method returns, contains the <paramref name="entry" /> value.</param>
+    /// <returns>true if the operation succeeded; otherwise, false.</returns>
     public bool TryGetAsset(TKey key, [NotNullWhen(true)] out ModAsset<TValue>? entry)
         => _entries.TryGetValue(key, out entry);
 
     /// <summary>
     /// Gets a value by key, or <c>null</c> if not found.
     /// </summary>
+    /// <param name="key">The key to look up.</param>
+    /// <returns>The value, or null if none is found.</returns>
     public TValue? Get(TKey key)
     {
         if (_entries.TryGetValue(key, out var entry))
@@ -187,17 +210,23 @@ public sealed class ModAssetRegistry<TKey, TValue> where TKey : notnull
     /// <summary>
     /// Returns true when the registry contains the given key.
     /// </summary>
+    /// <param name="key">The key to look up.</param>
+    /// <returns>true if the specified key is contained; otherwise, false.</returns>
     public bool Contains(TKey key) => _entries.ContainsKey(key);
 
     /// <summary>
     /// Returns the mod ID that supplied the entry, or null if not found.
     /// </summary>
+    /// <param name="key">The key to look up.</param>
+    /// <returns>The source mod, or null if none is found.</returns>
     public string? GetSourceMod(TKey key)
         => _entries.TryGetValue(key, out var entry) ? entry.SourceModId : null;
 
     /// <summary>
     /// Returns the asset location of the entry, or null if not found.
     /// </summary>
+    /// <param name="key">The key to look up.</param>
+    /// <returns>The location, or null if none is found.</returns>
     public AssetLocation? GetLocation(TKey key)
         => _entries.TryGetValue(key, out var entry) ? entry.Location : null;
 
@@ -205,6 +234,20 @@ public sealed class ModAssetRegistry<TKey, TValue> where TKey : notnull
     /// Creates a registry from assets that contain collections of child definitions.
     /// For example, a file <c>config/shops.json</c> with a <c>shops</c> array.
     /// </summary>
+    /// <typeparam name="TParent">The type of the tparent value.</typeparam>
+    /// <param name="api">The core API instance.</param>
+    /// <param name="assetPath">The asset path value.</param>
+    /// <param name="childSelector">The collection of child selector values.</param>
+    /// <param name="keySelector">The key selector value.</param>
+    /// <param name="mergeStrategy">The merge strategy value.</param>
+    /// <param name="comparer">The equality comparer.</param>
+    /// <param name="sourceModId">The source mod id value.</param>
+    /// <param name="validate">The validate value.</param>
+    /// <param name="onError">The callback to invoke.</param>
+    /// <param name="initialize">The callback to invoke.</param>
+    /// <param name="loadImmediately">The load immediately value.</param>
+    /// <returns>The from children.</returns>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="childSelector" /> is <see langword="null" />.</exception>
     public static ModAssetRegistry<TKey, TValue> FromChildren<TParent>(
         ICoreAPI api,
         string assetPath,

@@ -6,9 +6,13 @@ using Vintagestory.API.MathTools;
 namespace ArcanumLib.Gui.Hud;
 
 /// <summary>
-/// Generic client-side HUD overlay that holds a <see cref="HudPanel"/> and manages
+/// Generic client-side HUD overlay that holds a <see cref="HudPanel{TSnapshot, THudDefinition, TTheme}" /> and manages
 /// open/close, theme resolution, and panel (re)creation.
 /// </summary>
+/// <typeparam name="TSnapshot">The type of the tsnapshot value.</typeparam>
+/// <typeparam name="THudDefinition">The type of the thuddefinition value.</typeparam>
+/// <typeparam name="TTheme">The type of the ttheme value.</typeparam>
+/// <typeparam name="TPanel">The type of the tpanel value.</typeparam>
 public abstract class HudDialog<TSnapshot, THudDefinition, TTheme, TPanel> : HudElement
     where TSnapshot : class, IHudSnapshot
     where THudDefinition : class
@@ -19,6 +23,7 @@ public abstract class HudDialog<TSnapshot, THudDefinition, TTheme, TPanel> : Hud
     public override string ToggleKeyCombinationCode => null!;
 
     /// <summary>The dialog should not block mouse events for the rest of the UI.</summary>
+    /// <returns>true if the operation should receive mouse events; otherwise, false.</returns>
     public override bool ShouldReceiveMouseEvents() => false;
 
     /// <summary>Current snapshot to display.</summary>
@@ -36,18 +41,22 @@ public abstract class HudDialog<TSnapshot, THudDefinition, TTheme, TPanel> : Hud
     /// <summary>Last measured panel height, used to recreate the composer on size changes.</summary>
     protected int _lastPanelHeight;
 
-    /// <summary>Dialog compositor name, used for <see cref="ICoreClientAPI.Gui.CreateCompo"/>.</summary>
+    /// <summary>Dialog compositor name, used to create a <c>GuiComposer</c>.</summary>
     protected readonly string _dialogName;
 
     /// <summary>
-    /// Creates the dialog. The <paramref name="dialogName"/> must be unique per mod.
+    /// Creates the dialog. The <paramref name="dialogName" /> must be unique per mod.
     /// </summary>
+    /// <param name="capi">The client API instance.</param>
+    /// <param name="dialogName">The dialog name value.</param>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="dialogName" /> is <see langword="null" />.</exception>
     protected HudDialog(ICoreClientAPI capi, string dialogName) : base(capi)
     {
         _dialogName = dialogName ?? throw new ArgumentNullException(nameof(dialogName));
     }
 
     /// <summary>Called when the definition for this HUD is available or changes.</summary>
+    /// <param name="definition">The definition value.</param>
     public virtual void SetDefinition(THudDefinition definition)
     {
         _definition = definition;
@@ -56,6 +65,7 @@ public abstract class HudDialog<TSnapshot, THudDefinition, TTheme, TPanel> : Hud
     }
 
     /// <summary>Called when a new snapshot is received from the server.</summary>
+    /// <param name="snapshot">The snapshot value.</param>
     public virtual void OnSnapshotReceived(TSnapshot snapshot)
     {
         if (snapshot == null) return;
@@ -76,15 +86,25 @@ public abstract class HudDialog<TSnapshot, THudDefinition, TTheme, TPanel> : Hud
     }
 
     /// <summary>Resolves the active theme for the current definition.</summary>
+    /// <returns>The resolve theme.</returns>
     protected abstract TTheme ResolveTheme();
 
     /// <summary>Returns true when the HUD should be visible for the given snapshot.</summary>
+    /// <param name="snapshot">The snapshot value.</param>
+    /// <returns>true if the operation should show; otherwise, false.</returns>
     protected abstract bool ShouldShow(TSnapshot snapshot);
 
     /// <summary>Measures the desired panel size for the current state.</summary>
+    /// <param name="snapshot">The snapshot value.</param>
+    /// <param name="definition">The definition value.</param>
+    /// <param name="theme">The theme value.</param>
+    /// <returns>The measure.</returns>
     protected abstract (int width, int height) Measure(TSnapshot snapshot, THudDefinition definition, TTheme theme);
 
     /// <summary>Creates a new panel instance with the given bounds.</summary>
+    /// <param name="capi">The client API instance.</param>
+    /// <param name="bounds">The bounds value.</param>
+    /// <returns>The panel.</returns>
     protected abstract TPanel CreatePanel(ICoreClientAPI capi, ElementBounds bounds);
 
     /// <summary>Builds or reuses the GUI composer and refreshes the panel.</summary>

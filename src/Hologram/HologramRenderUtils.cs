@@ -11,8 +11,13 @@ namespace ArcanumLib.Hologram;
 public static class HologramRenderUtils
 {
     /// <summary>
-    /// Raycasts from the eye position to the hologram and returns true if any solid block (except <paramref name="ignorePos"/>) blocks the line of sight.
+    /// Raycasts from the eye position to the hologram and returns true if any solid block (except <paramref name="ignorePos" />) blocks the line of sight.
     /// </summary>
+    /// <param name="capi">The client API instance.</param>
+    /// <param name="eyePos">The three-dimensional vector.</param>
+    /// <param name="targetPos">The three-dimensional vector.</param>
+    /// <param name="ignorePos">The block position.</param>
+    /// <returns>true if occluded; otherwise, false.</returns>
     public static bool IsOccluded(ICoreClientAPI capi, Vec3d eyePos, Vec3d targetPos, BlockPos? ignorePos)
     {
         if (capi?.World == null) return false;
@@ -36,6 +41,8 @@ public static class HologramRenderUtils
     /// <summary>
     /// Computes a distance-based scale for a projected hologram.
     /// </summary>
+    /// <param name="distance">The distance value.</param>
+    /// <returns>The compute scale.</returns>
     public static float ComputeScale(float distance)
     {
         float scale = 4f / Math.Max(1f, distance);

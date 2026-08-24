@@ -4,7 +4,7 @@ using Vintagestory.API.Client;
 namespace ArcanumLib.Gui.Hud;
 
 /// <summary>
-/// Arguments passed to an <see cref="IHudElementRenderer.Draw"/> call.
+/// Arguments passed to an <see cref="IHudElementRenderer.Draw" /> call.
 /// Provides the Cairo context, the element definition, the snapshot, the theme
 /// and the bounding rectangle to draw into.
 /// </summary>

@@ -10,23 +10,23 @@ namespace ArcanumLib.Progression
     /// <summary>
     /// Standalone pity tracker for any loot-quality system.
     /// Tracks per-player "opens since last quality drop" counters keyed by (definitionId, subKey).
-    /// Persists via <see cref="ModDataStore"/> and can migrate legacy savegame data.
+    /// Persists via <see cref="ModDataStore" /> and can migrate legacy savegame data.
     /// </summary>
     public class PityTracker : IPityProvider
     {
         /// <summary>
-        /// The current global tracker instance, backed by <see cref="ArcanumServices"/>.
+        /// The current global tracker instance, backed by <see cref="ArcanumServices" />.
         /// Setting this registers or unregisters the tracker in the shared registry.
         /// </summary>
         public static PityTracker? Current
         {
-            get => ArcanumServices.Get<PityTracker>();
+            get => ArcanumServices.Get<PityTracker>(ArcanumServiceScope.Server);
             set
             {
                 if (value == null)
-                    ArcanumServices.Unregister<PityTracker>();
+                    ArcanumServices.Unregister<PityTracker>(ArcanumServiceScope.Server);
                 else
-                    ArcanumServices.Register(value);
+                    ArcanumServices.Register(value, ArcanumServiceScope.Server);
             }
         }
 
@@ -74,6 +74,7 @@ namespace ArcanumLib.Progression
         /// <summary>
         /// Registers an additional legacy savegame key to check during initialization.
         /// </summary>
+        /// <param name="key">The key to look up.</param>
         public void AddLegacyFallbackKey(string key)
         {
             if (string.IsNullOrWhiteSpace(key)) return;
@@ -115,6 +116,7 @@ namespace ArcanumLib.Progression
         /// <summary>
         /// Registers a pity definition. Existing definition with the same id is replaced.
         /// </summary>
+        /// <param name="def">The def value.</param>
         public void RegisterDefinition(PityDefinition def)
         {
             if (def == null || string.IsNullOrWhiteSpace(def.definitionId)) return;
@@ -128,6 +130,11 @@ namespace ArcanumLib.Progression
         /// <summary>
         /// Convenience helper to register tiered pity definitions.
         /// </summary>
+        /// <param name="prefix">The prefix value.</param>
+        /// <param name="tier3Cap">The tier 3 cap value.</param>
+        /// <param name="tier4Cap">The tier 4 cap value.</param>
+        /// <param name="tier3NameKey">The tier 3 name key value.</param>
+        /// <param name="tier4NameKey">The tier 4 name key value.</param>
         public void RegisterPityDefinitions(string prefix, int tier3Cap, int tier4Cap, string? tier3NameKey = null, string? tier4NameKey = null)
         {
             if (tier3Cap <= 0 && tier4Cap <= 0) return;
@@ -150,6 +157,9 @@ namespace ArcanumLib.Progression
         /// <summary>
         /// Try to get a registered pity definition.
         /// </summary>
+        /// <param name="definitionId">The definition id value.</param>
+        /// <param name="definition">When this method returns, contains the <paramref name="definition" /> value.</param>
+        /// <returns>true if the operation succeeded; otherwise, false.</returns>
         public bool TryGetDefinition(string definitionId, out PityDefinition? definition)
         {
             lock (_syncLock)
@@ -161,6 +171,9 @@ namespace ArcanumLib.Progression
         /// <summary>
         /// Records an open. Resets counters for all quality tiers &lt;= rolledQuality, increments for higher tiers.
         /// </summary>
+        /// <param name="playerUid">The unique player identifier.</param>
+        /// <param name="definitionId">The definition id value.</param>
+        /// <param name="rolledQuality">The rolled quality value.</param>
         public void RecordOpen(string playerUid, string definitionId, int rolledQuality)
         {
             if (string.IsNullOrWhiteSpace(playerUid) || string.IsNullOrWhiteSpace(definitionId)) return;
@@ -194,6 +207,9 @@ namespace ArcanumLib.Progression
         /// <summary>
         /// Returns the guaranteed quality tier index, or 0 if none.
         /// </summary>
+        /// <param name="playerUid">The unique player identifier.</param>
+        /// <param name="definitionId">The definition id value.</param>
+        /// <returns>The guaranteed quality.</returns>
         public int GetGuaranteedQuality(string playerUid, string definitionId)
         {
             if (string.IsNullOrWhiteSpace(playerUid) || string.IsNullOrWhiteSpace(definitionId)) return 0;
@@ -215,6 +231,9 @@ namespace ArcanumLib.Progression
         /// <summary>
         /// Get pity counters for a player/definition, or null if not tracked.
         /// </summary>
+        /// <param name="playerUid">The unique player identifier.</param>
+        /// <param name="definitionId">The definition id value.</param>
+        /// <returns>The counters, or null if none is found.</returns>
         public PityCounters? GetCounters(string playerUid, string definitionId)
         {
             if (string.IsNullOrWhiteSpace(playerUid) || string.IsNullOrWhiteSpace(definitionId)) return null;
@@ -237,6 +256,7 @@ namespace ArcanumLib.Progression
         /// <param name="playerUid">The player UID.</param>
         /// <param name="definitionId">The pity definition id.</param>
         /// <param name="qualityTierIndex">Optional: return opens until this specific tier. If omitted, returns the lowest remaining across all rules.</param>
+        /// <returns>The opens until guarantee.</returns>
         public int GetOpensUntilGuarantee(string playerUid, string definitionId, int qualityTierIndex = -1)
         {
             if (string.IsNullOrWhiteSpace(playerUid) || string.IsNullOrWhiteSpace(definitionId)) return -1;
@@ -281,6 +301,7 @@ namespace ArcanumLib.Progression
         /// <summary>
         /// Returns all registered definition IDs.
         /// </summary>
+        /// <returns>A collection of definition ids values.</returns>
         public IEnumerable<string> GetDefinitionIds()
         {
             lock (_syncLock)
@@ -292,6 +313,7 @@ namespace ArcanumLib.Progression
         /// <summary>
         /// Removes all pity counters for a player.
         /// </summary>
+        /// <param name="playerUid">The unique player identifier.</param>
         public void ResetPlayerData(string playerUid)
         {
             if (string.IsNullOrWhiteSpace(playerUid)) return;

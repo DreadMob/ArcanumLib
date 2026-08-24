@@ -13,13 +13,13 @@ public enum ActionConditionType
 {
     /// <summary>Always true. Useful for debugging.</summary>
     Always,
-    /// <summary>Checks a numeric value from <see cref="ActionContext.Extra"/> against a minimum.</summary>
+    /// <summary>Checks a numeric value from <see cref="ActionContext.Extra" /> against a minimum.</summary>
     MinValue,
-    /// <summary>Checks a numeric value from <see cref="ActionContext.Extra"/> against a maximum.</summary>
+    /// <summary>Checks a numeric value from <see cref="ActionContext.Extra" /> against a maximum.</summary>
     MaxValue,
-    /// <summary>Checks that a key exists in <see cref="ActionContext.Extra"/>.</summary>
+    /// <summary>Checks that a key exists in <see cref="ActionContext.Extra" />.</summary>
     HasKey,
-    /// <summary>Checks that a string value in <see cref="ActionContext.Extra"/> equals the expected value.</summary>
+    /// <summary>Checks that a string value in <see cref="ActionContext.Extra" /> equals the expected value.</summary>
     Equals,
     /// <summary>Checks the player has the given privilege.</summary>
     Permission,
@@ -32,7 +32,7 @@ public enum ActionConditionType
 }
 
 /// <summary>
-/// A declarative condition attached to an <see cref="ActionDescriptor"/>.
+/// A declarative condition attached to an <see cref="ActionDescriptor" />.
 /// Evaluated before the action handler runs.
 /// </summary>
 public class ActionCondition
@@ -41,7 +41,7 @@ public class ActionCondition
     [JsonProperty("type")]
     public ActionConditionType Type { get; set; } = ActionConditionType.Always;
 
-    /// <summary>The key in <see cref="ActionContext.Extra"/> to check.</summary>
+    /// <summary>The key in <see cref="ActionContext.Extra" /> to check.</summary>
     [JsonProperty("key")]
     public string? Key { get; set; }
 
@@ -56,6 +56,8 @@ public class ActionCondition
     /// <summary>
     /// Evaluates the condition against the given context.
     /// </summary>
+    /// <param name="context">The operation context.</param>
+    /// <returns>true if the operation succeeds; otherwise, false.</returns>
     public bool Evaluate(ActionContext context)
     {
         if (context == null) return false;

@@ -3,7 +3,7 @@ using System.Collections.Generic;
 namespace ArcanumLib.Common
 {
     /// <summary>
-    /// Persistent per-player playtime data used by <see cref="PlaytimeTracker"/>.
+    /// Persistent per-player playtime data used by <see cref="PlaytimeTracker" />.
     /// </summary>
     public class PlaytimeData
     {

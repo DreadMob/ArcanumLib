@@ -8,7 +8,7 @@ using Vintagestory.API.Common.Entities;
 namespace ArcanumLib.Effects
 {
     /// <summary>
-    /// The result of an <see cref="StatusEffectContainer.Apply"/> call.
+    /// The result of an <see cref="StatusEffectContainer.Apply" /> call.
     /// </summary>
     internal enum StatusEffectApplyResult
     {
@@ -28,6 +28,10 @@ namespace ArcanumLib.Effects
         private readonly List<StatusEffectInstance> _instances = new();
         private readonly Func<long> _nextId;
 
+        /// <summary>Performs the status effect container operation.</summary>
+        /// <param name="entity">The entity.</param>
+        /// <param name="nextId">The next id value.</param>
+        /// <exception cref="ArgumentNullException">Thrown when <paramref name="entity" /> is <see langword="null" />.</exception>
         public StatusEffectContainer(Entity entity, Func<long> nextId)
         {
             if (entity == null) throw new ArgumentNullException(nameof(entity));
@@ -46,13 +50,21 @@ namespace ArcanumLib.Effects
         /// </summary>
         public Entity? Entity => _entityRef.TryGetTarget(out var e) ? e : null;
 
+        /// <summary>Gets a value indicating whether is empty.</summary>
         public bool IsEmpty => _instances.Count == 0;
 
+        /// <summary>Gets the instances.</summary>
         public IReadOnlyList<StatusEffectInstance> Instances => _instances;
 
         /// <summary>
         /// Applies an effect to the entity according to the effect's stack mode.
         /// </summary>
+        /// <param name="effect">The effect value.</param>
+        /// <param name="durationMs">The duration ms value.</param>
+        /// <param name="data">The associated data.</param>
+        /// <returns>The apply.</returns>
+        /// <exception cref="ArgumentNullException">Thrown when <paramref name="effect" /> is <see langword="null" />.</exception>
+        /// <exception cref="ArgumentOutOfRangeException">Thrown when a argument out of range occurs.</exception>
         public (StatusEffectInstance? instance, StatusEffectApplyResult result, StatusEffectInstance? oldInstance) Apply(
             IStatusEffect effect, float durationMs, object? data)
         {
@@ -105,6 +117,8 @@ namespace ArcanumLib.Effects
         /// <summary>
         /// Removes all instances with the given effect code.
         /// </summary>
+        /// <param name="code">The code value.</param>
+        /// <returns>A collection of remove by code values.</returns>
         public IReadOnlyList<StatusEffectInstance> RemoveByCode(string code)
         {
             var removed = _instances.Where(i => i.Code == code).ToList();
@@ -118,6 +132,8 @@ namespace ArcanumLib.Effects
         /// <summary>
         /// Removes all instances matching the given category.
         /// </summary>
+        /// <param name="category">The category value.</param>
+        /// <returns>A collection of remove by category values.</returns>
         public IReadOnlyList<StatusEffectInstance> RemoveByCategory(EffectCategory category)
         {
             if (category == EffectCategory.None)
@@ -134,6 +150,8 @@ namespace ArcanumLib.Effects
         /// <summary>
         /// Removes the instance with the given id.
         /// </summary>
+        /// <param name="id">The identifier.</param>
+        /// <returns>The remove by id, or null if none is found.</returns>
         public StatusEffectInstance? RemoveById(long id)
         {
             var index = _instances.FindIndex(i => i.Id == id);
@@ -147,6 +165,7 @@ namespace ArcanumLib.Effects
         /// <summary>
         /// Removes all active effects and returns them.
         /// </summary>
+        /// <returns>A collection of remove all values.</returns>
         public IReadOnlyList<StatusEffectInstance> RemoveAll()
         {
             var removed = _instances.ToList();
@@ -157,6 +176,8 @@ namespace ArcanumLib.Effects
         /// <summary>
         /// Ticks all instances, returning expired and death-removed instances separately.
         /// </summary>
+        /// <param name="dt">The elapsed time in seconds.</param>
+        /// <returns>The tick.</returns>
         public StatusEffectTickResult Tick(float dt)
         {
             var expired = new List<StatusEffectInstance>();
@@ -214,7 +235,7 @@ namespace ArcanumLib.Effects
     }
 
     /// <summary>
-    /// Result of a <see cref="StatusEffectContainer.Tick"/> call.
+    /// Result of a <see cref="StatusEffectContainer.Tick" /> call.
     /// </summary>
     internal readonly struct StatusEffectTickResult
     {
@@ -233,6 +254,10 @@ namespace ArcanumLib.Effects
         /// </summary>
         public IReadOnlyList<StatusEffectInstance> Alive { get; }
 
+        /// <summary>Performs the status effect tick result operation.</summary>
+        /// <param name="expired">The collection of expired values.</param>
+        /// <param name="removedByDeath">The collection of removed by death values.</param>
+        /// <param name="alive">The collection of alive values.</param>
         public StatusEffectTickResult(IReadOnlyList<StatusEffectInstance> expired, IReadOnlyList<StatusEffectInstance> removedByDeath, IReadOnlyList<StatusEffectInstance> alive)
         {
             Expired = expired;

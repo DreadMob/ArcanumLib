@@ -14,6 +14,10 @@ namespace ArcanumLib.Gui.Icons
         /// The caller is responsible for setting the source color on the Cairo context
         /// before calling this method.
         /// </summary>
+        /// <param name="ctx">The ctx value.</param>
+        /// <param name="cx">The cx value.</param>
+        /// <param name="cy">The cy value.</param>
+        /// <param name="radius">The radius.</param>
         void Draw(Context ctx, double cx, double cy, double radius);
 
         /// <summary>
@@ -21,25 +25,46 @@ namespace ArcanumLib.Gui.Icons
         /// Default implementation forwards to the colorless overload so existing
         /// renderers continue to work without modification.
         /// </summary>
+        /// <param name="ctx">The ctx value.</param>
+        /// <param name="cx">The cx value.</param>
+        /// <param name="cy">The cy value.</param>
+        /// <param name="radius">The radius.</param>
+        /// <param name="color">The color value.</param>
         void Draw(Context ctx, double cx, double cy, double radius, RGBA color)
             => Draw(ctx, cx, cy, radius);
     }
 
     /// <summary>
     /// Convenience base class for vector icons that always use the explicit color.
-    /// Subclasses only need to override <see cref="DrawColored"/>.
-    /// The colorless <see cref="Draw(Context, double, double, double)"/> overload
+    /// Subclasses only need to override <see cref="DrawColored" />.
+    /// The colorless <see cref="Draw(Context, double, double, double)" /> overload
     /// forwards with <c>default(RGBA)</c>.
     /// </summary>
     public abstract class VectorIconBase : ICustomIconRenderer
     {
         /// <summary>Draw the icon using the provided color for strokes and fills.</summary>
+        /// <param name="ctx">The ctx value.</param>
+        /// <param name="cx">The cx value.</param>
+        /// <param name="cy">The cy value.</param>
+        /// <param name="radius">The radius.</param>
+        /// <param name="color">The color value.</param>
         public abstract void DrawColored(Context ctx, double cx, double cy, double radius, RGBA color);
 
+        /// <summary>Performs the draw operation.</summary>
+        /// <param name="ctx">The ctx value.</param>
+        /// <param name="cx">The cx value.</param>
+        /// <param name="cy">The cy value.</param>
+        /// <param name="radius">The radius.</param>
+        /// <param name="color">The color value.</param>
         /// <inheritdoc />
         public void Draw(Context ctx, double cx, double cy, double radius, RGBA color)
             => DrawColored(ctx, cx, cy, radius, color);
 
+        /// <summary>Performs the draw operation.</summary>
+        /// <param name="ctx">The ctx value.</param>
+        /// <param name="cx">The cx value.</param>
+        /// <param name="cy">The cy value.</param>
+        /// <param name="radius">The radius.</param>
         /// <inheritdoc />
         public void Draw(Context ctx, double cx, double cy, double radius)
             => DrawColored(ctx, cx, cy, radius, default);

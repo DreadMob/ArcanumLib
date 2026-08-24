@@ -8,10 +8,11 @@ namespace ArcanumLib.Data
     /// Resolves a per-entity cooldown multiplier (e.g. from a difficulty or tier attribute).
     /// </summary>
     /// <param name="entity">Entity whose multiplier is being resolved.</param>
+    /// <returns>The cooldown multiplier.</returns>
     public delegate double CooldownMultiplier(Entity entity);
 
     /// <summary>
-    /// Tracks per-entity cooldowns in <see cref="Entity.WatchedAttributes"/>.
+    /// Tracks per-entity cooldowns in <see cref="Entity.WatchedAttributes" />.
     /// Cooldowns are persisted across chunk unloads and survive server restarts
     /// because they are stored as milliseconds in the entity's attribute tree.
     /// </summary>
@@ -25,13 +26,19 @@ namespace ArcanumLib.Data
         /// <param name="key">Unique attribute key, e.g. "mymod:ability:lastStartMs".</param>
         /// <param name="durationSeconds">Cooldown length in seconds.</param>
         /// <param name="multiplier">Optional multiplier applied to the duration. Defaults to 1.0.</param>
+        /// <returns>true if ready; otherwise, false.</returns>
         public static bool IsReady(this Entity entity, string key, double durationSeconds, double multiplier = 1.0)
             => IsReady(entity, key, durationSeconds, null, multiplier);
 
         /// <summary>
         /// Returns true if the cooldown has never started or if the given duration has passed.
-        /// The multiplier is resolved by <paramref name="multiplierFactory"/> when a value is needed.
+        /// The multiplier is resolved by <paramref name="multiplierFactory" /> when a value is needed.
         /// </summary>
+        /// <param name="entity">The entity.</param>
+        /// <param name="key">The key to look up.</param>
+        /// <param name="durationSeconds">The duration seconds value.</param>
+        /// <param name="multiplierFactory">The multiplier factory value.</param>
+        /// <returns>true if ready; otherwise, false.</returns>
         public static bool IsReady(this Entity entity, string key, double durationSeconds, CooldownMultiplier? multiplierFactory)
             => IsReady(entity, key, durationSeconds, multiplierFactory, 1.0);
 
@@ -64,6 +71,8 @@ namespace ArcanumLib.Data
         /// <summary>
         /// Stores the current time as the cooldown start for the given key.
         /// </summary>
+        /// <param name="entity">The entity.</param>
+        /// <param name="key">The key to look up.</param>
         public static void MarkCooldownStart(this Entity entity, string key)
         {
             if (entity?.Api?.World is null || entity.WatchedAttributes is null) return;
@@ -79,12 +88,22 @@ namespace ArcanumLib.Data
         /// <summary>
         /// Returns the remaining cooldown time in milliseconds, or 0 if ready.
         /// </summary>
+        /// <param name="entity">The entity.</param>
+        /// <param name="key">The key to look up.</param>
+        /// <param name="durationSeconds">The duration seconds value.</param>
+        /// <param name="multiplier">The multiplier value.</param>
+        /// <returns>The remaining cooldown ms.</returns>
         public static long GetRemainingCooldownMs(this Entity entity, string key, double durationSeconds, double multiplier = 1.0)
             => GetRemainingCooldownMs(entity, key, durationSeconds, null, multiplier);
 
         /// <summary>
         /// Returns the remaining cooldown time in milliseconds using a multiplier factory.
         /// </summary>
+        /// <param name="entity">The entity.</param>
+        /// <param name="key">The key to look up.</param>
+        /// <param name="durationSeconds">The duration seconds value.</param>
+        /// <param name="multiplierFactory">The multiplier factory value.</param>
+        /// <returns>The remaining cooldown ms.</returns>
         public static long GetRemainingCooldownMs(this Entity entity, string key, double durationSeconds, CooldownMultiplier? multiplierFactory)
             => GetRemainingCooldownMs(entity, key, durationSeconds, multiplierFactory, 1.0);
 
@@ -118,12 +137,22 @@ namespace ArcanumLib.Data
         /// <summary>
         /// Returns the cooldown progress as a fraction from 0.0 (just started) to 1.0 (ready).
         /// </summary>
+        /// <param name="entity">The entity.</param>
+        /// <param name="key">The key to look up.</param>
+        /// <param name="durationSeconds">The duration seconds value.</param>
+        /// <param name="multiplier">The multiplier value.</param>
+        /// <returns>The cooldown progress.</returns>
         public static float GetCooldownProgress(this Entity entity, string key, double durationSeconds, double multiplier = 1.0)
             => GetCooldownProgress(entity, key, durationSeconds, null, multiplier);
 
         /// <summary>
         /// Returns the cooldown progress using a multiplier factory.
         /// </summary>
+        /// <param name="entity">The entity.</param>
+        /// <param name="key">The key to look up.</param>
+        /// <param name="durationSeconds">The duration seconds value.</param>
+        /// <param name="multiplierFactory">The multiplier factory value.</param>
+        /// <returns>The cooldown progress.</returns>
         public static float GetCooldownProgress(this Entity entity, string key, double durationSeconds, CooldownMultiplier? multiplierFactory)
             => GetCooldownProgress(entity, key, durationSeconds, multiplierFactory, 1.0);
 
@@ -164,8 +193,10 @@ namespace ArcanumLib.Data
         }
 
         /// <summary>
-        /// Resets the cooldown so that the next <see cref="IsReady"/> call returns true.
+        /// Resets the cooldown so that the next <see cref="IsReady(Vintagestory.API.Common.Entities.Entity, string, double, double)" /> call returns true.
         /// </summary>
+        /// <param name="entity">The entity.</param>
+        /// <param name="key">The key to look up.</param>
         public static void ResetCooldown(this Entity entity, string key)
         {
             if (entity?.WatchedAttributes is null) return;

@@ -19,11 +19,11 @@ namespace ArcanumLib.Gui.Controls
 
         /// <summary>
         /// Optional localization prefix for decoration strings. The client resolves these keys:
-        ///   {decorPrefix}-decor-divider   — section separator line
-        ///   {decorPrefix}-decor-header    — symbol prefix before section title
-        ///   {decorPrefix}-decor-entry     — bullet marker for normal entries
-        ///   {decorPrefix}-decor-active    — bullet marker for active entries
-        ///   {decorPrefix}-decor-sub       — sub-item marker (for nested lines)
+        /// {decorPrefix}-decor-divider   — section separator line
+        /// {decorPrefix}-decor-header    — symbol prefix before section title
+        /// {decorPrefix}-decor-entry     — bullet marker for normal entries
+        /// {decorPrefix}-decor-active    — bullet marker for active entries
+        /// {decorPrefix}-decor-sub       — sub-item marker (for nested lines)
         /// If null or keys missing, client falls back to built-in defaults.
         /// Consumers provide decoration via their lang files.
         /// </summary>

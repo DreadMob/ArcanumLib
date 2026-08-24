@@ -4,21 +4,22 @@ using System.Collections.Generic;
 namespace ArcanumLib.Gui.Hud;
 
 /// <summary>
-/// Resolves a named <typeparamref name="TTheme"/> by merging a custom override
+/// Resolves a named theme by merging a custom override
 /// over an optional built-in theme and a fallback base theme.
 /// </summary>
 public static class HudThemeResolver
 {
     /// <summary>
     /// Resolves a theme by name. Custom themes take priority over built-ins;
-    /// built-in themes are merged over the <paramref name="baseTheme"/> so that
+    /// built-in themes are merged over the <paramref name="baseTheme" /> so that
     /// unspecified fields fall back to the defaults.
     /// </summary>
+    /// <typeparam name="TTheme">The type of the ttheme value.</typeparam>
     /// <param name="name">Theme name to resolve.</param>
     /// <param name="customThemes">Optional dictionary of JSON/custom themes keyed by name.</param>
     /// <param name="builtInFactory">Optional factory that returns a built-in theme for a name.</param>
     /// <param name="baseTheme">Fallback theme used when the name is unknown or no theme matched.</param>
-    /// <returns>The resolved theme, or <paramref name="baseTheme"/> if no theme was found.</returns>
+    /// <returns>The resolved theme, or <paramref name="baseTheme" /> if no theme was found.</returns>
     public static TTheme Resolve<TTheme>(
         string name,
         Dictionary<string, TTheme>? customThemes,

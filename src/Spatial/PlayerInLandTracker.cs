@@ -36,9 +36,14 @@ public class PlayerInLandTracker : ModSystem
     /// <summary>Raised whenever the player changes from one claim to another, including entering null.</summary>
     public static event Action<string, string?, string?>? PlayerClaimChanged;
 
+    /// <summary>Returns a value indicating whether the operation should load.</summary>
+    /// <param name="forSide">The for side value.</param>
+    /// <returns>true if the operation should load; otherwise, false.</returns>
     /// <inheritdoc />
     public override bool ShouldLoad(EnumAppSide forSide) => forSide == EnumAppSide.Server;
 
+    /// <summary>Performs the start server side operation.</summary>
+    /// <param name="api">The server API instance.</param>
     /// <inheritdoc />
     public override void StartServerSide(ICoreServerAPI api)
     {
@@ -49,6 +54,7 @@ public class PlayerInLandTracker : ModSystem
         api.Event.PlayerLeave += OnPlayerLeave;
     }
 
+    /// <summary>Releases all resources used by the current object.</summary>
     /// <inheritdoc />
     public override void Dispose()
     {
@@ -71,6 +77,8 @@ public class PlayerInLandTracker : ModSystem
     /// player is not inside any claim or is offline. The value is cached and
     /// refreshed by the tracker tick.
     /// </summary>
+    /// <param name="playerUid">The unique player identifier.</param>
+    /// <returns>The player claim, or null if none is found.</returns>
     public static string? GetPlayerClaim(string playerUid)
     {
         if (_instance == null) return null;
@@ -85,6 +93,9 @@ public class PlayerInLandTracker : ModSystem
     /// <summary>
     /// Returns true if the player is currently inside the named claim.
     /// </summary>
+    /// <param name="playerUid">The unique player identifier.</param>
+    /// <param name="claimName">The claim name value.</param>
+    /// <returns>true if player in claim; otherwise, false.</returns>
     public static bool IsPlayerInClaim(string playerUid, string? claimName)
     {
         if (_instance == null || string.IsNullOrWhiteSpace(claimName)) return false;

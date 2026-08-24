@@ -24,6 +24,8 @@ public static class EffectResistanceStore
     /// <summary>
     /// Adds a full immunity to effects with the given tag.
     /// </summary>
+    /// <param name="entity">The entity.</param>
+    /// <param name="tag">The tag value.</param>
     public static void AddImmunity(Entity entity, string tag)
     {
         if (entity == null || string.IsNullOrWhiteSpace(tag)) return;
@@ -34,6 +36,8 @@ public static class EffectResistanceStore
     /// <summary>
     /// Removes an immunity by tag.
     /// </summary>
+    /// <param name="entity">The entity.</param>
+    /// <param name="tag">The tag value.</param>
     public static void RemoveImmunity(Entity entity, string tag)
     {
         if (entity == null || string.IsNullOrWhiteSpace(tag)) return;
@@ -45,6 +49,9 @@ public static class EffectResistanceStore
     /// Adds a resistance (0..1) to effects with the given tag.
     /// 0 = no resistance, 0.5 = 50% duration reduction, 1 = full immunity equivalent.
     /// </summary>
+    /// <param name="entity">The entity.</param>
+    /// <param name="tag">The tag value.</param>
+    /// <param name="amount">The amount value.</param>
     public static void AddResistance(Entity entity, string tag, float amount)
     {
         if (entity == null || string.IsNullOrWhiteSpace(tag)) return;
@@ -56,6 +63,8 @@ public static class EffectResistanceStore
     /// <summary>
     /// Removes a resistance by tag.
     /// </summary>
+    /// <param name="entity">The entity.</param>
+    /// <param name="tag">The tag value.</param>
     public static void RemoveResistance(Entity entity, string tag)
     {
         if (entity == null || string.IsNullOrWhiteSpace(tag)) return;
@@ -66,6 +75,9 @@ public static class EffectResistanceStore
     /// <summary>
     /// Returns true if the entity is fully immune to the given tag.
     /// </summary>
+    /// <param name="entity">The entity.</param>
+    /// <param name="tag">The tag value.</param>
+    /// <returns>true if immune; otherwise, false.</returns>
     public static bool IsImmune(Entity entity, string tag)
     {
         if (entity == null || string.IsNullOrWhiteSpace(tag)) return false;
@@ -76,6 +88,9 @@ public static class EffectResistanceStore
     /// <summary>
     /// Returns true if the entity is immune to any of the effect's tags.
     /// </summary>
+    /// <param name="entity">The entity.</param>
+    /// <param name="effect">The effect value.</param>
+    /// <returns>true if immune to effect; otherwise, false.</returns>
     public static bool IsImmuneToEffect(Entity entity, IStatusEffect effect)
     {
         if (entity == null || effect == null) return false;
@@ -94,6 +109,9 @@ public static class EffectResistanceStore
     /// Returns the effective duration multiplier for an effect (0..1).
     /// 1.0 = full duration, 0.5 = half duration, 0 = blocked.
     /// </summary>
+    /// <param name="entity">The entity.</param>
+    /// <param name="effect">The effect value.</param>
+    /// <returns>The duration multiplier.</returns>
     public static float GetDurationMultiplier(Entity entity, IStatusEffect effect)
     {
         if (entity == null || effect == null) return 1f;
@@ -118,6 +136,7 @@ public static class EffectResistanceStore
     /// <summary>
     /// Clears all immunities and resistances for the entity.
     /// </summary>
+    /// <param name="entity">The entity.</param>
     public static void Clear(Entity entity)
     {
         if (entity == null) return;

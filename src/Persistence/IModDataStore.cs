@@ -34,7 +34,7 @@ namespace ArcanumLib.Persistence
         bool IsLoaded { get; }
 
         /// <summary>
-        /// Whether the live data has changed since the last <see cref="Save"/>.
+        /// Whether the live data has changed since the last <see cref="Save" />.
         /// </summary>
         bool IsDirty { get; }
 
@@ -44,13 +44,13 @@ namespace ArcanumLib.Persistence
         void Load();
 
         /// <summary>
-        /// Saves the current data into the current savegame if <see cref="IsDirty"/> is true.
+        /// Saves the current data into the current savegame if <see cref="IsDirty" /> is true.
         /// Resets the dirty flag on success.
         /// </summary>
         void Save();
 
         /// <summary>
-        /// Marks the store as dirty so the next <see cref="Save"/> will persist the data.
+        /// Marks the store as dirty so the next <see cref="Save" /> will persist the data.
         /// </summary>
         void MarkDirty();
     }
@@ -68,7 +68,7 @@ namespace ArcanumLib.Persistence
 
         /// <summary>
         /// Registers a migration from one schema version to the next.
-        /// Migrations must form a continuous chain from the stored version up to <see cref="DataVersion"/>.
+        /// Migrations must form a continuous chain from the stored version up to the current data version.
         /// </summary>
         /// <param name="fromVersion">The source schema version.</param>
         /// <param name="migration">A function that transforms the previous JSON payload into the next version.</param>

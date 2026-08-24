@@ -7,7 +7,7 @@ using Vintagestory.API.Client;
 namespace ArcanumLib.Gui.Controls;
 
 /// <summary>
-/// Static icon element that renders an asset from <see cref="ImageIconCache"/>.
+/// Static icon element that renders an asset from <see cref="ImageIconCache" />.
 /// Supports clipping shapes (circle, hexagon, diamond) and optional tinting.
 /// </summary>
 public class ArcanumIcon : GuiElement
@@ -19,8 +19,14 @@ public class ArcanumIcon : GuiElement
     private readonly bool _tint;
 
     /// <summary>
-    /// Creates a static icon element that renders an asset from <see cref="ImageIconCache"/>.
+    /// Creates a static icon element that renders an asset from <see cref="ImageIconCache" />.
     /// </summary>
+    /// <param name="capi">The client API instance.</param>
+    /// <param name="bounds">The bounds value.</param>
+    /// <param name="assetPath">The asset path value.</param>
+    /// <param name="color">The color value.</param>
+    /// <param name="fit">The fit value.</param>
+    /// <param name="tint">The tint value.</param>
     public ArcanumIcon(
         ICoreClientAPI capi,
         ElementBounds bounds,
@@ -38,6 +44,8 @@ public class ArcanumIcon : GuiElement
     }
 
     /// <summary>Renders the clipped and tinted icon, or a placeholder if the asset fails to load.</summary>
+    /// <param name="ctx">The ctx value.</param>
+    /// <param name="surface">The surface value.</param>
     public override void ComposeElements(Context ctx, ImageSurface surface)
     {
         if (string.IsNullOrWhiteSpace(_assetPath) || _radius <= 0)
@@ -57,11 +65,20 @@ public class ArcanumIcon : GuiElement
     }
 }
 
+/// <summary>Represents arcanum icon composer helpers.</summary>
 public static class ArcanumIconComposerHelpers
 {
     /// <summary>
     /// Adds a static icon element.
     /// </summary>
+    /// <param name="composer">The composer value.</param>
+    /// <param name="assetPath">The asset path value.</param>
+    /// <param name="bounds">The bounds value.</param>
+    /// <param name="color">The color value.</param>
+    /// <param name="fit">The fit value.</param>
+    /// <param name="tint">The tint value.</param>
+    /// <param name="key">The key to look up.</param>
+    /// <returns>The add arcanum icon.</returns>
     public static GuiComposer AddArcanumIcon(
         this GuiComposer composer,
         string assetPath,

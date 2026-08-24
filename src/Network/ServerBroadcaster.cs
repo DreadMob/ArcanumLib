@@ -8,7 +8,7 @@ namespace ArcanumLib.Network;
 
 /// <summary>
 /// Helper for sending packets to all online players with optional filtering.
-/// Works with any <see cref="IServerNetworkChannel"/> and supports per-player
+/// Works with any <see cref="IServerNetworkChannel" /> and supports per-player
 /// predicates, radius-based filtering, and exclusion lists.
 /// </summary>
 public static class ServerBroadcaster
@@ -40,6 +40,11 @@ public static class ServerBroadcaster
     /// <summary>
     /// Sends a packet to all online players matching the given predicate.
     /// </summary>
+    /// <typeparam name="T">The type of the t value.</typeparam>
+    /// <param name="sapi">The server API instance.</param>
+    /// <param name="channel">The channel value.</param>
+    /// <param name="packet">The packet value.</param>
+    /// <param name="predicate">The server player.</param>
     public static void BroadcastPacket<T>(
         ICoreServerAPI sapi,
         IServerNetworkChannel channel,
@@ -61,6 +66,7 @@ public static class ServerBroadcaster
     /// <summary>
     /// Sends a packet to all online players within the given radius of a position.
     /// </summary>
+    /// <typeparam name="T">The type of the t value.</typeparam>
     /// <param name="sapi">The server API.</param>
     /// <param name="channel">The network channel.</param>
     /// <param name="packet">The packet to send.</param>
@@ -96,6 +102,7 @@ public static class ServerBroadcaster
     /// <summary>
     /// Sends a packet to all online players except those in the exclusion list.
     /// </summary>
+    /// <typeparam name="T">The type of the t value.</typeparam>
     /// <param name="sapi">The server API.</param>
     /// <param name="channel">The network channel.</param>
     /// <param name="packet">The packet to send.</param>
@@ -120,6 +127,7 @@ public static class ServerBroadcaster
     /// <summary>
     /// Sends a packet to all online players in the given group (by role or custom grouping).
     /// </summary>
+    /// <typeparam name="T">The type of the t value.</typeparam>
     /// <param name="sapi">The server API.</param>
     /// <param name="channel">The network channel.</param>
     /// <param name="packet">The packet to send.</param>

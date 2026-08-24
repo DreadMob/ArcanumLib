@@ -10,6 +10,8 @@ namespace ArcanumLib.Caching;
 /// a configurable time. Optionally bounded by a maximum size; when both limits apply,
 /// the oldest unused entries are removed first.
 /// </summary>
+/// <typeparam name="TKey">The type of the tkey value.</typeparam>
+/// <typeparam name="TValue">The type of the tvalue value.</typeparam>
 public sealed class TimedCache<TKey, TValue> : IDisposable
     where TKey : notnull
 {
@@ -49,6 +51,8 @@ public sealed class TimedCache<TKey, TValue> : IDisposable
     /// <summary>
     /// Adds or updates the value for the given key.
     /// </summary>
+    /// <param name="key">The key to look up.</param>
+    /// <param name="value">The value to set or compare.</param>
     public void Add(TKey key, TValue value)
     {
         _lock.EnterWriteLock();
@@ -74,6 +78,9 @@ public sealed class TimedCache<TKey, TValue> : IDisposable
     /// <summary>
     /// Tries to get the value and refreshes its last-access time on success.
     /// </summary>
+    /// <param name="key">The key to look up.</param>
+    /// <param name="value">The value to set or compare.</param>
+    /// <returns>true if the operation succeeded; otherwise, false.</returns>
     public bool TryGetValue(TKey key, out TValue? value)
     {
         _lock.EnterUpgradeableReadLock();
@@ -112,6 +119,8 @@ public sealed class TimedCache<TKey, TValue> : IDisposable
     /// <summary>
     /// Removes the key from the cache.
     /// </summary>
+    /// <param name="key">The key to look up.</param>
+    /// <returns>true if the operation succeeds; otherwise, false.</returns>
     public bool Remove(TKey key)
     {
         _lock.EnterWriteLock();
@@ -228,6 +237,7 @@ public sealed class TimedCache<TKey, TValue> : IDisposable
         }
     }
 
+    /// <summary>Releases all resources used by the current object.</summary>
     public void Dispose()
     {
         if (_disposed) return;

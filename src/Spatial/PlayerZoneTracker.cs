@@ -9,7 +9,7 @@ using Vintagestory.API.Server;
 namespace ArcanumLib.Spatial;
 
 /// <summary>
-/// Defines a 3D zone shape in a specific dimension for use with <see cref="PlayerZoneTracker"/>.
+/// Defines a 3D zone shape in a specific dimension for use with <see cref="PlayerZoneTracker" />.
 /// </summary>
 public interface IZoneShape
 {
@@ -17,18 +17,23 @@ public interface IZoneShape
     int Dimension { get; }
 
     /// <summary>Returns true if the point lies inside the zone.</summary>
+    /// <param name="point">The three-dimensional vector.</param>
+    /// <returns>true if the specified point is contained; otherwise, false.</returns>
     bool Contains(Vec3d? point);
 
     /// <summary>
     /// Distance from the point to the zone boundary. Negative or zero if inside.
     /// Positive values can be used for LOD or culling.
     /// </summary>
+    /// <param name="point">The three-dimensional vector.</param>
+    /// <returns>The distance to.</returns>
     double DistanceTo(Vec3d? point);
 
     /// <summary>
     /// Enumerates chunk coordinates that the zone's bounding box overlaps.
     /// </summary>
-    /// <param name="chunkSize">Chunk edge length, usually <see cref="GlobalConstants.ChunkSize"/>.</param>
+    /// <param name="chunkSize">Chunk edge length, usually <see cref="GlobalConstants.ChunkSize" />.</param>
+    /// <returns>A collection of chunk keys values.</returns>
     IEnumerable<BlockPos> GetChunkKeys(int chunkSize);
 }
 
@@ -40,12 +45,16 @@ public readonly record struct SphereZoneShape : IZoneShape
     /// <summary>World-space center of the sphere.</summary>
     public Vec3d Center { get; init; }
 
+    /// <summary>Gets or sets the dimension.</summary>
     /// <inheritdoc />
     public int Dimension { get; init; }
 
     /// <summary>Radius in blocks.</summary>
     public double Radius { get; init; }
 
+    /// <summary>Returns a value indicating whether the specified value is contained.</summary>
+    /// <param name="point">The three-dimensional vector.</param>
+    /// <returns>true if the specified point is contained; otherwise, false.</returns>
     /// <inheritdoc />
     public bool Contains(Vec3d? point)
     {
@@ -56,6 +65,9 @@ public readonly record struct SphereZoneShape : IZoneShape
         return dx * dx + dy * dy + dz * dz <= Radius * Radius;
     }
 
+    /// <summary>Performs the distance to operation.</summary>
+    /// <param name="point">The three-dimensional vector.</param>
+    /// <returns>The distance to.</returns>
     /// <inheritdoc />
     public double DistanceTo(Vec3d? point)
     {
@@ -66,6 +78,9 @@ public readonly record struct SphereZoneShape : IZoneShape
         return Math.Sqrt(dx * dx + dy * dy + dz * dz) - Radius;
     }
 
+    /// <summary>Gets chunk keys.</summary>
+    /// <param name="chunkSize">The chunk edge length.</param>
+    /// <returns>A collection of chunk keys values.</returns>
     /// <inheritdoc />
     public IEnumerable<BlockPos> GetChunkKeys(int chunkSize)
     {
@@ -96,9 +111,13 @@ public readonly record struct BoxZoneShape : IZoneShape
     /// <summary>Maximum corner of the box.</summary>
     public Vec3d Max { get; init; }
 
+    /// <summary>Gets or sets the dimension.</summary>
     /// <inheritdoc />
     public int Dimension { get; init; }
 
+    /// <summary>Returns a value indicating whether the specified value is contained.</summary>
+    /// <param name="point">The three-dimensional vector.</param>
+    /// <returns>true if the specified point is contained; otherwise, false.</returns>
     /// <inheritdoc />
     public bool Contains(Vec3d? point)
     {
@@ -108,6 +127,9 @@ public readonly record struct BoxZoneShape : IZoneShape
                point.Z >= Min.Z && point.Z <= Max.Z;
     }
 
+    /// <summary>Performs the distance to operation.</summary>
+    /// <param name="point">The three-dimensional vector.</param>
+    /// <returns>The distance to.</returns>
     /// <inheritdoc />
     public double DistanceTo(Vec3d? point)
     {
@@ -118,6 +140,9 @@ public readonly record struct BoxZoneShape : IZoneShape
         return Math.Sqrt(dx * dx + dy * dy + dz * dz);
     }
 
+    /// <summary>Gets chunk keys.</summary>
+    /// <param name="chunkSize">The chunk edge length.</param>
+    /// <returns>A collection of chunk keys values.</returns>
     /// <inheritdoc />
     public IEnumerable<BlockPos> GetChunkKeys(int chunkSize)
     {
@@ -167,9 +192,14 @@ public class PlayerZoneTracker : ModSystem
     /// <summary>Raised when a player leaves any tracked zone.</summary>
     public static event Action<string, IServerPlayer>? PlayerExited;
 
+    /// <summary>Returns a value indicating whether the operation should load.</summary>
+    /// <param name="forSide">The for side value.</param>
+    /// <returns>true if the operation should load; otherwise, false.</returns>
     /// <inheritdoc />
     public override bool ShouldLoad(EnumAppSide forSide) => forSide == EnumAppSide.Server;
 
+    /// <summary>Performs the start server side operation.</summary>
+    /// <param name="api">The server API instance.</param>
     /// <inheritdoc />
     public override void StartServerSide(ICoreServerAPI api)
     {
@@ -179,6 +209,7 @@ public class PlayerZoneTracker : ModSystem
         api.Event.PlayerLeave += OnPlayerLeave;
     }
 
+    /// <summary>Releases all resources used by the current object.</summary>
     /// <inheritdoc />
     public override void Dispose()
     {
@@ -201,22 +232,24 @@ public class PlayerZoneTracker : ModSystem
     }
 
     /// <summary>
-    /// Registers a new zone. If <paramref name="zoneId"/> already exists, it is replaced.
+    /// Registers a new zone. If <paramref name="zoneId" /> already exists, it is replaced.
     /// </summary>
     /// <param name="zoneId">Unique zone identifier.</param>
     /// <param name="shape">Zone geometry and dimension.</param>
     /// <param name="data">Optional arbitrary data for the consumer.</param>
     /// <param name="onEnter">Optional callback when a player enters.</param>
+    /// <param name="onStayed">Optional callback called each tick while a player remains inside.</param>
     /// <param name="onExit">Optional callback when a player leaves.</param>
-    public static void Register(string zoneId, IZoneShape shape, object? data = null, Action<IServerPlayer>? onEnter = null, Action<IServerPlayer>? onExit = null)
+    public static void Register(string zoneId, IZoneShape shape, object? data = null, Action<IServerPlayer>? onEnter = null, Action<IServerPlayer>? onStayed = null, Action<IServerPlayer>? onExit = null)
     {
         if (_instance == null) return;
-        _instance.RegisterZone(zoneId, shape, data, onEnter, onExit);
+        _instance.RegisterZone(zoneId, shape, data, onEnter, onStayed, onExit);
     }
 
     /// <summary>
     /// Removes a zone and clears all tracked players for it.
     /// </summary>
+    /// <param name="zoneId">The unique zone identifier.</param>
     public static void Unregister(string zoneId)
     {
         _instance?._Unregister(zoneId);
@@ -225,6 +258,9 @@ public class PlayerZoneTracker : ModSystem
     /// <summary>
     /// Returns true if the player is currently inside the given zone.
     /// </summary>
+    /// <param name="playerUid">The unique player identifier.</param>
+    /// <param name="zoneId">The unique zone identifier.</param>
+    /// <returns>true if player in zone; otherwise, false.</returns>
     public static bool IsPlayerInZone(string playerUid, string zoneId)
     {
         if (_instance == null) return false;
@@ -234,6 +270,8 @@ public class PlayerZoneTracker : ModSystem
     /// <summary>
     /// Returns the players currently inside a zone.
     /// </summary>
+    /// <param name="zoneId">The unique zone identifier.</param>
+    /// <returns>A collection of players in zone values.</returns>
     public static IReadOnlyList<IServerPlayer> GetPlayersInZone(string zoneId)
     {
         var result = new List<IServerPlayer>();
@@ -254,6 +292,8 @@ public class PlayerZoneTracker : ModSystem
     /// <summary>
     /// Returns the zone IDs the player is currently inside.
     /// </summary>
+    /// <param name="playerUid">The unique player identifier.</param>
+    /// <returns>A collection of zones for player values.</returns>
     public static IReadOnlyList<string> GetZonesForPlayer(string playerUid)
     {
         var result = new List<string>();
@@ -272,7 +312,7 @@ public class PlayerZoneTracker : ModSystem
         _instance?.OnTick(0);
     }
 
-    private void RegisterZone(string zoneId, IZoneShape shape, object? data, Action<IServerPlayer>? onEnter, Action<IServerPlayer>? onExit)
+    private void RegisterZone(string zoneId, IZoneShape shape, object? data, Action<IServerPlayer>? onEnter, Action<IServerPlayer>? onStayed, Action<IServerPlayer>? onExit)
     {
         _Unregister(zoneId);
 
@@ -281,6 +321,7 @@ public class PlayerZoneTracker : ModSystem
             Shape = shape,
             Data = data,
             OnEnter = onEnter,
+            OnStayed = onStayed,
             OnExit = onExit
         };
 
@@ -373,8 +414,13 @@ public class PlayerZoneTracker : ModSystem
 
         foreach (var zoneId in current)
         {
-            if (last.Contains(zoneId)) continue;
             if (!_zones.TryGetValue(zoneId, out var zone)) continue;
+
+            if (last.Contains(zoneId))
+            {
+                zone.OnStayed?.Invoke(player);
+                continue;
+            }
 
             if (!_playersInZone.TryGetValue(zoneId, out var uids))
             {
@@ -397,6 +443,13 @@ public class PlayerZoneTracker : ModSystem
 
             zone.OnExit?.Invoke(player);
             PlayerExited?.Invoke(zoneId, player);
+        }
+
+        foreach (var zoneId in current)
+        {
+            if (!last.Contains(zoneId)) continue;
+            if (!_zones.TryGetValue(zoneId, out var zone)) continue;
+            zone.OnStayed?.Invoke(player);
         }
 
         if (current.Count > 0)
@@ -427,6 +480,7 @@ public class PlayerZoneTracker : ModSystem
         public IZoneShape Shape = null!;
         public object? Data;
         public Action<IServerPlayer>? OnEnter;
+        public Action<IServerPlayer>? OnStayed;
         public Action<IServerPlayer>? OnExit;
     }
 }

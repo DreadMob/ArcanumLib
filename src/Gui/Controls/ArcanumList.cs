@@ -11,6 +11,7 @@ namespace ArcanumLib.Gui.Controls;
 /// <summary>
 /// A reusable, scrollable and selectable list of text rows.
 /// </summary>
+/// <typeparam name="T">The type of the t value.</typeparam>
 public class ArcanumList<T> : GuiElement
 {
     private readonly List<T> _items = new();
@@ -40,6 +41,14 @@ public class ArcanumList<T> : GuiElement
     /// <summary>
     /// Creates a new Arcanum list with the given row factory and selection callback.
     /// </summary>
+    /// <param name="capi">The client API instance.</param>
+    /// <param name="bounds">The bounds value.</param>
+    /// <param name="labelSelector">The label selector value.</param>
+    /// <param name="rowHeight">The row height value.</param>
+    /// <param name="onSelected">The callback to invoke.</param>
+    /// <param name="font">The font value.</param>
+    /// <param name="textPadding">The text padding value.</param>
+    /// <param name="drawZebra">The draw zebra value.</param>
     public ArcanumList(
         ICoreClientAPI capi,
         ElementBounds bounds,
@@ -63,6 +72,8 @@ public class ArcanumList<T> : GuiElement
     /// <summary>
     /// Replaces the current items and resets the scroll/selection state.
     /// </summary>
+    /// <param name="items">The collection of items values.</param>
+    /// <returns>The set items.</returns>
     public ArcanumList<T> SetItems(IEnumerable<T> items)
     {
         _items.Clear();
@@ -77,6 +88,7 @@ public class ArcanumList<T> : GuiElement
     /// <summary>
     /// Scrolls the list to the given vertical offset in content pixels.
     /// </summary>
+    /// <param name="y">The Y coordinate.</param>
     public void ScrollTo(float y)
     {
         _scrollY = GameMath.Clamp(y, 0f, MaxScroll);
@@ -86,6 +98,7 @@ public class ArcanumList<T> : GuiElement
     /// <summary>
     /// Selects an item by index.
     /// </summary>
+    /// <param name="index">The zero-based index.</param>
     public void Select(int index)
     {
         if (index < 0 || index >= _items.Count)
@@ -106,13 +119,16 @@ public class ArcanumList<T> : GuiElement
     private float MaxScroll => Math.Max(0f, TotalHeight - VisibleHeight);
     private bool ScrollNeeded => TotalHeight > VisibleHeight + 0.1f;
 
-    /// <summary>Skips static composition; the list renders dynamically in <see cref="RenderInteractiveElements"/>.</summary>
+    /// <summary>Skips static composition; the list renders dynamically in <see cref="RenderInteractiveElements" />.</summary>
+    /// <param name="ctxStatic">The ctx static value.</param>
+    /// <param name="surfaceStatic">The surface static value.</param>
     public override void ComposeElements(Context ctxStatic, ImageSurface surfaceStatic)
     {
         // The list renders dynamically in RenderInteractiveElements.
     }
 
     /// <summary>Updates hover state, regenerates the cached texture if needed, and renders the list.</summary>
+    /// <param name="deltaTime">The delta time value.</param>
     public override void RenderInteractiveElements(float deltaTime)
     {
         if (Bounds?.ParentBounds == null) return;
@@ -340,6 +356,8 @@ public class ArcanumList<T> : GuiElement
     }
 
     /// <summary>Handles mouse down for scrollbar dragging and row selection.</summary>
+    /// <param name="api">The client API instance.</param>
+    /// <param name="args">The arguments.</param>
     public override void OnMouseDownOnElement(ICoreClientAPI api, MouseEvent args)
     {
         if (Bounds == null) return;
@@ -384,6 +402,8 @@ public class ArcanumList<T> : GuiElement
     }
 
     /// <summary>Handles mouse move for scrollbar dragging and hover state.</summary>
+    /// <param name="api">The client API instance.</param>
+    /// <param name="args">The arguments.</param>
     public override void OnMouseMove(ICoreClientAPI api, MouseEvent args)
     {
         if (Bounds == null) return;
@@ -408,6 +428,8 @@ public class ArcanumList<T> : GuiElement
     }
 
     /// <summary>Handles mouse up to end scrollbar dragging.</summary>
+    /// <param name="api">The client API instance.</param>
+    /// <param name="args">The arguments.</param>
     public override void OnMouseUp(ICoreClientAPI api, MouseEvent args)
     {
         if (_dragging)
@@ -419,6 +441,8 @@ public class ArcanumList<T> : GuiElement
     }
 
     /// <summary>Handles mouse wheel scrolling inside the list.</summary>
+    /// <param name="api">The client API instance.</param>
+    /// <param name="args">The arguments.</param>
     public override void OnMouseWheel(ICoreClientAPI api, MouseWheelEventArgs args)
     {
         if (Bounds == null || !ScrollNeeded) return;
@@ -453,13 +477,22 @@ public class ArcanumList<T> : GuiElement
 }
 
 /// <summary>
-/// Composer helper for adding <see cref="ArcanumList{T}"/> instances to a <see cref="GuiComposer"/>.
+/// Composer helper for adding <see cref="ArcanumList{T}" /> instances to a <see cref="GuiComposer" />.
 /// </summary>
 public static class ArcanumListComposerHelpers
 {
     /// <summary>
     /// Adds an Arcanum scrollable list to the composer.
     /// </summary>
+    /// <typeparam name="T">The type of the t value.</typeparam>
+    /// <param name="composer">The composer value.</param>
+    /// <param name="bounds">The bounds value.</param>
+    /// <param name="labelSelector">The label selector value.</param>
+    /// <param name="rowHeight">The row height value.</param>
+    /// <param name="onSelected">The callback to invoke.</param>
+    /// <param name="font">The font value.</param>
+    /// <param name="key">The key to look up.</param>
+    /// <returns>The add arcanum list.</returns>
     public static GuiComposer AddArcanumList<T>(
         this GuiComposer composer,
         ElementBounds bounds,
@@ -480,6 +513,16 @@ public static class ArcanumListComposerHelpers
     /// <summary>
     /// Adds an Arcanum scrollable list with an initial set of items.
     /// </summary>
+    /// <typeparam name="T">The type of the t value.</typeparam>
+    /// <param name="composer">The composer value.</param>
+    /// <param name="items">The collection of items values.</param>
+    /// <param name="bounds">The bounds value.</param>
+    /// <param name="labelSelector">The label selector value.</param>
+    /// <param name="rowHeight">The row height value.</param>
+    /// <param name="onSelected">The callback to invoke.</param>
+    /// <param name="font">The font value.</param>
+    /// <param name="key">The key to look up.</param>
+    /// <returns>The add arcanum list.</returns>
     public static GuiComposer AddArcanumList<T>(
         this GuiComposer composer,
         IEnumerable<T> items,
@@ -502,6 +545,10 @@ public static class ArcanumListComposerHelpers
     /// <summary>
     /// Retrieves an Arcanum list from the composer by key.
     /// </summary>
+    /// <typeparam name="T">The type of the t value.</typeparam>
+    /// <param name="composer">The composer value.</param>
+    /// <param name="key">The key to look up.</param>
+    /// <returns>The arcanum list, or null if none is found.</returns>
     public static ArcanumList<T>? GetArcanumList<T>(this GuiComposer composer, string key)
     {
         return composer.GetElement(key) as ArcanumList<T>;

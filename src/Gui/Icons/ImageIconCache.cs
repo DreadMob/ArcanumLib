@@ -10,18 +10,23 @@ using Vintagestory.API.Common;
 
 namespace ArcanumLib.Gui.Icons;
 
+/// <summary>Defines icon fit.</summary>
 public enum IconFit
 {
+    /// <summary>None.</summary>
     None,
+    /// <summary>Circle.</summary>
     Circle,
+    /// <summary>Hexagon.</summary>
     Hexagon,
+    /// <summary>Diamond.</summary>
     Diamond
 }
 
 /// <summary>
 /// Caches and renders icon image surfaces from the Vintage Story asset pipeline.
 /// Supports PNG, JPEG, GIF, BMP, ICO, WBMP, WebP, HEIF, DNG, KTX, PKM and ASTC
-/// through <see cref="SkiaSharp.SKCodec"/>, then converts decoded pixels to a
+/// through <see cref="SkiaSharp.SKCodec" />, then converts decoded pixels to a
 /// Cairo ARGB32 surface with alpha pre-multiplication and near-transparent noise removal.
 /// </summary>
 public static class ImageIconCache
@@ -31,6 +36,8 @@ public static class ImageIconCache
     private static readonly ConcurrentDictionary<string, long> _missing = new(StringComparer.OrdinalIgnoreCase);
     private const long MissingRetryMs = 60000;
 
+    /// <summary>Performs the init operation.</summary>
+    /// <param name="capi">The client API instance.</param>
     public static void Init(ICoreClientAPI capi)
     {
         if (_capi == capi) return;
@@ -42,6 +49,7 @@ public static class ImageIconCache
         _missing.Clear();
     }
 
+    /// <summary>Releases all resources used by the current object.</summary>
     public static void Dispose()
     {
         foreach (var s in _surfaces.Values)
@@ -63,6 +71,7 @@ public static class ImageIconCache
     /// <summary>
     /// Pre-loads an icon surface so the first paint does not stall the render thread.
     /// </summary>
+    /// <param name="assetPath">The asset path value.</param>
     public static void Preload(string assetPath)
     {
         if (string.IsNullOrWhiteSpace(assetPath) || _capi == null) return;
@@ -71,6 +80,16 @@ public static class ImageIconCache
         if (surface == null) RecordMissing(assetPath);
     }
 
+    /// <summary>Attempts to draw icon and returns a value indicating whether the operation succeeded.</summary>
+    /// <param name="ctx">The ctx value.</param>
+    /// <param name="assetPath">The asset path value.</param>
+    /// <param name="cx">The cx value.</param>
+    /// <param name="cy">The cy value.</param>
+    /// <param name="radius">The radius.</param>
+    /// <param name="color">The color value.</param>
+    /// <param name="fit">The fit value.</param>
+    /// <param name="tint">The tint value.</param>
+    /// <returns>true if the operation succeeded; otherwise, false.</returns>
     public static bool TryDrawIcon(Context ctx, string assetPath, double cx, double cy, double radius, RGBA color, IconFit fit = IconFit.None, bool tint = false)
     {
         if (string.IsNullOrWhiteSpace(assetPath) || _capi == null || radius <= 0)
@@ -218,6 +237,7 @@ public static class ImageIconCache
     /// Cairo ARGB32 expects pre-multiplied color, so we pre-multiply RGB by alpha
     /// and drop isolated nearly-transparent noise pixels.
     /// </summary>
+    /// <param name="surface">The surface value.</param>
     private static void PremultiplyAndCleanSurface(ImageSurface surface)
     {
         if (surface == null || surface.Format != Format.Argb32) return;

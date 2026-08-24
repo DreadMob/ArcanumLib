@@ -7,7 +7,7 @@ using Vintagestory.API.Common.Entities;
 namespace ArcanumLib.Effects;
 
 /// <summary>
-/// Static facade for the <see cref="StatusEffectService"/>.
+/// Static facade for the <see cref="StatusEffectService" />.
 /// </summary>
 public static class StatusEffectManager
 {

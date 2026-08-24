@@ -20,60 +20,106 @@ namespace ArcanumLib.Particles
         /// <summary>Named RGBA color presets for common particle effects.</summary>
         public static class Colors
         {
+            /// <summary>Gets the fire.</summary>
             public static int Fire => ColorUtil.ToRgba(255, 255, 120, 40);
+            /// <summary>Gets the fire dark.</summary>
             public static int FireDark => ColorUtil.ToRgba(255, 180, 60, 20);
+            /// <summary>Gets the poison.</summary>
             public static int Poison => ColorUtil.ToRgba(200, 50, 200, 50);
+            /// <summary>Gets the poison green.</summary>
             public static int PoisonGreen => ColorUtil.ToRgba(255, 60, 200, 60);
+            /// <summary>Gets the poison bright.</summary>
             public static int PoisonBright => ColorUtil.ToRgba(255, 80, 255, 60);
+            /// <summary>Gets the ice.</summary>
             public static int Ice => ColorUtil.ToRgba(220, 180, 220, 255);
+            /// <summary>Gets the ice bright.</summary>
             public static int IceBright => ColorUtil.ToRgba(255, 200, 240, 255);
+            /// <summary>Gets the nile.</summary>
             public static int Nile => ColorUtil.ToRgba(220, 20, 140, 180);
+            /// <summary>Gets the nile bright.</summary>
             public static int NileBright => ColorUtil.ToRgba(255, 120, 220, 255);
+            /// <summary>Gets the nile foam.</summary>
             public static int NileFoam => ColorUtil.ToRgba(220, 200, 240, 255);
+            /// <summary>Gets the shadow.</summary>
             public static int Shadow => ColorUtil.ToRgba(200, 40, 0, 60);
+            /// <summary>Gets the shadow deep.</summary>
             public static int ShadowDeep => ColorUtil.ToRgba(180, 20, 0, 40);
+            /// <summary>Gets the lightning.</summary>
             public static int Lightning => ColorUtil.ToRgba(255, 255, 255, 180);
+            /// <summary>Gets the lightning blue.</summary>
             public static int LightningBlue => ColorUtil.ToRgba(255, 180, 200, 255);
+            /// <summary>Gets the holy.</summary>
             public static int Holy => ColorUtil.ToRgba(255, 255, 240, 200);
+            /// <summary>Gets the holy gold.</summary>
             public static int HolyGold => ColorUtil.ToRgba(255, 255, 200, 80);
+            /// <summary>Gets the blood.</summary>
             public static int Blood => ColorUtil.ToRgba(220, 180, 20, 20);
+            /// <summary>Gets the blood dark.</summary>
             public static int BloodDark => ColorUtil.ToRgba(200, 120, 10, 10);
+            /// <summary>Gets the arcane.</summary>
             public static int Arcane => ColorUtil.ToRgba(200, 120, 50, 200);
+            /// <summary>Gets the arcane bright.</summary>
             public static int ArcaneBright => ColorUtil.ToRgba(255, 160, 80, 255);
+            /// <summary>Gets the smoke.</summary>
             public static int Smoke => ColorUtil.ToRgba(140, 60, 60, 60);
+            /// <summary>Gets the smoke dark.</summary>
             public static int SmokeDark => ColorUtil.ToRgba(140, 30, 30, 30);
+            /// <summary>Gets the void.</summary>
             public static int Void => ColorUtil.ToRgba(180, 10, 0, 20);
+            /// <summary>Gets the nature.</summary>
             public static int Nature => ColorUtil.ToRgba(200, 60, 180, 40);
+            /// <summary>Gets the nature bright.</summary>
             public static int NatureBright => ColorUtil.ToRgba(255, 100, 220, 80);
+            /// <summary>Gets the chain.</summary>
             public static int Chain => ColorUtil.ToRgba(200, 150, 100, 200);
+            /// <summary>Gets the shield.</summary>
             public static int Shield => ColorUtil.ToRgba(200, 100, 150, 220);
+            /// <summary>Gets the shield gold.</summary>
             public static int ShieldGold => ColorUtil.ToRgba(220, 220, 180, 80);
+            /// <summary>Gets the white.</summary>
             public static int White => ColorUtil.ToRgba(255, 255, 255, 255);
+            /// <summary>Gets the black.</summary>
             public static int Black => ColorUtil.ToRgba(255, 10, 10, 10);
 
             // Themed color presets for common visual styles.
             // Mechanical / industrial — sparks, molten orange, smoke
+            /// <summary>Gets the mecha spark.</summary>
             public static int MechaSpark => ColorUtil.ToRgba(255, 255, 200, 60);
+            /// <summary>Gets the mecha orange.</summary>
             public static int MechaOrange => ColorUtil.ToRgba(240, 255, 140, 20);
+            /// <summary>Gets the mecha smoke.</summary>
             public static int MechaSmoke => ColorUtil.ToRgba(160, 80, 70, 60);
+            /// <summary>Gets the mecha core.</summary>
             public static int MechaCore => ColorUtil.ToRgba(255, 255, 80, 0);
 
             // Bone / skeletal — bone white, marrow green, primal rage
+            /// <summary>Gets the bone white.</summary>
             public static int BoneWhite => ColorUtil.ToRgba(220, 230, 220, 200);
+            /// <summary>Gets the bone marrow.</summary>
             public static int BoneMarrow => ColorUtil.ToRgba(200, 160, 200, 80);
+            /// <summary>Gets the bone rage.</summary>
             public static int BoneRage => ColorUtil.ToRgba(240, 200, 40, 30);
+            /// <summary>Gets the bone dust.</summary>
             public static int BoneDust => ColorUtil.ToRgba(150, 180, 170, 140);
 
             // Stone / crypt — stone grey, crypt purple, ancient dust
+            /// <summary>Gets the stone grey.</summary>
             public static int StoneGrey => ColorUtil.ToRgba(180, 120, 110, 100);
+            /// <summary>Gets the crypt purple.</summary>
             public static int CryptPurple => ColorUtil.ToRgba(200, 100, 40, 140);
+            /// <summary>Gets the crypt deep.</summary>
             public static int CryptDeep => ColorUtil.ToRgba(180, 60, 20, 100);
+            /// <summary>Gets the ancient dust.</summary>
             public static int AncientDust => ColorUtil.ToRgba(140, 140, 130, 110);
 
             // Toxic / miasma — toxic green, miasma purple, corruption
+            /// <summary>Gets the toxic green.</summary>
             public static int ToxicGreen => ColorUtil.ToRgba(220, 40, 220, 30);
+            /// <summary>Gets the miasma.</summary>
             public static int Miasma => ColorUtil.ToRgba(180, 80, 60, 120);
+            /// <summary>Gets the miasma bright.</summary>
             public static int MiasmaBright => ColorUtil.ToRgba(220, 120, 100, 180);
+            /// <summary>Gets the corruption.</summary>
             public static int Corruption => ColorUtil.ToRgba(200, 60, 30, 80);
         }
 
@@ -81,7 +127,8 @@ namespace ArcanumLib.Particles
         // BUILDER
         // ========================================
 
-        /// <summary>Creates a new <see cref="ParticleEffectBuilder"/>.</summary>
+        /// <summary>Creates a new <see cref="ParticleEffectBuilder" />.</summary>
+        /// <returns>The value.</returns>
         public static ParticleEffectBuilder Create() => new ParticleEffectBuilder();
 
         // ========================================
@@ -89,6 +136,10 @@ namespace ArcanumLib.Particles
         // ========================================
 
         /// <summary>Fire explosion with smoke and flash.</summary>
+        /// <param name="sapi">The server API instance.</param>
+        /// <param name="center">The center position.</param>
+        /// <param name="radius">The radius.</param>
+        /// <param name="intensity">The intensity.</param>
         public static void SpawnFireExplosion(ICoreServerAPI sapi, Vec3d center, float radius, int intensity = 1)
         {
             if (sapi == null) return;
@@ -123,6 +174,10 @@ namespace ArcanumLib.Particles
         }
 
         /// <summary>Poison explosion with green mist.</summary>
+        /// <param name="sapi">The server API instance.</param>
+        /// <param name="center">The center position.</param>
+        /// <param name="radius">The radius.</param>
+        /// <param name="intensity">The intensity.</param>
         public static void SpawnPoisonExplosion(ICoreServerAPI sapi, Vec3d center, float radius, int intensity = 1)
         {
             if (sapi == null) return;
@@ -143,6 +198,11 @@ namespace ArcanumLib.Particles
         }
 
         /// <summary>Generic colored explosion with particles of the given color.</summary>
+        /// <param name="sapi">The server API instance.</param>
+        /// <param name="center">The center position.</param>
+        /// <param name="radius">The radius.</param>
+        /// <param name="color">The color value.</param>
+        /// <param name="intensity">The intensity.</param>
         public static void SpawnExplosion(ICoreServerAPI sapi, Vec3d center, float radius, int color, int intensity = 1)
         {
             if (sapi == null) return;
@@ -164,9 +224,14 @@ namespace ArcanumLib.Particles
 
         /// <summary>
         /// Shadow/void explosion with dark particles.
-        /// If <paramref name="color"/> is 0, uses the default shadow/void colors.
+        /// If <paramref name="color" /> is 0, uses the default shadow/void colors.
         /// Otherwise tints the explosion with the supplied color.
         /// </summary>
+        /// <param name="sapi">The server API instance.</param>
+        /// <param name="center">The center position.</param>
+        /// <param name="radius">The radius.</param>
+        /// <param name="intensity">The intensity.</param>
+        /// <param name="color">The color value.</param>
         public static void SpawnShadowExplosion(ICoreServerAPI sapi, Vec3d center, float radius, int intensity = 1, int color = 0)
         {
             if (sapi == null) return;
@@ -205,6 +270,12 @@ namespace ArcanumLib.Particles
         // ========================================
 
         /// <summary>Spawn a ring of particles around a position (aura effect).</summary>
+        /// <param name="sapi">The server API instance.</param>
+        /// <param name="center">The center position.</param>
+        /// <param name="radius">The radius.</param>
+        /// <param name="color">The color value.</param>
+        /// <param name="count">The number of items.</param>
+        /// <param name="size">The size.</param>
         public static void SpawnAuraRing(ICoreServerAPI sapi, Vec3d center, float radius, int color, int count = 12, float size = 0.3f)
         {
             if (sapi == null) return;
@@ -230,6 +301,12 @@ namespace ArcanumLib.Particles
         }
 
         /// <summary>Spawn a sphere of particles around a position.</summary>
+        /// <param name="sapi">The server API instance.</param>
+        /// <param name="center">The center position.</param>
+        /// <param name="radius">The radius.</param>
+        /// <param name="color">The color value.</param>
+        /// <param name="count">The number of items.</param>
+        /// <param name="size">The size.</param>
         public static void SpawnAuraSphere(ICoreServerAPI sapi, Vec3d center, float radius, int color, int count = 16, float size = 0.25f)
         {
             if (sapi == null) return;
@@ -258,6 +335,12 @@ namespace ArcanumLib.Particles
         }
 
         /// <summary>Spawn a sphere of particles around a position (client-side).</summary>
+        /// <param name="capi">The client API instance.</param>
+        /// <param name="center">The center position.</param>
+        /// <param name="radius">The radius.</param>
+        /// <param name="color">The color value.</param>
+        /// <param name="count">The number of items.</param>
+        /// <param name="size">The size.</param>
         public static void SpawnAuraSphereClient(ICoreClientAPI capi, Vec3d center, float radius, int color, int count = 16, float size = 0.25f)
         {
             if (capi == null) return;
@@ -286,6 +369,12 @@ namespace ArcanumLib.Particles
         }
 
         /// <summary>Spawn a column/pillar of particles rising from a position.</summary>
+        /// <param name="sapi">The server API instance.</param>
+        /// <param name="basePos">The three-dimensional vector.</param>
+        /// <param name="height">The height.</param>
+        /// <param name="width">The width.</param>
+        /// <param name="color">The color value.</param>
+        /// <param name="count">The number of items.</param>
         public static void SpawnPillar(ICoreServerAPI sapi, Vec3d basePos, float height, float width, int color, int count = 20)
         {
             if (sapi == null) return;
@@ -307,6 +396,12 @@ namespace ArcanumLib.Particles
         // ========================================
 
         /// <summary>Spawn particles along a line between two points (chain/beam effect).</summary>
+        /// <param name="sapi">The server API instance.</param>
+        /// <param name="from">The three-dimensional vector.</param>
+        /// <param name="to">The three-dimensional vector.</param>
+        /// <param name="color">The color value.</param>
+        /// <param name="segments">The segments value.</param>
+        /// <param name="size">The size.</param>
         public static void SpawnLine(ICoreServerAPI sapi, Vec3d from, Vec3d to, int color, int segments = 8, float size = 0.2f)
         {
             if (sapi == null) return;
@@ -335,6 +430,13 @@ namespace ArcanumLib.Particles
         }
 
         /// <summary>Spawn a spiral of particles around a position.</summary>
+        /// <param name="sapi">The server API instance.</param>
+        /// <param name="center">The center position.</param>
+        /// <param name="radius">The radius.</param>
+        /// <param name="height">The height.</param>
+        /// <param name="color">The color value.</param>
+        /// <param name="count">The number of items.</param>
+        /// <param name="size">The size.</param>
         public static void SpawnSpiral(ICoreServerAPI sapi, Vec3d center, float radius, float height, int color, int count = 24, float size = 0.2f)
         {
             if (sapi == null) return;
@@ -366,6 +468,12 @@ namespace ArcanumLib.Particles
         // ========================================
 
         /// <summary>Spawn particles around an entity (body glow/aura).</summary>
+        /// <param name="sapi">The server API instance.</param>
+        /// <param name="entity">The entity.</param>
+        /// <param name="color">The color value.</param>
+        /// <param name="count">The number of items.</param>
+        /// <param name="size">The size.</param>
+        /// <param name="spread">The spread value.</param>
         public static void SpawnEntityAura(ICoreServerAPI sapi, Entity entity, int color, int count = 6, float size = 0.4f, float spread = 0.5f)
         {
             if (sapi == null || entity == null) return;
@@ -385,6 +493,11 @@ namespace ArcanumLib.Particles
         }
 
         /// <summary>Spawn impact particles at an entity's position (hit effect).</summary>
+        /// <param name="sapi">The server API instance.</param>
+        /// <param name="entity">The entity.</param>
+        /// <param name="color">The color value.</param>
+        /// <param name="count">The number of items.</param>
+        /// <param name="size">The size.</param>
         public static void SpawnImpact(ICoreServerAPI sapi, Entity entity, int color, int count = 10, float size = 0.3f)
         {
             if (sapi == null || entity == null) return;
@@ -394,6 +507,11 @@ namespace ArcanumLib.Particles
         }
 
         /// <summary>Spawn impact particles at a world position (hit effect).</summary>
+        /// <param name="sapi">The server API instance.</param>
+        /// <param name="pos">The position.</param>
+        /// <param name="color">The color value.</param>
+        /// <param name="count">The number of items.</param>
+        /// <param name="size">The size.</param>
         public static void SpawnImpact(ICoreServerAPI sapi, Vec3d pos, int color, int count = 10, float size = 0.3f)
         {
             if (sapi == null || pos == null) return;
@@ -411,6 +529,12 @@ namespace ArcanumLib.Particles
         }
 
         /// <summary>Spawn ground-level particles spreading outward (shockwave).</summary>
+        /// <param name="sapi">The server API instance.</param>
+        /// <param name="center">The center position.</param>
+        /// <param name="radius">The radius.</param>
+        /// <param name="color">The color value.</param>
+        /// <param name="count">The number of items.</param>
+        /// <param name="size">The size.</param>
         public static void SpawnShockwave(ICoreServerAPI sapi, Vec3d center, float radius, int color, int count = 24, float size = 0.4f)
         {
             if (sapi == null) return;
@@ -441,6 +565,13 @@ namespace ArcanumLib.Particles
         // ========================================
 
         /// <summary>Spawn falling particles (rain, ash, embers).</summary>
+        /// <param name="sapi">The server API instance.</param>
+        /// <param name="center">The center position.</param>
+        /// <param name="radius">The radius.</param>
+        /// <param name="height">The height.</param>
+        /// <param name="color">The color value.</param>
+        /// <param name="count">The number of items.</param>
+        /// <param name="size">The size.</param>
         public static void SpawnFalling(ICoreServerAPI sapi, Vec3d center, float radius, float height, int color, int count = 15, float size = 0.2f)
         {
             if (sapi == null) return;
@@ -458,6 +589,11 @@ namespace ArcanumLib.Particles
         }
 
         /// <summary>Spawn rising embers/sparks.</summary>
+        /// <param name="sapi">The server API instance.</param>
+        /// <param name="center">The center position.</param>
+        /// <param name="radius">The radius.</param>
+        /// <param name="count">The number of items.</param>
+        /// <param name="size">The size.</param>
         public static void SpawnEmbers(ICoreServerAPI sapi, Vec3d center, float radius, int count = 10, float size = 0.15f)
         {
             if (sapi == null) return;
@@ -478,6 +614,14 @@ namespace ArcanumLib.Particles
         /// Spawn slow rising particles around a position (idle/ambient effect).
         /// Particles drift upward with slight horizontal spread.
         /// </summary>
+        /// <param name="sapi">The server API instance.</param>
+        /// <param name="center">The center position.</param>
+        /// <param name="radius">The radius.</param>
+        /// <param name="height">The height.</param>
+        /// <param name="color">The color value.</param>
+        /// <param name="count">The number of items.</param>
+        /// <param name="size">The size.</param>
+        /// <param name="riseSpeed">The rise speed value.</param>
         public static void SpawnRising(ICoreServerAPI sapi, Vec3d center, float radius, float height,
             int color, int count = 3, float size = 0.3f, float riseSpeed = 0.08f)
         {

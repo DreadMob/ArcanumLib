@@ -1,13 +1,13 @@
 namespace ArcanumLib.Items
 {
     /// <summary>
-    /// Configuration for the generic <see cref="ItemModeManager"/>.
+    /// Configuration for the generic <see cref="ItemModeManager" />.
     /// Consumers set their own attribute keys and optional resolvers.
     /// </summary>
     public class ItemModeConfig
     {
         /// <summary>
-        /// Attribute key that stores the serialized list of <see cref="ItemMode"/> entries.
+        /// Attribute key that stores the serialized list of <see cref="ItemMode" /> entries.
         /// </summary>
         public string ModesAttributeKey { get; set; } = "arcanumlib:modes";
 
@@ -27,7 +27,7 @@ namespace ArcanumLib.Items
         public Vintagestory.API.Common.ILogger? Logger { get; set; }
 
         /// <summary>
-        /// Optional name resolver. Receives the raw <see cref="ItemMode.Name"/> and returns the display text.
+        /// Optional name resolver. Receives the raw <see cref="ItemMode.Name" /> and returns the display text.
         /// </summary>
         public System.Func<string, string?>? NameResolver { get; set; }
     }

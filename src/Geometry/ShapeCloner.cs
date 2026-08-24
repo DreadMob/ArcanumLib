@@ -7,7 +7,7 @@ using Vintagestory.API.Util;
 namespace ArcanumLib.Geometry;
 
 /// <summary>
-/// Deep-clones <see cref="Shape"/> instances so they can be safely modified
+/// Deep-clones <see cref="Shape" /> instances so they can be safely modified
 /// without sharing mutable state with the original. Useful for wearable/tessellation
 /// patching where the engine may cache and reuse a single shape for many renderers.
 /// </summary>
@@ -15,9 +15,11 @@ public static class ShapeCloner
 {
     /// <summary>
     /// Creates a deep copy of the source shape. The returned shape has its own
-    /// <see cref="Shape.Textures"/>, <see cref="Shape.TextureSizes"/>,
-    /// <see cref="ShapeElement.FacesResolved"/>, and <see cref="ShapeElement.AttachmentPoints"/>.
+    /// <see cref="Shape.Textures" />, <see cref="Shape.TextureSizes" />,
+    /// <see cref="ShapeElement.FacesResolved" />, and <see cref="ShapeElement.AttachmentPoints" />.
     /// </summary>
+    /// <param name="source">The source value.</param>
+    /// <returns>The deep clone, or null if none is found.</returns>
     public static Shape? DeepClone(Shape? source)
     {
         if (source == null) return null;
@@ -64,6 +66,9 @@ public static class ShapeCloner
     /// Loads a shape from the asset pipeline and returns a deep clone suitable for
     /// in-place mutation. Returns <c>null</c> if the shape could not be loaded.
     /// </summary>
+    /// <param name="api">The core API instance.</param>
+    /// <param name="location">The asset location.</param>
+    /// <returns>The load and clone, or null if none is found.</returns>
     public static Shape? LoadAndClone(ICoreAPI api, AssetLocation location)
     {
         if (api?.Assets == null || location == null) return null;
@@ -76,6 +81,9 @@ public static class ShapeCloner
     /// <summary>
     /// Loads a shape from the asset pipeline and returns a deep clone.
     /// </summary>
+    /// <param name="api">The core API instance.</param>
+    /// <param name="path">The path.</param>
+    /// <returns>The load and clone, or null if none is found.</returns>
     public static Shape? LoadAndClone(ICoreAPI api, string path)
     {
         if (api?.Assets == null || string.IsNullOrWhiteSpace(path)) return null;

@@ -8,10 +8,10 @@ namespace ArcanumLib.Gui.Icons
     /// <summary>
     /// Cairo vector icon renderer for custom tab decorations.
     /// Draws decorative elements (dividers, bullets, header symbols) using Cairo paths.
-    /// Used by <see cref="GuiElementCustomTabContent"/> to render data-driven tab content.
+    /// Used by <see cref="ArcanumLib.Gui.Controls.GuiElementCustomTabContent" /> to render data-driven tab content.
     /// Consumers can choose which icons to use via decorPrefix localization keys.
     /// The generic glyphs (skull, hourglass, shield, crown, sword, rift) are also registered
-    /// in <see cref="CustomIconRegistry"/> under <c>arcanum:&lt;name&gt;</c> keys so any mod
+    /// in <see cref="CustomIconRegistry" /> under <c>arcanum:&lt;name&gt;</c> keys so any mod
     /// can reference them without depending on this static class directly.
     /// </summary>
     public static class CustomTabIconRenderer
@@ -19,7 +19,7 @@ namespace ArcanumLib.Gui.Icons
         private static bool _registered;
 
         /// <summary>
-        /// Registers the generic glyphs into <see cref="CustomIconRegistry"/>.
+        /// Registers the generic glyphs into <see cref="CustomIconRegistry" />.
         /// Safe to call multiple times. Keys: <c>arcanum:skull</c>, <c>arcanum:hourglass</c>,
         /// <c>arcanum:shield</c>, <c>arcanum:crown</c>, <c>arcanum:sword</c>, <c>arcanum:rift</c>,
         /// <c>arcanum:star</c>, <c>arcanum:section-divider</c>, <c>arcanum:section-header</c>,
@@ -40,6 +40,11 @@ namespace ArcanumLib.Gui.Icons
         /// <summary>
         /// Draw a decorative section divider — horizontal line with a centered diamond ornament.
         /// </summary>
+        /// <param name="ctx">The ctx value.</param>
+        /// <param name="x">The X coordinate.</param>
+        /// <param name="y">The Y coordinate.</param>
+        /// <param name="w">The w value.</param>
+        /// <param name="color">The color value.</param>
         public static void DrawSectionDivider(Context ctx, double x, double y, double w, RGBA color)
         {
             double s = GuiElement.scaled(3.5);
@@ -74,6 +79,11 @@ namespace ArcanumLib.Gui.Icons
         /// <summary>
         /// Draw a small diamond/rune symbol before a section header title.
         /// </summary>
+        /// <param name="ctx">The ctx value.</param>
+        /// <param name="cx">The cx value.</param>
+        /// <param name="cy">The cy value.</param>
+        /// <param name="s">The duration in seconds.</param>
+        /// <param name="color">The color value.</param>
         public static void DrawSectionHeaderIcon(Context ctx, double cx, double cy, double s, RGBA color)
         {
             ctx.SetSourceRGBA(color.R, color.G, color.B, color.A);
@@ -94,6 +104,11 @@ namespace ArcanumLib.Gui.Icons
         /// <summary>
         /// Draw a small arrow/bullet marker for normal entries.
         /// </summary>
+        /// <param name="ctx">The ctx value.</param>
+        /// <param name="cx">The cx value.</param>
+        /// <param name="cy">The cy value.</param>
+        /// <param name="s">The duration in seconds.</param>
+        /// <param name="color">The color value.</param>
         public static void DrawEntryBullet(Context ctx, double cx, double cy, double s, RGBA color)
         {
             ctx.SetSourceRGBA(color.R, color.G, color.B, color.A * 0.8);
@@ -111,6 +126,11 @@ namespace ArcanumLib.Gui.Icons
         /// <summary>
         /// Draw a star marker for active entries.
         /// </summary>
+        /// <param name="ctx">The ctx value.</param>
+        /// <param name="cx">The cx value.</param>
+        /// <param name="cy">The cy value.</param>
+        /// <param name="r">The r value.</param>
+        /// <param name="color">The color value.</param>
         public static void DrawActiveStar(Context ctx, double cx, double cy, double r, RGBA color)
         {
             ctx.SetSourceRGBA(color.R, color.G, color.B, color.A);
@@ -132,6 +152,11 @@ namespace ArcanumLib.Gui.Icons
         /// <summary>
         /// Draw a small dot for sub-item indentation.
         /// </summary>
+        /// <param name="ctx">The ctx value.</param>
+        /// <param name="cx">The cx value.</param>
+        /// <param name="cy">The cy value.</param>
+        /// <param name="s">The duration in seconds.</param>
+        /// <param name="color">The color value.</param>
         public static void DrawSubDot(Context ctx, double cx, double cy, double s, RGBA color)
         {
             ctx.SetSourceRGBA(color.R, color.G, color.B, color.A * 0.5);
@@ -143,6 +168,11 @@ namespace ArcanumLib.Gui.Icons
         /// Draw a rift/void crack icon — suitable for an "About" section.
         /// A jagged vertical crack with small branches.
         /// </summary>
+        /// <param name="ctx">The ctx value.</param>
+        /// <param name="cx">The cx value.</param>
+        /// <param name="cy">The cy value.</param>
+        /// <param name="s">The duration in seconds.</param>
+        /// <param name="color">The color value.</param>
         public static void DrawRiftIcon(Context ctx, double cx, double cy, double s, RGBA color)
         {
             ctx.Save();
@@ -177,6 +207,11 @@ namespace ArcanumLib.Gui.Icons
         /// <summary>
         /// Draw a shield icon — a shield outline with a vertical line.
         /// </summary>
+        /// <param name="ctx">The ctx value.</param>
+        /// <param name="cx">The cx value.</param>
+        /// <param name="cy">The cy value.</param>
+        /// <param name="s">The duration in seconds.</param>
+        /// <param name="color">The color value.</param>
         public static void DrawShieldIcon(Context ctx, double cx, double cy, double s, RGBA color)
         {
             ctx.Save();
@@ -207,6 +242,11 @@ namespace ArcanumLib.Gui.Icons
         /// <summary>
         /// Draw a crown/rank icon — a simple crown shape.
         /// </summary>
+        /// <param name="ctx">The ctx value.</param>
+        /// <param name="cx">The cx value.</param>
+        /// <param name="cy">The cy value.</param>
+        /// <param name="s">The duration in seconds.</param>
+        /// <param name="color">The color value.</param>
         public static void DrawCrownIcon(Context ctx, double cx, double cy, double s, RGBA color)
         {
             ctx.Save();
@@ -245,6 +285,11 @@ namespace ArcanumLib.Gui.Icons
         /// <summary>
         /// Draw a skull/danger icon.
         /// </summary>
+        /// <param name="ctx">The ctx value.</param>
+        /// <param name="cx">The cx value.</param>
+        /// <param name="cy">The cy value.</param>
+        /// <param name="s">The duration in seconds.</param>
+        /// <param name="color">The color value.</param>
         public static void DrawSkullIcon(Context ctx, double cx, double cy, double s, RGBA color)
         {
             ctx.Save();
@@ -277,6 +322,11 @@ namespace ArcanumLib.Gui.Icons
         /// <summary>
         /// Draw an hourglass/rotation icon.
         /// </summary>
+        /// <param name="ctx">The ctx value.</param>
+        /// <param name="cx">The cx value.</param>
+        /// <param name="cy">The cy value.</param>
+        /// <param name="s">The duration in seconds.</param>
+        /// <param name="color">The color value.</param>
         public static void DrawHourglassIcon(Context ctx, double cx, double cy, double s, RGBA color)
         {
             ctx.Save();
@@ -313,6 +363,11 @@ namespace ArcanumLib.Gui.Icons
         /// <summary>
         /// Draw a challenge/sword icon.
         /// </summary>
+        /// <param name="ctx">The ctx value.</param>
+        /// <param name="cx">The cx value.</param>
+        /// <param name="cy">The cy value.</param>
+        /// <param name="s">The duration in seconds.</param>
+        /// <param name="color">The color value.</param>
         public static void DrawSwordIcon(Context ctx, double cx, double cy, double s, RGBA color)
         {
             ctx.Save();

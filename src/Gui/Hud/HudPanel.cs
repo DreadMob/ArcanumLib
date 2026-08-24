@@ -8,8 +8,11 @@ namespace ArcanumLib.Gui.Hud;
 /// <summary>
 /// Generic base class for a data-driven HUD panel rendered via Cairo.
 /// Manages texture caching, invalidation and disposal. Derived types implement
-/// <see cref="BuildCacheKey"/> and <see cref="DrawPanelContent"/>.
+/// <see cref="BuildCacheKey" /> and <see cref="DrawPanelContent" />.
 /// </summary>
+/// <typeparam name="TSnapshot">The type of the tsnapshot value.</typeparam>
+/// <typeparam name="THudDefinition">The type of the thuddefinition value.</typeparam>
+/// <typeparam name="TTheme">The type of the ttheme value.</typeparam>
 public abstract class HudPanel<TSnapshot, THudDefinition, TTheme> : GuiElement, IDisposable
     where TSnapshot : class, IHudSnapshot
     where THudDefinition : class
@@ -34,6 +37,8 @@ public abstract class HudPanel<TSnapshot, THudDefinition, TTheme> : GuiElement, 
     protected long _snapshotReceivedMs;
 
     /// <summary>Creates the panel and its cached texture.</summary>
+    /// <param name="capi">The client API instance.</param>
+    /// <param name="bounds">The bounds value.</param>
     protected HudPanel(ICoreClientAPI capi, ElementBounds bounds) : base(capi, bounds)
     {
         _cachedTexture = new LoadedTexture(capi);
@@ -42,6 +47,9 @@ public abstract class HudPanel<TSnapshot, THudDefinition, TTheme> : GuiElement, 
     /// <summary>
     /// Called after a new snapshot is received. Invalidates the cached texture and records the receive time.
     /// </summary>
+    /// <param name="snapshot">The snapshot value.</param>
+    /// <param name="definition">The definition value.</param>
+    /// <param name="theme">The theme value.</param>
     public virtual void Update(TSnapshot? snapshot, THudDefinition? definition, TTheme? theme)
     {
         _snapshot = snapshot;
@@ -53,6 +61,7 @@ public abstract class HudPanel<TSnapshot, THudDefinition, TTheme> : GuiElement, 
     /// <summary>
     /// Called after a new snapshot is received. Invalidates the cached texture and records the receive time.
     /// </summary>
+    /// <param name="receivedMs">The received ms value.</param>
     protected virtual void OnSnapshotReceived(long receivedMs)
     {
         _snapshotReceivedMs = receivedMs;
@@ -60,15 +69,22 @@ public abstract class HudPanel<TSnapshot, THudDefinition, TTheme> : GuiElement, 
     }
 
     /// <summary>Builds a cache key from the current snapshot. Must be implemented by derived panels.</summary>
+    /// <returns>The cache key, or null if none is found.</returns>
     protected abstract string? BuildCacheKey();
 
     /// <summary>Renders the full panel content into the provided Cairo context.</summary>
+    /// <param name="ctx">The ctx value.</param>
+    /// <param name="width">The width.</param>
+    /// <param name="height">The height.</param>
     protected abstract void DrawPanelContent(Context ctx, int width, int height);
 
     /// <summary>Composes the static panel surface; the default implementation is empty.</summary>
+    /// <param name="ctxStatic">The ctx static value.</param>
+    /// <param name="surfaceStatic">The surface static value.</param>
     public override void ComposeElements(Context ctxStatic, ImageSurface surfaceStatic) { }
 
     /// <summary>Renders the cached panel texture and regenerates it when the cache key changes.</summary>
+    /// <param name="deltaTime">The delta time value.</param>
     public override void RenderInteractiveElements(float deltaTime)
     {
         if (Bounds?.ParentBounds == null) return;

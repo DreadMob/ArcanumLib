@@ -9,8 +9,9 @@ namespace ArcanumLib.Gui.Hud;
 /// <summary>
 /// Generic full-screen transient overlay (toast, achievement, combat, milestone, etc.).
 /// Manages auto-open, optional sound, elapsed-time tracking and auto-close.
-/// Derived types implement <see cref="OnDrawContent"/> and set <see cref="DurationSeconds"/>.
+/// Derived types implement <see cref="OnDrawContent" /> and set <see cref="DurationSeconds" />.
 /// </summary>
+/// <typeparam name="TModel">The type of the tmodel value.</typeparam>
 public abstract class TransientOverlay<TModel> : GuiDialog
     where TModel : class
 {
@@ -24,6 +25,7 @@ public abstract class TransientOverlay<TModel> : GuiDialog
     public override bool PrefersUngrabbedMouse => false;
 
     /// <summary>Should not receive mouse events.</summary>
+    /// <returns>true if the operation should receive mouse events; otherwise, false.</returns>
     public override bool ShouldReceiveMouseEvents() => false;
 
     /// <summary>Current data to display.</summary>
@@ -45,9 +47,11 @@ public abstract class TransientOverlay<TModel> : GuiDialog
     protected virtual string DrawKey => "overlay";
 
     /// <summary>Creates the overlay.</summary>
+    /// <param name="capi">The client API instance.</param>
     protected TransientOverlay(ICoreClientAPI capi) : base(capi) { }
 
     /// <summary>Shows the overlay with the given data, recomposing if already open.</summary>
+    /// <param name="data">The associated data.</param>
     public virtual void Show(TModel? data)
     {
         _data = data;
@@ -82,22 +86,33 @@ public abstract class TransientOverlay<TModel> : GuiDialog
     }
 
     /// <summary>
-    /// Draw callback passed to Vintage Story. Forwards to <see cref="OnDrawContent"/>.
+    /// Draw callback passed to Vintage Story. Forwards to <see cref="OnDrawContent" />.
     /// </summary>
+    /// <param name="ctx">The ctx value.</param>
+    /// <param name="surface">The surface value.</param>
+    /// <param name="bounds">The bounds value.</param>
     protected virtual void OnDrawInternal(Context ctx, ImageSurface surface, ElementBounds bounds)
     {
         OnDrawContent(ctx, surface, bounds, _elapsed, _data);
     }
 
     /// <summary>
-    /// Draws the overlay content. <paramref name="elapsed"/> is in seconds.
+    /// Draws the overlay content. <paramref name="elapsed" /> is in seconds.
     /// </summary>
+    /// <param name="ctx">The ctx value.</param>
+    /// <param name="surface">The surface value.</param>
+    /// <param name="bounds">The bounds value.</param>
+    /// <param name="elapsed">The elapsed value.</param>
+    /// <param name="data">The associated data.</param>
     protected abstract void OnDrawContent(Context ctx, ImageSurface surface, ElementBounds bounds, float elapsed, TModel? data);
 
     /// <summary>Returns true when the overlay should be redrawn this frame. Override to reduce CPU.</summary>
+    /// <param name="elapsed">The elapsed value.</param>
+    /// <returns>true if the operation should redraw; otherwise, false.</returns>
     protected virtual bool ShouldRedraw(float elapsed) => true;
 
     /// <summary>Updates elapsed time, redraws and closes the overlay when the duration expires.</summary>
+    /// <param name="deltaTime">The delta time value.</param>
     public override void OnRenderGUI(float deltaTime)
     {
         base.OnRenderGUI(deltaTime);
@@ -115,6 +130,7 @@ public abstract class TransientOverlay<TModel> : GuiDialog
     }
 
     /// <summary>Resets data and closes.</summary>
+    /// <returns>true if the operation succeeded; otherwise, false.</returns>
     public override bool TryClose()
     {
         _data = null;

@@ -9,9 +9,9 @@ namespace ArcanumLib.Gui.Controls;
 
 /// <summary>
 /// Themed vertical scrollbar for the Arcanum GUI toolkit. Slim track + accent handle.
-/// Mirrors the small subset of the standard <see cref="GuiElementScrollbar"/> API the
-/// dialog actually uses: <see cref="SetHeights"/>, <see cref="SetNewTotalHeight"/>,
-/// <see cref="SetScrollbarPosition"/>, plus a value callback fired in content pixels
+/// Mirrors the small subset of the standard <see cref="GuiElementScrollbar" /> API the
+/// dialog actually uses: <see cref="SetHeights" />, <see cref="SetNewTotalHeight" />,
+/// <see cref="SetScrollbarPosition" />, plus a value callback fired in content pixels
 /// so existing scroll handlers keep working.
 /// </summary>
 public class ArcanumScrollbar : GuiElement
@@ -41,9 +41,12 @@ public class ArcanumScrollbar : GuiElement
     public bool HandleMouseWheel { get; set; } = true;
 
     /// <summary>
-    /// Creates a new scrollbar. The <paramref name="onNewValue"/> callback receives the
+    /// Creates a new scrollbar. The <paramref name="onNewValue" /> callback receives the
     /// current scroll offset in content pixels.
     /// </summary>
+    /// <param name="capi">The client API instance.</param>
+    /// <param name="bounds">The bounds value.</param>
+    /// <param name="onNewValue">The callback to invoke.</param>
     public ArcanumScrollbar(ICoreClientAPI capi, ElementBounds bounds, Action<float> onNewValue)
         : base(capi, bounds)
     {
@@ -61,6 +64,8 @@ public class ArcanumScrollbar : GuiElement
     /// <summary>
     /// Sets the visible and total content heights, clamping the current value.
     /// </summary>
+    /// <param name="visible">The visible value.</param>
+    /// <param name="total">The total value.</param>
     public void SetHeights(float visible, float total)
     {
         visibleHeight = Math.Max(1f, visible);
@@ -71,6 +76,7 @@ public class ArcanumScrollbar : GuiElement
     /// <summary>
     /// Updates the total content height while keeping the visible height.
     /// </summary>
+    /// <param name="total">The total value.</param>
     public void SetNewTotalHeight(float total)
     {
         totalHeight = Math.Max(visibleHeight, total);
@@ -80,6 +86,7 @@ public class ArcanumScrollbar : GuiElement
     /// <summary>
     /// Sets the scroll position and notifies the callback.
     /// </summary>
+    /// <param name="value">The value to set or compare.</param>
     public void SetScrollbarPosition(float value)
     {
         currentValue = GameMath.Clamp(value, 0f, MaxValue);
@@ -95,8 +102,13 @@ public class ArcanumScrollbar : GuiElement
     // Rendering.
     // --------------------------------------------------------------
 
+    /// <summary>Performs the compose elements operation.</summary>
+    /// <param name="ctxStatic">The ctx static value.</param>
+    /// <param name="surfaceStatic">The surface static value.</param>
     public override void ComposeElements(Context ctxStatic, ImageSurface surfaceStatic) { }
 
+    /// <summary>Performs the render interactive elements operation.</summary>
+    /// <param name="deltaTime">The delta time value.</param>
     public override void RenderInteractiveElements(float deltaTime)
     {
         if (Bounds?.ParentBounds == null) return;
@@ -236,6 +248,9 @@ public class ArcanumScrollbar : GuiElement
     // Mouse interaction.
     // --------------------------------------------------------------
 
+    /// <summary>Performs the on mouse down on element operation.</summary>
+    /// <param name="api">The client API instance.</param>
+    /// <param name="args">The arguments.</param>
     public override void OnMouseDownOnElement(ICoreClientAPI api, MouseEvent args)
     {
         if (!ScrollNeeded) return;
@@ -259,6 +274,9 @@ public class ArcanumScrollbar : GuiElement
         args.Handled = true;
     }
 
+    /// <summary>Performs the on mouse move operation.</summary>
+    /// <param name="api">The client API instance.</param>
+    /// <param name="args">The arguments.</param>
     public override void OnMouseMove(ICoreClientAPI api, MouseEvent args)
     {
         if (!dragging) return;
@@ -278,6 +296,9 @@ public class ArcanumScrollbar : GuiElement
         args.Handled = true;
     }
 
+    /// <summary>Performs the on mouse up operation.</summary>
+    /// <param name="api">The client API instance.</param>
+    /// <param name="args">The arguments.</param>
     public override void OnMouseUp(ICoreClientAPI api, MouseEvent args)
     {
         if (dragging)
@@ -287,6 +308,9 @@ public class ArcanumScrollbar : GuiElement
         }
     }
 
+    /// <summary>Performs the on mouse wheel operation.</summary>
+    /// <param name="api">The client API instance.</param>
+    /// <param name="args">The arguments.</param>
     public override void OnMouseWheel(ICoreClientAPI api, MouseWheelEventArgs args)
     {
         if (!HandleMouseWheel) return;
@@ -315,6 +339,7 @@ public class ArcanumScrollbar : GuiElement
         args.SetHandled(true);
     }
 
+    /// <summary>Releases all resources used by the current object.</summary>
     public override void Dispose()
     {
         trackTexture?.Dispose();
@@ -326,13 +351,18 @@ public class ArcanumScrollbar : GuiElement
 }
 
 /// <summary>
-/// Composer extension methods for adding <see cref="ArcanumScrollbar"/> elements.
+/// Composer extension methods for adding <see cref="ArcanumScrollbar" /> elements.
 /// </summary>
 public static class ArcanumScrollbarComposerHelpers
 {
     /// <summary>
     /// Adds a themed vertical scrollbar to the composer.
     /// </summary>
+    /// <param name="composer">The composer value.</param>
+    /// <param name="onNewValue">The callback to invoke.</param>
+    /// <param name="bounds">The bounds value.</param>
+    /// <param name="key">The key to look up.</param>
+    /// <returns>The add arcanum scrollbar.</returns>
     public static GuiComposer AddArcanumScrollbar(
         this GuiComposer composer,
         Action<float> onNewValue,

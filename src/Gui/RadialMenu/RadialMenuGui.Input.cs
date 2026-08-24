@@ -8,6 +8,7 @@ using Vintagestory.API.MathTools;
 
 namespace ArcanumLib.Gui.RadialMenu
 {
+    /// <summary>Represents radial menu gui.</summary>
     public partial class RadialMenuGui
     {
         private void DrawHeart(Context ctx, float cx, float cy, float size)
@@ -386,12 +387,16 @@ namespace ArcanumLib.Gui.RadialMenu
             }
         }
 
+        /// <summary>Performs the on mouse move operation.</summary>
+        /// <param name="args">The arguments.</param>
         public override void OnMouseMove(MouseEvent args)
         {
             base.OnMouseMove(args);
             UpdateHoveredIndex(args.X, args.Y);
         }
 
+        /// <summary>Performs the on mouse down operation.</summary>
+        /// <param name="args">The arguments.</param>
         public override void OnMouseDown(MouseEvent args)
         {
             base.OnMouseDown(args);
@@ -432,6 +437,8 @@ namespace ArcanumLib.Gui.RadialMenu
             }
         }
 
+        /// <summary>Performs the on key down operation.</summary>
+        /// <param name="args">The arguments.</param>
         public override void OnKeyDown(KeyEvent args)
         {
             if (!IsOpened()) return;
@@ -443,6 +450,8 @@ namespace ArcanumLib.Gui.RadialMenu
             base.OnKeyDown(args);
         }
 
+        /// <summary>Performs the on key up operation.</summary>
+        /// <param name="args">The arguments.</param>
         public override void OnKeyUp(KeyEvent args)
         {
             base.OnKeyUp(args);

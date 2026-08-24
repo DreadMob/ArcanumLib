@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text.Json;
+using ArcanumLib.Core;
 using ArcanumLib.Persistence;
 using Vintagestory.API.Server;
 
@@ -11,7 +12,7 @@ namespace ArcanumLib.Common
     /// <summary>
     /// Tracks total online time per player via PlayerJoin / PlayerLeave events.
     /// Also tracks first join date, last online date, and login streaks.
-    /// Persists data through <see cref="ModDataStore"/> so it survives savegame copy/delete.
+    /// Persists data through <see cref="ModDataStore" /> so it survives savegame copy/delete.
     /// </summary>
     public class PlaytimeTracker : IDisposable
     {
@@ -22,19 +23,32 @@ namespace ArcanumLib.Common
         private readonly string _legacyDataFileName;
 
         /// <summary>
-        /// Global instance created by <see cref="PlaytimeTrackerModSystem"/>.
+        /// Server-scoped instance registered with <see cref="ArcanumServices" />.
         /// Consumers can use this instead of constructing their own tracker.
         /// </summary>
-        public static PlaytimeTracker? Current { get; set; }
+        public static PlaytimeTracker? Current
+        {
+            get => ArcanumServices.Get<PlaytimeTracker>(ArcanumServiceScope.Server);
+            set
+            {
+                if (value == null)
+                    ArcanumServices.Unregister<PlaytimeTracker>(ArcanumServiceScope.Server);
+                else
+                    ArcanumServices.Register(value, ArcanumServiceScope.Server);
+            }
+        }
 
         /// <summary>Fired when a session is saved: (playerUid, totalMs).</summary>
         public event Action<string, long>? OnSessionSaved;
 
         /// <summary>
-        /// Creates a new tracker backed by <see cref="ModDataStore"/>.
-        /// The optional <paramref name="legacyDataFileName"/> is used once to migrate data from the
+        /// Creates a new tracker backed by <see cref="ModDataStore" />.
+        /// The optional <paramref name="legacyDataFileName" /> is used once to migrate data from the
         /// old flat-JSON persistence format. New data is always written through the data store.
         /// </summary>
+        /// <param name="sapi">The server API instance.</param>
+        /// <param name="legacyDataFileName">The legacy data file name value.</param>
+        /// <exception cref="ArgumentNullException">Thrown when <paramref name="sapi" /> is <see langword="null" />.</exception>
         public PlaytimeTracker(ICoreServerAPI sapi, string legacyDataFileName = "playtime_tracker.json")
         {
             _sapi = sapi ?? throw new ArgumentNullException(nameof(sapi));
@@ -123,12 +137,16 @@ namespace ArcanumLib.Common
         }
 
         /// <summary>Total playtime in hours for the given player.</summary>
+        /// <param name="playerUid">The unique player identifier.</param>
+        /// <returns>The playtime hours.</returns>
         public float GetPlaytimeHours(string playerUid)
         {
             return GetPlaytimeMs(playerUid) / 3600000f;
         }
 
         /// <summary>Total playtime in milliseconds for the given player.</summary>
+        /// <param name="playerUid">The unique player identifier.</param>
+        /// <returns>The playtime ms.</returns>
         public long GetPlaytimeMs(string playerUid)
         {
             long totalMs = PlayerData.GetValueOrDefault(playerUid)?.TotalMs ?? 0;
@@ -143,6 +161,7 @@ namespace ArcanumLib.Common
         /// Returns all tracked player UIDs with their total playtime in hours.
         /// Includes offline players (e.g. imported historical data).
         /// </summary>
+        /// <returns>A dictionary of all playtime hours.</returns>
         public Dictionary<string, float> GetAllPlaytimeHours()
         {
             var result = new Dictionary<string, float>(StringComparer.OrdinalIgnoreCase);
@@ -158,6 +177,8 @@ namespace ArcanumLib.Common
         }
 
         /// <summary>First join timestamp in UTC milliseconds, or null if unknown.</summary>
+        /// <param name="playerUid">The unique player identifier.</param>
+        /// <returns>The first join ms, or null if none is found.</returns>
         public long? GetFirstJoinMs(string playerUid)
         {
             var data = PlayerData.GetValueOrDefault(playerUid);
@@ -166,6 +187,8 @@ namespace ArcanumLib.Common
         }
 
         /// <summary>Last online timestamp in UTC milliseconds. Returns now if currently online.</summary>
+        /// <param name="playerUid">The unique player identifier.</param>
+        /// <returns>The last online ms, or null if none is found.</returns>
         public long? GetLastOnlineMs(string playerUid)
         {
             if (_playerSessionStartMs.ContainsKey(playerUid))
@@ -176,12 +199,16 @@ namespace ArcanumLib.Common
         }
 
         /// <summary>Current login streak (consecutive days).</summary>
+        /// <param name="playerUid">The unique player identifier.</param>
+        /// <returns>The login streak.</returns>
         public int GetLoginStreak(string playerUid)
         {
             return PlayerData.GetValueOrDefault(playerUid)?.LoginStreak ?? 0;
         }
 
         /// <summary>Sets the first join timestamp for a player.</summary>
+        /// <param name="playerUid">The unique player identifier.</param>
+        /// <param name="ms">The interval in milliseconds.</param>
         public void SetFirstJoinMs(string playerUid, long ms)
         {
             var data = GetOrCreateData(playerUid);
@@ -192,6 +219,8 @@ namespace ArcanumLib.Common
         /// <summary>
         /// Sets the total accumulated playtime for a player (useful for importing historical data).
         /// </summary>
+        /// <param name="playerUid">The unique player identifier.</param>
+        /// <param name="totalMs">The total ms value.</param>
         public void SetTotalMs(string playerUid, long totalMs)
         {
             var data = GetOrCreateData(playerUid);
@@ -200,9 +229,11 @@ namespace ArcanumLib.Common
         }
 
         /// <summary>
-        /// Bulk import playtime from a map of playerUid -> totalMs.
+        /// Bulk import playtime from a map of playerUid -&gt; totalMs.
         /// Returns number of entries imported.
         /// </summary>
+        /// <param name="playtimes">The playtimes value.</param>
+        /// <returns>The import from dictionary.</returns>
         public int ImportFromDictionary(Dictionary<string, long> playtimes)
         {
             int count = 0;

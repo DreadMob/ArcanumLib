@@ -15,6 +15,8 @@ namespace ArcanumLib.Gui.Icons
             new(StringComparer.OrdinalIgnoreCase);
 
         /// <summary>Register a renderer for the given key. Overwrites any existing.</summary>
+        /// <param name="key">The key to look up.</param>
+        /// <param name="renderer">The renderer value.</param>
         public static void Register(string key, ICustomIconRenderer renderer)
         {
             if (string.IsNullOrWhiteSpace(key)) return;
@@ -26,6 +28,8 @@ namespace ArcanumLib.Gui.Icons
         /// Register a delegate-based vector icon under the given key.
         /// Convenience overload for simple stateless icons that only need ctx/cx/cy/radius/color.
         /// </summary>
+        /// <param name="key">The key to look up.</param>
+        /// <param name="draw">The callback to invoke.</param>
         public static void Register(string key,
             Action<Context, double, double, double, RGBA> draw)
         {
@@ -34,6 +38,9 @@ namespace ArcanumLib.Gui.Icons
         }
 
         /// <summary>Try to get a renderer by key.</summary>
+        /// <param name="key">The key to look up.</param>
+        /// <param name="renderer">When this method returns, contains the <paramref name="renderer" /> value.</param>
+        /// <returns>true if the operation succeeded; otherwise, false.</returns>
         public static bool TryGet(string key, out ICustomIconRenderer? renderer)
         {
             if (string.IsNullOrWhiteSpace(key))
@@ -48,6 +55,13 @@ namespace ArcanumLib.Gui.Icons
         /// Try to draw a registered icon with an explicit color.
         /// Returns true if a renderer was found and invoked, false otherwise.
         /// </summary>
+        /// <param name="key">The key to look up.</param>
+        /// <param name="ctx">The ctx value.</param>
+        /// <param name="cx">The cx value.</param>
+        /// <param name="cy">The cy value.</param>
+        /// <param name="radius">The radius.</param>
+        /// <param name="color">The color value.</param>
+        /// <returns>true if the operation succeeded; otherwise, false.</returns>
         public static bool TryDraw(string key, Context ctx, double cx, double cy, double radius, RGBA color)
         {
             if (!TryGet(key, out var renderer) || renderer == null) return false;
@@ -60,6 +74,12 @@ namespace ArcanumLib.Gui.Icons
         /// The caller should set the source color on the Cairo context beforehand.
         /// Returns true if a renderer was found and invoked, false otherwise.
         /// </summary>
+        /// <param name="key">The key to look up.</param>
+        /// <param name="ctx">The ctx value.</param>
+        /// <param name="cx">The cx value.</param>
+        /// <param name="cy">The cy value.</param>
+        /// <param name="radius">The radius.</param>
+        /// <returns>true if the operation succeeded; otherwise, false.</returns>
         public static bool TryDraw(string key, Context ctx, double cx, double cy, double radius)
         {
             if (!TryGet(key, out var renderer) || renderer == null) return false;
@@ -68,10 +88,14 @@ namespace ArcanumLib.Gui.Icons
         }
 
         /// <summary>Check whether a renderer is registered for the key.</summary>
+        /// <param name="key">The key to look up.</param>
+        /// <returns>true if the operation has ; otherwise, false.</returns>
         public static bool Has(string key)
             => !string.IsNullOrWhiteSpace(key) && _renderers.ContainsKey(key);
 
         /// <summary>Remove a registered renderer.</summary>
+        /// <param name="key">The key to look up.</param>
+        /// <returns>true if the operation succeeds; otherwise, false.</returns>
         public static bool Unregister(string key)
             => _renderers.Remove(key, out _);
 

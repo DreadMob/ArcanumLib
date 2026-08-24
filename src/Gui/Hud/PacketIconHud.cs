@@ -7,8 +7,10 @@ namespace ArcanumLib.Gui.Hud;
 
 /// <summary>
 /// Generic packet-driven icon HUD. Receives a packet containing entries,
-/// preloads icons, shows/hides the HUD, and calls <see cref="OnDrawHud"/>.
+/// preloads icons, shows/hides the HUD, and calls <see cref="OnDrawHud" />.
 /// </summary>
+/// <typeparam name="TPacket">The type of the tpacket value.</typeparam>
+/// <typeparam name="TEntry">The type of the tentry value.</typeparam>
 public abstract class PacketIconHud<TPacket, TEntry> : HudElement
     where TPacket : class, IHudPacket<TEntry>
 {
@@ -16,6 +18,7 @@ public abstract class PacketIconHud<TPacket, TEntry> : HudElement
     public override string ToggleKeyCombinationCode => null!;
 
     /// <summary>Should not receive mouse events.</summary>
+    /// <returns>true if the operation should receive mouse events; otherwise, false.</returns>
     public override bool ShouldReceiveMouseEvents() => false;
 
     /// <summary>Last received packet.</summary>
@@ -37,9 +40,11 @@ public abstract class PacketIconHud<TPacket, TEntry> : HudElement
     protected abstract string HudName { get; }
 
     /// <summary>Creates the icon HUD.</summary>
+    /// <param name="capi">The client API instance.</param>
     protected PacketIconHud(ICoreClientAPI capi) : base(capi) { }
 
     /// <summary>Receives a packet and updates the HUD.</summary>
+    /// <param name="packet">The packet value.</param>
     public virtual void UpdateFromPacket(TPacket? packet)
     {
         _lastPacket = packet;
@@ -68,6 +73,7 @@ public abstract class PacketIconHud<TPacket, TEntry> : HudElement
     }
 
     /// <summary>Preloads the icon for an entry. Called for every entry in a packet.</summary>
+    /// <param name="entry">The entry value.</param>
     protected virtual void PreloadIcon(TEntry entry) { }
 
     /// <summary>Builds the single-composer with the dynamic custom draw callback.</summary>
@@ -87,6 +93,7 @@ public abstract class PacketIconHud<TPacket, TEntry> : HudElement
     }
 
     /// <summary>Returns the desired composer width/height.</summary>
+    /// <returns>The measure hud bounds.</returns>
     protected abstract (float width, float height) MeasureHudBounds();
 
     /// <summary>Recomposes the dialog. Override if layout changes at runtime.</summary>
@@ -107,9 +114,13 @@ public abstract class PacketIconHud<TPacket, TEntry> : HudElement
     }
 
     /// <summary>Draws the full icon HUD.</summary>
+    /// <param name="ctx">The ctx value.</param>
+    /// <param name="surface">The surface value.</param>
+    /// <param name="currentBounds">The current bounds value.</param>
     protected abstract void OnDrawHud(Context ctx, ImageSurface surface, ElementBounds currentBounds);
 
     /// <summary>Toggles user visibility without discarding the last packet.</summary>
+    /// <param name="visible">The visible value.</param>
     public virtual void SetVisible(bool visible)
     {
         _userHidden = !visible;
@@ -129,6 +140,7 @@ public abstract class PacketIconHud<TPacket, TEntry> : HudElement
     }
 
     /// <summary>Periodically redraws the icon list.</summary>
+    /// <param name="deltaTime">The delta time value.</param>
     public override void OnRenderGUI(float deltaTime)
     {
         base.OnRenderGUI(deltaTime);
@@ -145,6 +157,7 @@ public abstract class PacketIconHud<TPacket, TEntry> : HudElement
     }
 
     /// <summary>Closes and clears the last packet.</summary>
+    /// <returns>true if the operation succeeded; otherwise, false.</returns>
     public override bool TryClose()
     {
         _lastPacket = null;

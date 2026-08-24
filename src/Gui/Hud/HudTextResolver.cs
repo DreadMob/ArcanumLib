@@ -13,12 +13,12 @@ public static class HudTextResolver
     /// <summary>
     /// Resolves a HUD label on the client. Single keys are localized; composite strings
     /// split by '—' resolve each side. Mob-code markers ("mob:code") are passed to
-    /// <paramref name="mobNameResolver"/> when provided.
+    /// <paramref name="mobNameResolver" /> when provided.
     /// </summary>
     /// <param name="text">The raw text, localization key, or mob-code marker.</param>
     /// <param name="mobNameResolver">Optional resolver for "mob:" markers.</param>
-    /// <param name="customResolver">Optional resolver called before <see cref="Lang.Get"/> for keys containing a ':'.</param>
-    /// <returns>The localized or resolved string, or <paramref name="text"/> if no localization matched.</returns>
+    /// <param name="customResolver">Optional resolver called before <see cref="Lang.Get" /> for keys containing a ':'.</param>
+    /// <returns>The localized or resolved string, or <paramref name="text" /> if no localization matched.</returns>
     public static string Resolve(string text, Func<string, string?>? mobNameResolver = null, Func<string, string?>? customResolver = null)
     {
         if (string.IsNullOrWhiteSpace(text)) return text;

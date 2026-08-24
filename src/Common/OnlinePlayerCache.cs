@@ -34,6 +34,8 @@ public class OnlinePlayerCache : ModSystem
     public static IReadOnlyDictionary<string, IServerPlayer> ByUid => _byUidSnapshot;
 
     /// <summary>Returns the online server player for the given UID, or null.</summary>
+    /// <param name="playerUid">The unique player identifier.</param>
+    /// <returns>The by uid, or null if none is found.</returns>
     public static IServerPlayer? GetByUid(string playerUid)
     {
         if (string.IsNullOrWhiteSpace(playerUid)) return null;
@@ -43,9 +45,14 @@ public class OnlinePlayerCache : ModSystem
     /// <summary>Current number of online server players.</summary>
     public static int Count => _allSnapshot.Length;
 
+    /// <summary>Returns a value indicating whether the operation should load.</summary>
+    /// <param name="forSide">The for side value.</param>
+    /// <returns>true if the operation should load; otherwise, false.</returns>
     /// <inheritdoc />
     public override bool ShouldLoad(EnumAppSide forSide) => forSide == EnumAppSide.Server;
 
+    /// <summary>Performs the start server side operation.</summary>
+    /// <param name="api">The server API instance.</param>
     /// <inheritdoc />
     public override void StartServerSide(ICoreServerAPI api)
     {
@@ -56,10 +63,12 @@ public class OnlinePlayerCache : ModSystem
 
         api.Event.PlayerJoin += OnPlayerJoin;
         api.Event.PlayerLeave += OnPlayerLeave;
+        api.Event.PlayerDisconnect += OnPlayerDisconnect;
 
         _tickId = api.Event.RegisterGameTickListener(OnTick, 5000);
     }
 
+    /// <summary>Releases all resources used by the current object.</summary>
     /// <inheritdoc />
     public override void Dispose()
     {
@@ -67,6 +76,7 @@ public class OnlinePlayerCache : ModSystem
         {
             _sapi.Event.PlayerJoin -= OnPlayerJoin;
             _sapi.Event.PlayerLeave -= OnPlayerLeave;
+            _sapi.Event.PlayerDisconnect -= OnPlayerDisconnect;
 
             if (_tickId != 0)
             {
@@ -100,6 +110,11 @@ public class OnlinePlayerCache : ModSystem
     }
 
     private void OnPlayerLeave(IServerPlayer player)
+    {
+        Remove(player);
+    }
+
+    private void OnPlayerDisconnect(IServerPlayer player)
     {
         Remove(player);
     }

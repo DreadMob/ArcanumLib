@@ -4,7 +4,7 @@ using System.Collections.Generic;
 namespace ArcanumLib.Items
 {
     /// <summary>
-    /// Configuration for the generic <see cref="ItemCharge"/> helpers.
+    /// Configuration for the generic <see cref="ItemCharge" /> helpers.
     /// Consumers can set their own attribute and metadata key namespaces, charge suffixes,
     /// and optional resolvers for display names, units, and material names.
     /// </summary>
@@ -17,7 +17,7 @@ namespace ArcanumLib.Items
 
         /// <summary>
         /// Prefix for the generic charge attribute, e.g. "arcanumlib:attr:".
-        /// The full generic charge key is <see cref="AttributePrefix"/> + <see cref="ChargeAttributeName"/>.
+        /// The full generic charge key is <see cref="AttributePrefix" /> + <see cref="ChargeAttributeName" />.
         /// </summary>
         public string AttributePrefix { get; set; } = "arcanumlib:attr:";
 
@@ -105,11 +105,13 @@ namespace ArcanumLib.Items
         /// <summary>
         /// Builds the generic charge attribute key.
         /// </summary>
+        /// <returns>The charge key string, or null if none is found.</returns>
         public string GetChargeKey() => AttributePrefix + ChargeAttributeName;
 
         /// <summary>
         /// Builds all candidate charge attribute keys (generic + legacy prefixes + suffixed variants).
         /// </summary>
+        /// <returns>A collection of all charge keys values.</returns>
         public IEnumerable<string> GetAllChargeKeys()
         {
             foreach (var key in GetAllChargeBaseKeys())
@@ -152,6 +154,8 @@ namespace ArcanumLib.Items
         /// <summary>
         /// Builds all candidate metadata keys for the given short metadata name (e.g. "chargemax").
         /// </summary>
+        /// <param name="shortKey">The short key value.</param>
+        /// <returns>A collection of all meta keys values.</returns>
         public IEnumerable<string> GetAllMetaKeys(string shortKey)
         {
             yield return MetaPrefix + shortKey;
@@ -167,6 +171,8 @@ namespace ArcanumLib.Items
         /// <summary>
         /// Returns true if the short key is a recognized charge attribute.
         /// </summary>
+        /// <param name="shortKey">The short key value.</param>
+        /// <returns>true if charge attribute; otherwise, false.</returns>
         public bool IsChargeAttribute(string shortKey)
         {
             if (string.IsNullOrEmpty(shortKey)) return false;
@@ -179,12 +185,16 @@ namespace ArcanumLib.Items
         /// <summary>
         /// Returns true if the short key is a time-based charge attribute.
         /// </summary>
+        /// <param name="shortKey">The short key value.</param>
+        /// <returns>true if time charge attribute; otherwise, false.</returns>
         public bool IsTimeChargeAttribute(string shortKey)
             => !string.IsNullOrEmpty(shortKey) && shortKey.EndsWith(TimeChargeSuffix);
 
         /// <summary>
         /// Returns true if the short key is a use-based charge attribute.
         /// </summary>
+        /// <param name="shortKey">The short key value.</param>
+        /// <returns>true if use charge attribute; otherwise, false.</returns>
         public bool IsUseChargeAttribute(string shortKey)
             => !string.IsNullOrEmpty(shortKey) && (shortKey == ChargeAttributeName || shortKey.EndsWith(UseChargeSuffix));
     }

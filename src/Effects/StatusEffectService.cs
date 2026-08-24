@@ -9,7 +9,7 @@ namespace ArcanumLib.Effects;
 
 /// <summary>
 /// Instance-based manager for applying, ticking, and removing status effects on entities.
-/// Register with <see cref="ArcanumLib.Core.ArcanumServices"/> or use <see cref="StatusEffectManager"/> static facade.
+/// Register with <see cref="ArcanumLib.Core.ArcanumServices" /> or use <see cref="StatusEffectManager" /> static facade.
 /// </summary>
 public class StatusEffectService
 {
