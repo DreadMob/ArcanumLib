@@ -116,7 +116,7 @@ public class ActionCondition
     {
         result = 0;
         if (obj == null) return false;
-        return double.TryParse(Convert.ToString(obj), System.Globalization.NumberStyles.Any,
-            System.Globalization.CultureInfo.InvariantCulture, out result);
+        return double.TryParse(Convert.ToString(obj, System.Globalization.CultureInfo.InvariantCulture),
+            System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out result);
     }
 }

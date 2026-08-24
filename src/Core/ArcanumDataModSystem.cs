@@ -30,6 +30,8 @@ public class ArcanumDataModSystem : ModSystem
     /// <param name="sapi">The server API.</param>
     public override void StartServerSide(ICoreServerAPI sapi)
     {
+        if (sapi == null) throw new ArgumentNullException(nameof(sapi));
+
         _sapi = sapi;
 
         ModDataStore.Sapi = sapi;

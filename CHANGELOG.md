@@ -8,8 +8,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Added
 
-- Unit test project (`ArcanumLib.Tests`) and Atlas integration test project (`ArcanumLib.AtlasTests`) covering `ArcanumServices`, `CommandArgs`, `EventBus`, `PityTracker`, `PityDefinition`, `WeightedRandom`, `LootTable`, `TimedCache`, `TagMatcher`, `PositionUtils`, and `OnlinePlayerCache`.
-- Atlas headless server scenarios for mod load, `OnlinePlayerCache`, `CooldownTracker`, and `TagMatcher`.
+- Unit test project (`ArcanumLib.Tests`) and Atlas integration test project (`ArcanumLib.AtlasTests`) covering `ArcanumServices`, `CommandArgs`, `EventBus`, `PityTracker`, `PityDefinition`, `WeightedRandom`, `LootTable`, `TimedCache`, `TagMatcher`, `ItemCharge`, `Wildcard`, `ValidationResult`, `ModDataStore`, `WatchedAttributesExtensions`, `EffectResistanceStore`, `StatusEffectService`, `CooldownTracker`, `InventoryFingerprint`, `ChatFormatUtil`, `PlaytimeTracker`, `PlaytimeCooldownManager`, `DamageHelper`, `EntityHealthExtensions`, `EntityControlExtensions`, `CleanupScope`, `EventScope`, `BlockEntitySearchUtils`, `CollectibleNameResolver`, `PositionUtils`, `OnlinePlayerCache`, `CommandBuilder`, and `PlayerProximityTracker`.
+- Atlas headless server scenarios for mod load, `OnlinePlayerCache`, `CooldownTracker`, `TagMatcher`, `CommandBuilder`, and `PlayerProximityTracker`.
+- Dedicated `ArcanumLib.AtlasFixture` project to author a small fixture world (`fixtures/world.vcdbs`) via `atlas fixture`.
 - `ArcanumServiceScope` for explicit client/server/world service registration in `ArcanumServices`.
 - `ArcanumServices.ScopeFor(ICoreAPI)` helper.
 - `TypedNetworkChannel.SendToPlayers<T>` and `TypedNetworkChannel.SendToAllExcept<T>` for targeted server-side packet delivery.
@@ -32,6 +33,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 - `OnlinePlayerCache` now also removes players on `PlayerDisconnect` (kicks and timeouts), not just `PlayerLeave`.
 - `LootTable.Roll` now returns `default` when total effective weight is zero, matching its documented contract.
+- `PlayerProximityTracker` null-warning for `Position.dimension` resolved.
 - `OnlinePlayerCache` no longer exposes unsynchronized mutable collections.
 - `TypedNetworkChannel.Send<T>` no longer silently broadcasts to an empty player list.
 - `ModDataStoreInstance` data/loading/dirty state is now protected by `ReaderWriterLockSlim`.

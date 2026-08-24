@@ -86,6 +86,24 @@ public class PositionUtilsTests
     }
 
     [Fact]
+    public void GetAngleTo_AlongPositiveX()
+    {
+        var from = new Vec3d(0, 0, 0);
+        var to = new Vec3d(1, 0, 0);
+
+        Assert.Equal(0.0, PositionUtils.GetAngleTo(from, to), 5);
+    }
+
+    [Fact]
+    public void GetAngleTo_AlongPositiveZ()
+    {
+        var from = new Vec3d(0, 0, 0);
+        var to = new Vec3d(0, 0, 1);
+
+        Assert.Equal(Math.PI / 2.0, PositionUtils.GetAngleTo(from, to), 5);
+    }
+
+    [Fact]
     public void GetRandomPointInCircle_KeepsYAndStaysWithinRadius()
     {
         var center = new Vec3d(10, 20, 30);
@@ -131,5 +149,66 @@ public class PositionUtilsTests
 
             Assert.InRange(dist, 3.0, 7.0 + 1e-9);
         }
+    }
+
+    [Fact]
+    public void LerpPosition_Midpoint()
+    {
+        var a = new Vec3d(0, 0, 0);
+        var b = new Vec3d(10, 20, 30);
+
+        var mid = PositionUtils.LerpPosition(a, b, 0.5);
+
+        Assert.Equal(5.0, mid.X, 5);
+        Assert.Equal(10.0, mid.Y, 5);
+        Assert.Equal(15.0, mid.Z, 5);
+    }
+
+    [Fact]
+    public void LerpPosition_ClampsT()
+    {
+        var a = new Vec3d(0, 0, 0);
+        var b = new Vec3d(10, 10, 10);
+
+        Assert.Equal(a, PositionUtils.LerpPosition(a, b, -1));
+        Assert.Equal(b, PositionUtils.LerpPosition(a, b, 2));
+    }
+
+    [Fact]
+    public void LerpPosition_HandlesNull()
+    {
+        var a = new Vec3d(1, 2, 3);
+
+        Assert.Equal(a, PositionUtils.LerpPosition(a, null!, 0.5));
+        Assert.Equal(a, PositionUtils.LerpPosition(null!, a, 0.5));
+    }
+
+    [Fact]
+    public void GetRandomPointInCone_StaysWithinCone()
+    {
+        var apex = new Vec3d(0, 0, 0);
+        var direction = new Vec3d(1, 0, 0);
+        var random = new Random(0);
+
+        for (int i = 0; i < 20; i++)
+        {
+            var point = PositionUtils.GetRandomPointInCone(apex, direction, 5.0, 45.0, random);
+            double dist = PositionUtils.HorizontalDistanceTo(apex, point);
+
+            Assert.True(dist <= 5.0 + 1e-9);
+            Assert.Equal(0.0, point.Y, 5);
+        }
+    }
+
+    [Fact]
+    public void GetRandomPointInCone_WithVec3f_Direction()
+    {
+        var apex = new Vec3d(0, 0, 0);
+        var direction = new Vec3f(0, 0, 1);
+        var random = new Random(0);
+
+        var point = PositionUtils.GetRandomPointInCone(apex, direction, 5.0, 30.0, random);
+
+        Assert.True(PositionUtils.HorizontalDistanceTo(apex, point) <= 5.0 + 1e-9);
     }
 }

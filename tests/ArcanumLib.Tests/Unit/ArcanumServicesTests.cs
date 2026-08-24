@@ -1,9 +1,14 @@
 using System;
 using ArcanumLib.Core;
+using NSubstitute;
+using Vintagestory.API.Client;
+using Vintagestory.API.Common;
+using Vintagestory.API.Server;
 using Xunit;
 
 namespace ArcanumLib.Tests.Unit;
 
+[Collection("ArcanumServices")]
 public class ArcanumServicesTests : IDisposable
 {
     public ArcanumServicesTests()
@@ -82,6 +87,27 @@ public class ArcanumServicesTests : IDisposable
     public void Register_Throws_WhenServiceIsNull()
     {
         Assert.Throws<ArgumentNullException>(() => ArcanumServices.Register<string>(null!));
+    }
+
+    [Fact]
+    public void ScopeFor_ServerApi_ReturnsServer()
+    {
+        var sapi = Substitute.For<ICoreServerAPI>();
+        Assert.Equal(ArcanumServiceScope.Server, ArcanumServices.ScopeFor(sapi));
+    }
+
+    [Fact]
+    public void ScopeFor_ClientApi_ReturnsClient()
+    {
+        var capi = Substitute.For<ICoreClientAPI>();
+        Assert.Equal(ArcanumServiceScope.Client, ArcanumServices.ScopeFor(capi));
+    }
+
+    [Fact]
+    public void ScopeFor_NullOrUnknown_ReturnsGlobal()
+    {
+        Assert.Equal(ArcanumServiceScope.Global, ArcanumServices.ScopeFor(null));
+        Assert.Equal(ArcanumServiceScope.Global, ArcanumServices.ScopeFor(Substitute.For<ICoreAPI>()));
     }
 
     private sealed class DisposableService : IDisposable
