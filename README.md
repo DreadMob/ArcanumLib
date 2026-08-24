@@ -17,6 +17,8 @@ Arcanum Lib is a shared library mod for [Vintage Story](https://www.vintagestory
 The library is built around a few headline features that have no vanilla equivalent:
 
 - **Status Effects** — timed buffs/debuffs with stacking, refresh, override, and independent modes. No vanilla equivalent.
+- **HUDs & Overlays** — generic `HudPanel`, `HudDialog`, and `HudClientSystem`, plus `TransientOverlay` for toasts, `PacketIconHud` for packet-driven icon bars, and `IHudElementRenderer` for reusable panel elements. No vanilla equivalent.
+- **Holograms** — floating text labels above blocks with `SingleHologramRenderer` and `AreaHologramRenderer`, versioned texture caching, and 3D projection. No vanilla equivalent.
 - **Action Registry** — JSON-declared actions with typed handlers, cooldowns, and permissions. Lets content packs add behaviour without recompiling.
 - **EventBus** — typed publish/subscribe event bus for cross-mod communication. Mods publish events without knowing who subscribes.
 - **CommandBuilder** — fluent command framework with typed arguments, permissions, and autocomplete. Replaces manual `CmdArgs` parsing.
@@ -78,6 +80,8 @@ See the [`docs/`](docs) folder for full API documentation and examples.
 | **CustomTabContent** | Data-driven scrollable tab content with decorative Cairo icons and `CustomTabData` model. |
 | **GuiDateTimePicker** | Reusable date/time picker for `GuiComposer` with Now/Clear buttons. |
 | **Custom Icons** | `ICustomIconRenderer`, `CustomIconRegistry`, and `CustomTabIconRenderer` for custom Cairo-drawn GUI icons. |
+|| **HUDs & Overlays** | `HudPanel`/`HudDialog`/`HudClientSystem`, `TransientOverlay` for toasts, `PacketIconHud` for packet-driven icon bars, and `IHudElementRenderer` element registry. |
+|| **Holograms** | `SingleHologramRenderer` and `AreaHologramRenderer` for floating block labels with `IHologramTextSource`, versioned texture caching, and 3D projection. |
 | **ImageIconCache** | Load, cache and draw icon image surfaces with circle, hexagon, and diamond clipping plus optional tinting. |
 | **ModeIconBuilder** | Factory for tool-mode icons (in-game icon, letter, or live `ItemStack` rendering). |
 
@@ -182,7 +186,7 @@ ArcanumLib/
 ├── ArcanumLibModSystem.cs    — Vintage Story entry point, lifecycle, and API registration
 ├── src/
 │   ├── Core/                  — ArcanumServices, ArcanumLibModSystem
-│   ├── Gui/                   — theme, composer, controls, layout, icons, radial menu
+│   ├── Gui/                   — theme, composer, controls, layout, icons, radial menu, huds, holograms
 │   ├── Geometry/              — PositionUtils, BlockEntitySearchUtils
 │   ├── Caching/               — TimedCache and SimpleLRUCache
 │   ├── Common/                — EventScope, CleanupScope, PlaytimeTracker, PlaytimeCooldownManager

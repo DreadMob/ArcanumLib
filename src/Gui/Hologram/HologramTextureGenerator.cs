@@ -1,4 +1,5 @@
 using System;
+using ArcanumLib.Gui.Theme;
 using Cairo;
 using Vintagestory.API.Client;
 
@@ -68,28 +69,22 @@ public static class HologramTextureGenerator
                 continue;
             }
 
-            bool handled = options.RenderLine?.Invoke(ctx, i, line, 0, y, width) ?? false;
+            bool handled = options.RenderLine?.RenderLine(ctx, i, line, width, y, lineHeight) ?? false;
             if (!handled)
             {
-                if (options.TextColor is { Length: >= 4 })
-                    ctx.SetSourceRGBA(options.TextColor[0], options.TextColor[1], options.TextColor[2], options.TextColor[3]);
-                else
-                    ctx.SetSourceRGBA(0.95, 0.95, 0.95, 1.0);
+                RGBA textColor = options.TextColor ?? new RGBA(0.95, 0.95, 0.95, 1.0);
 
                 var ext = ctx.TextExtents(line);
                 double x = options.Centered ? (width - ext.Width) / 2.0 : options.PaddingX;
 
-                if (options.ShadowColor is { Length: >= 4 })
+                if (options.ShadowColor is RGBA shadow)
                 {
-                    ctx.SetSourceRGBA(options.ShadowColor[0], options.ShadowColor[1], options.ShadowColor[2], options.ShadowColor[3]);
+                    shadow.Apply(ctx);
                     ctx.MoveTo(x + 1, y + 1);
                     ctx.ShowText(line);
                 }
 
-                if (options.TextColor is { Length: >= 4 })
-                    ctx.SetSourceRGBA(options.TextColor[0], options.TextColor[1], options.TextColor[2], options.TextColor[3]);
-                else
-                    ctx.SetSourceRGBA(0.95, 0.95, 0.95, 1.0);
+                textColor.Apply(ctx);
                 ctx.MoveTo(x, y);
                 ctx.ShowText(line);
             }
@@ -108,16 +103,16 @@ public static class HologramTextureGenerator
 
     private static void DrawBackground(Context ctx, int width, double height, HologramTextureOptions options)
     {
-        double[] bg = options.BackgroundColor ?? new[] { 0.0, 0.0, 0.0, 0.6 };
-        double[] border = options.BorderColor ?? new[] { 1.0, 1.0, 1.0, 0.3 };
+        RGBA bg = options.BackgroundColor ?? new RGBA(0.0, 0.0, 0.0, 0.6);
+        RGBA border = options.BorderColor ?? new RGBA(1.0, 1.0, 1.0, 0.3);
         double radius = Math.Min(10.0, Math.Min(width, height) / 6.0);
 
         RoundedRect(ctx, 0.5, 0.5, width - 1, height - 1, radius);
-        ctx.SetSourceRGBA(bg[0], bg[1], bg[2], bg[3]);
+        bg.Apply(ctx);
         ctx.Fill();
 
         RoundedRect(ctx, 0.5, 0.5, width - 1, height - 1, radius);
-        ctx.SetSourceRGBA(border[0], border[1], border[2], border[3]);
+        border.Apply(ctx);
         ctx.LineWidth = 1.2;
         ctx.Stroke();
     }

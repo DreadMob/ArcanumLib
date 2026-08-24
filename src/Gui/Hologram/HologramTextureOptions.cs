@@ -1,4 +1,5 @@
 using System;
+using ArcanumLib.Gui.Theme;
 using Cairo;
 
 namespace ArcanumLib.Gui.Hologram;
@@ -33,19 +34,19 @@ public class HologramTextureOptions
     public bool Centered { get; set; } = true;
 
     /// <summary>Background RGBA color (0-1 range). Used when <see cref="DrawBackground"/> is true.</summary>
-    public double[]? BackgroundColor { get; set; } = new[] { 0.06, 0.07, 0.10, 0.72 };
+    public RGBA? BackgroundColor { get; set; } = new RGBA(0.06, 0.07, 0.10, 0.72);
 
     /// <summary>Border RGBA color (0-1 range). Used when <see cref="DrawBackground"/> is true.</summary>
-    public double[]? BorderColor { get; set; } = new[] { 0.85, 0.7, 0.25, 0.35 };
+    public RGBA? BorderColor { get; set; } = new RGBA(0.85, 0.7, 0.25, 0.35);
 
-    /// <summary>Text RGBA color (0-1 range), or null to keep the context's current source.</summary>
-    public double[]? TextColor { get; set; }
+    /// <summary>Text RGBA color (0-1 range), or null to use the default light text.</summary>
+    public RGBA? TextColor { get; set; }
 
     /// <summary>Whether to draw a rounded background and border.</summary>
     public bool DrawBackground { get; set; } = true;
 
     /// <summary>Shadow RGBA color (0-1 range), or null to skip the shadow.</summary>
-    public double[]? ShadowColor { get; set; } = new[] { 0.0, 0.0, 0.0, 0.8 };
+    public RGBA? ShadowColor { get; set; } = new RGBA(0.0, 0.0, 0.0, 0.8);
 
     /// <summary>Cairo font face name.</summary>
     public string FontFace { get; set; } = "Sans";
@@ -57,9 +58,7 @@ public class HologramTextureOptions
     public FontSlant FontSlant { get; set; } = FontSlant.Normal;
 
     /// <summary>
-    /// Optional callback for custom line rendering.
-    /// Receives the Cairo context, the line index, the trimmed line text, the suggested x and y coordinates,
-    /// and the texture width. Return <c>true</c> if the callback has fully handled the line.
+    /// Optional per-line renderer. Return <c>true</c> from <see cref="IHologramLineRenderer.RenderLine"/> to skip the default centered draw.
     /// </summary>
-    public Func<Context, int, string, double, double, double, bool>? RenderLine { get; set; }
+    public IHologramLineRenderer? RenderLine { get; set; }
 }

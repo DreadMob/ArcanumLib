@@ -23,8 +23,9 @@ parent: Arcanum GUI Toolkit
 |------|---------|
 | `IHologramTextSource` | Provides text, color, version, position, range, and visibility for one hologram. |
 | `HologramTexture` | Wraps a `LoadedTexture` with the version it was generated from. |
-| `HologramTextureOptions` | Font, layout, padding, colors, and an optional per-line callback. |
+| `HologramTextureOptions` | Font, layout, padding, colors, and an optional per-line renderer. |
 | `HologramTextureGenerator` | Generates a `HologramTexture` from multi-line text. |
+| `IHologramLineRenderer` | Override how a single line is drawn. |
 | `SingleHologramRenderer` | One `IRenderer` for a single `IHologramTextSource`. |
 | `AreaHologramRenderer` | One `IRenderer` that scans nearby chunks for sources and renders them. |
 | `HologramRenderUtils` | Projection and occlusion helpers. |
@@ -101,7 +102,7 @@ _hologramRenderer = new AreaHologramRenderer(
         FontSize = 18,
         LineWidth = 520,
         DrawBackground = false,
-        TextColor = new[] { 0.95, 0.80, 0.25, 1.0 }
+        TextColor = new RGBA(0.95, 0.80, 0.25, 1.0)
     },
     range: 48,
     yRange: 8,
@@ -119,20 +120,28 @@ _hologramRenderer = new AreaHologramRenderer(
 
 ## Per-line custom drawing
 
-`HologramTextureOptions.RenderLine` lets a mod override how individual lines are drawn. The callback receives the `Context`, current `Y` position, line index, line text, the configured `X` offset and the line height. Return `true` to prevent the default centered text draw for that line.
+`HologramTextureOptions.RenderLine` is an optional `IHologramLineRenderer` that lets a mod override how a single line is drawn. Return `true` to skip the default centered text.
 
 ```csharp
-options.RenderLine = (ctx, y, index, line, x, lineHeight) =>
+using ArcanumLib.Gui.Hologram;
+using Cairo;
+
+public class MyLineRenderer : IHologramLineRenderer
 {
-    if (line.StartsWith(">"))
+    public bool RenderLine(Context ctx, int lineIndex, string line, double x, double y, double lineHeight)
     {
-        ctx.SetSourceRGBA(0.95, 0.85, 0.45, 0.95);
-        ctx.MoveTo(x, y);
-        ctx.ShowText(line);
-        return true;
+        if (line.StartsWith(">"))
+        {
+            ctx.SetSourceRGBA(0.95, 0.85, 0.45, 0.95);
+            ctx.MoveTo(x, y);
+            ctx.ShowText(line);
+            return true;
+        }
+        return false;
     }
-    return false;
-};
+}
+
+options.RenderLine = new MyLineRenderer();
 ```
 
 Use this for progress bars, separators, headers, or different colors per line without re-implementing the texture generator.
