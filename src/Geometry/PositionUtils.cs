@@ -217,6 +217,57 @@ namespace ArcanumLib.Geometry
         }
 
         /// <summary>
+        /// Returns the 3D distance between two positions.
+        /// </summary>
+        public static double DistanceTo(Vec3d a, Vec3d b)
+        {
+            if (a == null || b == null) return double.MaxValue;
+            double dx = a.X - b.X;
+            double dy = a.Y - b.Y;
+            double dz = a.Z - b.Z;
+            return Math.Sqrt(dx * dx + dy * dy + dz * dz);
+        }
+
+        /// <summary>
+        /// Returns the 3D distance between an entity and a position.
+        /// </summary>
+        public static double DistanceTo(Entity entity, Vec3d point)
+        {
+            if (entity?.Pos == null || point == null) return double.MaxValue;
+            return DistanceTo(entity.Pos.XYZ, point);
+        }
+
+        /// <summary>
+        /// Returns the squared 3D distance between two positions.
+        /// Faster than <see cref="DistanceTo"/> for range comparisons.
+        /// </summary>
+        public static double SquareDistanceTo(Vec3d a, Vec3d b)
+        {
+            if (a == null || b == null) return double.MaxValue;
+            double dx = a.X - b.X;
+            double dy = a.Y - b.Y;
+            double dz = a.Z - b.Z;
+            return dx * dx + dy * dy + dz * dz;
+        }
+
+        /// <summary>
+        /// Returns true if <paramref name="point"/> is within <paramref name="range"/> blocks of
+        /// <paramref name="center"/> in 3D.
+        /// </summary>
+        public static bool IsWithinRange(Vec3d point, Vec3d center, double range)
+            => DistanceTo(point, center) <= range;
+
+        /// <summary>
+        /// Returns true if <paramref name="entity"/> is within <paramref name="range"/> blocks of
+        /// <paramref name="center"/> in 3D.
+        /// </summary>
+        public static bool IsWithinRange(Entity entity, Vec3d center, double range)
+        {
+            if (entity?.Pos == null) return false;
+            return IsWithinRange(entity.Pos.XYZ, center, range);
+        }
+
+        /// <summary>
         /// Returns true if <paramref name="point"/> is within <paramref name="range"/> blocks of
         /// <paramref name="center"/> on the horizontal plane (ignoring Y).
         /// </summary>

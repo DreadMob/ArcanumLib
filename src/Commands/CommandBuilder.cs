@@ -150,54 +150,78 @@ public sealed class CommandBuilder
 
         string syntax = BuildSyntax();
 
-        _sapi.RegisterCommand(_name, _description, syntax, (player, id, args) =>
+        var cmd = _sapi.ChatCommands.Create(_name)
+            .WithDescription(_description)
+            .RequiresPrivilege(_permission);
+
+        if (_args.Count == 0)
         {
-            try
+            cmd.HandleWith(args =>
             {
-                if (!string.IsNullOrEmpty(_permission) && !player.HasPrivilege(_permission))
+                try
                 {
-                    player.SendMessage(0, $"You don't have permission to use this command.", EnumChatType.CommandError);
-                    return;
-                }
+                    var player = args.Caller.Player as IServerPlayer ?? args.Caller.Entity as IServerPlayer;
+                    if (player == null)
+                        return TextCommandResult.Error("Command must be run by a player.");
 
-                var resolved = ResolveArgs(args);
-                if (resolved == null)
+                    _handler!(_sapi, player, new CommandArgs(new Dictionary<string, object?>(StringComparer.OrdinalIgnoreCase)));
+                    return TextCommandResult.Success("");
+                }
+                catch (Exception ex)
                 {
-                    player.SendMessage(0, $"Invalid arguments. Usage: {_name} {syntax}", EnumChatType.CommandError);
-                    return;
+                    _sapi.Logger.Warning("[ArcanumLib] Command '{0}' failed: {1}", _name, ex.Message);
+                    return TextCommandResult.Error($"Command error: {ex.Message}");
                 }
-
-                _handler(_sapi, player, new CommandArgs(resolved));
-            }
-            catch (Exception ex)
-            {
-                _sapi.Logger.Warning("[ArcanumLib] Command '{0}' failed: {1}", _name, ex.Message);
-                player.SendMessage(0, $"Command error: {ex.Message}", EnumChatType.CommandError);
-            }
-        });
-    }
-
-    private string BuildSyntax()
-    {
-        var parts = new List<string>();
-        foreach (var arg in _args)
-        {
-            if (arg.Required)
-                parts.Add($"<{arg.Name}>");
-            else
-                parts.Add($"[{arg.Name}]");
+            });
+            return;
         }
-        return parts.Count > 0 ? string.Join(" ", parts) : "";
+
+        var parser = BuildParser();
+        cmd.WithArgs(parser)
+            .HandleWith(args =>
+            {
+                try
+                {
+                    var player = args.Caller.Player as IServerPlayer ?? args.Caller.Entity as IServerPlayer;
+                    if (player == null)
+                        return TextCommandResult.Error("Command must be run by a player.");
+
+                    var resolved = ResolveArgsFromParsed(args, syntax);
+                    if (resolved == null)
+                    {
+                        return TextCommandResult.Error($"Invalid arguments. Usage: {_name} {syntax}");
+                    }
+
+                    _handler!(_sapi, player, new CommandArgs(resolved));
+                    return TextCommandResult.Success("");
+                }
+                catch (Exception ex)
+                {
+                    _sapi.Logger.Warning("[ArcanumLib] Command '{0}' failed: {1}", _name, ex.Message);
+                    return TextCommandResult.Error($"Command error: {ex.Message}");
+                }
+            });
     }
 
-    private Dictionary<string, object?>? ResolveArgs(CmdArgs raw)
+    private ICommandArgumentParser BuildParser()
+    {
+        // Use a single WordOrSaturated parser for all arguments and split manually.
+        // This preserves the original CommandBuilder argument parsing semantics.
+        return _sapi.ChatCommands.Parsers.Word("args");
+    }
+
+    private Dictionary<string, object?>? ResolveArgsFromParsed(TextCommandCallingArgs parsed, string syntax)
     {
         var result = new Dictionary<string, object?>(StringComparer.OrdinalIgnoreCase);
+        object? rawValue = parsed.Parsers.Count > 0 ? parsed.Parsers[0].GetValue() : null;
+        string? rawInput = rawValue?.ToString() ?? "";
+
+        var tokens = rawInput.Split(' ', StringSplitOptions.RemoveEmptyEntries);
 
         for (int i = 0; i < _args.Count; i++)
         {
             var arg = _args[i];
-            string? token = raw.PopWord();
+            string? token = i < tokens.Length ? tokens[i] : null;
 
             if (string.IsNullOrEmpty(token))
             {
@@ -227,5 +251,18 @@ public sealed class CommandBuilder
         }
 
         return result;
+    }
+
+    private string BuildSyntax()
+    {
+        var parts = new List<string>();
+        foreach (var arg in _args)
+        {
+            if (arg.Required)
+                parts.Add($"<{arg.Name}>");
+            else
+                parts.Add($"[{arg.Name}]");
+        }
+        return parts.Count > 0 ? string.Join(" ", parts) : "";
     }
 }

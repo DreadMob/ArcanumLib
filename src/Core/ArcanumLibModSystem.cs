@@ -32,6 +32,7 @@ public class ArcanumLibModSystem : ModSystem
         ArcanumServices.Register<ICoreAPI>(capi);
         ArcanumServices.Register<ICoreClientAPI>(capi);
         ImageIconCache.Init(capi);
+        CustomTabIconRenderer.RegisterGenericIcons();
     }
 
     /// <summary>

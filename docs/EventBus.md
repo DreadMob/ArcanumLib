@@ -93,6 +93,18 @@ Removes all subscriptions for all event types. Intended for world shutdown.
 
 Returns the number of active subscriptions for event type `T`.
 
+### `EventBus.GetDiagnostics()`
+
+Returns a list of `EventBusSubscriptionInfo` records for every tracked subscription, including invocation count, average time, and last error. See [Diagnostics]({{ site.baseurl }}{% link Diagnostics.md %}) for details.
+
+### `EventBus.GetDanglingSubscriptions()`
+
+Returns a list of subscription keys (`EventType[Tag]`) that have active subscribers but were never published. Useful for detecting typo'd event names.
+
+### `EventBus.ActiveSubscriptionCount()`
+
+Returns the total number of active (non-disposed) subscriptions across all event types and tags.
+
 ### `EventBusPriority`
 
 | Value | Description |

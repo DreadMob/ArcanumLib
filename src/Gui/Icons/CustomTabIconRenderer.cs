@@ -10,9 +10,33 @@ namespace ArcanumLib.Gui.Icons
     /// Draws decorative elements (dividers, bullets, header symbols) using Cairo paths.
     /// Used by <see cref="GuiElementCustomTabContent"/> to render data-driven tab content.
     /// Consumers can choose which icons to use via decorPrefix localization keys.
+    /// The generic glyphs (skull, hourglass, shield, crown, sword, rift) are also registered
+    /// in <see cref="CustomIconRegistry"/> under <c>arcanum:&lt;name&gt;</c> keys so any mod
+    /// can reference them without depending on this static class directly.
     /// </summary>
     public static class CustomTabIconRenderer
     {
+        private static bool _registered;
+
+        /// <summary>
+        /// Registers the generic glyphs into <see cref="CustomIconRegistry"/>.
+        /// Safe to call multiple times. Keys: <c>arcanum:skull</c>, <c>arcanum:hourglass</c>,
+        /// <c>arcanum:shield</c>, <c>arcanum:crown</c>, <c>arcanum:sword</c>, <c>arcanum:rift</c>,
+        /// <c>arcanum:star</c>, <c>arcanum:section-divider</c>, <c>arcanum:section-header</c>,
+        /// <c>arcanum:entry-bullet</c>, <c>arcanum:sub-dot</c>.
+        /// </summary>
+        public static void RegisterGenericIcons()
+        {
+            if (_registered) return;
+            _registered = true;
+            CustomIconRegistry.Register("arcanum:skull", (ctx, cx, cy, r, color) => DrawSkullIcon(ctx, cx, cy, r, color));
+            CustomIconRegistry.Register("arcanum:hourglass", (ctx, cx, cy, r, color) => DrawHourglassIcon(ctx, cx, cy, r, color));
+            CustomIconRegistry.Register("arcanum:shield", (ctx, cx, cy, r, color) => DrawShieldIcon(ctx, cx, cy, r, color));
+            CustomIconRegistry.Register("arcanum:crown", (ctx, cx, cy, r, color) => DrawCrownIcon(ctx, cx, cy, r, color));
+            CustomIconRegistry.Register("arcanum:sword", (ctx, cx, cy, r, color) => DrawSwordIcon(ctx, cx, cy, r, color));
+            CustomIconRegistry.Register("arcanum:rift", (ctx, cx, cy, r, color) => DrawRiftIcon(ctx, cx, cy, r, color));
+            CustomIconRegistry.Register("arcanum:star", (ctx, cx, cy, r, color) => DrawActiveStar(ctx, cx, cy, r, color));
+        }
         /// <summary>
         /// Draw a decorative section divider — horizontal line with a centered diamond ornament.
         /// </summary>

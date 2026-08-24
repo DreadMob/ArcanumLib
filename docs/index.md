@@ -32,6 +32,8 @@ Everything you need for custom in-game UI without fighting the low-level API.
 | [CustomTabContent]({{ site.baseurl }}{% link CustomTabContent.md %}) | Data-driven scrollable tab content with decorative Cairo icons and section layout. |
 | [GuiDateTimePicker]({{ site.baseurl }}{% link GuiDateTimePicker.md %}) | Reusable date/time picker for `GuiComposer` with Now/Clear buttons. |
 | [Custom Icons]({{ site.baseurl }}{% link CustomIcons.md %}) | Registry and interface for custom Cairo-drawn GUI icons keyed by string. |
+|| [HUDs & Overlays]({{ site.baseurl }}{% link Huds.md %}) | Generic HUD panels, client systems, packet icon HUDs, and transient overlays. |
+|| [Holograms]({{ site.baseurl }}{% link Holograms.md %}) | Floating text labels above blocks with texture caching and 3D projection. |
 | [BlockEntityConfigDialog]({{ site.baseurl }}{% link BlockEntityConfigDialog.md %}) | Generic base dialog for editing block entity configuration with typed config and save/cancel. |
 | [ImageIconCache]({{ site.baseurl }}{% link ImageIconCache.md %}) | Load and draw `.png`/`.jpg`/`.webp` icons with clipping and tinting. |
 
@@ -95,6 +97,14 @@ Keep the server/client responsive.
 |------|---------|
 | [EventBus]({{ site.baseurl }}{% link EventBus.md %}) | Typed publish/subscribe event bus for cross-mod communication. |
 | [CommandBuilder]({{ site.baseurl }}{% link CommandBuilder.md %}) | Fluent command framework with typed arguments, permissions, and autocomplete. |
+
+## Diagnostics
+
+Runtime validation and monitoring for ArcanumLib modules and dependent mods.
+
+| Page | Purpose |
+|------|---------|
+| [Diagnostics]({{ site.baseurl }}{% link Diagnostics.md %}) | Automatic startup checks for services, ModSystems, EventBus health, dependency versions, and runtime monitoring (tick time, memory, entities). |
 
 ## Logging
 

@@ -50,6 +50,18 @@ public static class ArcanumServices
     }
 
     /// <summary>
+    /// Returns the registered service of the given <paramref name="type"/>, or null.
+    /// </summary>
+    public static object? Get(Type type)
+    {
+        if (type == null) throw new ArgumentNullException(nameof(type));
+        lock (_syncLock)
+        {
+            return _services.TryGetValue(type, out var service) ? service : null;
+        }
+    }
+
+    /// <summary>
     /// Clears all registered services. Intended for world shutdown.
     /// </summary>
     public static void Shutdown()

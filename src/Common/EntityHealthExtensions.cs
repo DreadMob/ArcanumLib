@@ -10,6 +10,28 @@ namespace ArcanumLib.Common
     public static class EntityHealthExtensions
     {
         /// <summary>
+        /// Returns the current health as a fraction of max health, or <paramref name="defaultValue"/> when not available.
+        /// First checks top-level <c>health</c> and <c>maxHealth</c> watched attributes, then falls back to the <c>health</c> tree.
+        /// </summary>
+        public static float GetHealthPercent(this Entity entity, float defaultValue = 0f)
+        {
+            if (entity == null) return defaultValue;
+
+            var wa = entity.WatchedAttributes;
+            if (wa == null) return defaultValue;
+
+            float maxHealth = wa.GetFloat("maxHealth", 0f);
+            float currentHealth = wa.GetFloat("health", 0f);
+            if (maxHealth > 0f)
+                return currentHealth / maxHealth;
+
+            if (TryGetHealthFraction(entity, out float fraction))
+                return fraction;
+
+            return defaultValue;
+        }
+
+        /// <summary>
         /// Tries to get the current health as a fraction of max health.
         /// </summary>
         public static bool TryGetHealthFraction(this Entity entity, out float fraction)

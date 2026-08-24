@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using ArcanumLib.Core;
 
 namespace ArcanumLib.Events;
@@ -48,6 +49,37 @@ public enum EventBusPriority
 }
 
 /// <summary>
+/// Diagnostic record for a single active EventBus subscription.
+/// Used by <see cref="EventBus.GetDiagnostics"/> to report subscription health.
+/// </summary>
+public sealed class EventBusSubscriptionInfo
+{
+    /// <summary>Event type the handler is subscribed to.</summary>
+    public Type EventType { get; init; } = typeof(object);
+
+    /// <summary>Tag associated with the subscription, or empty for type-only subs.</summary>
+    public string Tag { get; init; } = "";
+
+    /// <summary>When the subscription was created.</summary>
+    public DateTime CreatedAt { get; init; }
+
+    /// <summary>Whether the subscription has been disposed.</summary>
+    public bool IsDisposed { get; internal set; }
+
+    /// <summary>Number of times the handler has been invoked.</summary>
+    public long InvocationCount { get; internal set; }
+
+    /// <summary>Total elapsed time spent in the handler, in milliseconds.</summary>
+    public double TotalInvocationMs { get; internal set; }
+
+    /// <summary>Last exception message thrown by the handler, if any.</summary>
+    public string? LastError { get; internal set; }
+
+    /// <summary>Average time per invocation in milliseconds, or 0 if never invoked.</summary>
+    public double AverageInvocationMs => InvocationCount > 0 ? TotalInvocationMs / InvocationCount : 0;
+}
+
+/// <summary>
 /// Typed publish/subscribe event bus for cross-mod communication.
 /// Mods can publish events without knowing who subscribes, and subscribe
 /// to event types without a hard reference to the publisher.
@@ -60,6 +92,7 @@ public static class EventBus
         public Action<object?> Handler = _ => { };
         public EventBusPriority Priority;
         public int RegistrationOrder;
+        public EventBusSubscriptionInfo? DiagInfo;
     }
 
     private readonly struct EventKey : IEquatable<EventKey>
@@ -83,6 +116,8 @@ public static class EventBus
     private static readonly Dictionary<EventKey, List<HandlerEntry>> _handlers = new();
     private static readonly object _syncLock = new();
     private static int _registrationCounter;
+    private static readonly List<WeakReference<HandlerEntry>> _allEntries = new();
+    private static readonly List<string> _publishedTags = new();
 
     // ── Type-only subscriptions (tag = "") — IEvent constrained ──
 
@@ -133,10 +168,18 @@ public static class EventBus
     {
         if (handler == null) throw new ArgumentNullException(nameof(handler));
 
+        var diagInfo = new EventBusSubscriptionInfo
+        {
+            EventType = typeof(T),
+            Tag = tag ?? "",
+            CreatedAt = DateTime.UtcNow
+        };
+
         var entry = new HandlerEntry
         {
             Handler = o => handler((T)o!),
-            Priority = priority
+            Priority = priority,
+            DiagInfo = diagInfo
         };
 
         lock (_syncLock)
@@ -154,6 +197,7 @@ public static class EventBus
                 int p = b.Priority.CompareTo(a.Priority);
                 return p != 0 ? p : a.RegistrationOrder.CompareTo(b.RegistrationOrder);
             });
+            _allEntries.Add(new WeakReference<HandlerEntry>(entry));
         }
 
         var capturedKey = new EventKey(typeof(T), tag);
@@ -166,6 +210,7 @@ public static class EventBus
                     list.RemoveAll(h => ReferenceEquals(h, entry));
                     if (list.Count == 0) _handlers.Remove(capturedKey);
                 }
+                diagInfo.IsDisposed = true;
             }
         });
     }
@@ -178,6 +223,7 @@ public static class EventBus
         var key = new EventKey(typeof(T), tag);
         lock (_syncLock)
         {
+            RecordPublishedTag(tag);
             if (!_handlers.TryGetValue(key, out var list) || list.Count == 0)
                 return 0;
             snapshot = new List<HandlerEntry>(list);
@@ -223,10 +269,18 @@ public static class EventBus
     {
         if (handler == null) throw new ArgumentNullException(nameof(handler));
 
+        var diagInfo = new EventBusSubscriptionInfo
+        {
+            EventType = typeof(object),
+            Tag = tag ?? "",
+            CreatedAt = DateTime.UtcNow
+        };
+
         var entry = new HandlerEntry
         {
             Handler = o => handler(o),
-            Priority = priority
+            Priority = priority,
+            DiagInfo = diagInfo
         };
 
         lock (_syncLock)
@@ -244,6 +298,7 @@ public static class EventBus
                 int p = b.Priority.CompareTo(a.Priority);
                 return p != 0 ? p : a.RegistrationOrder.CompareTo(b.RegistrationOrder);
             });
+            _allEntries.Add(new WeakReference<HandlerEntry>(entry));
         }
 
         var capturedKey = new EventKey(typeof(object), tag);
@@ -256,6 +311,7 @@ public static class EventBus
                     list.RemoveAll(h => ReferenceEquals(h, entry));
                     if (list.Count == 0) _handlers.Remove(capturedKey);
                 }
+                diagInfo.IsDisposed = true;
             }
         });
     }
@@ -277,6 +333,7 @@ public static class EventBus
 
         lock (_syncLock)
         {
+            RecordPublishedTag(tag);
             var untypedKey = new EventKey(typeof(object), tag);
             if (_handlers.TryGetValue(untypedKey, out var list) && list.Count > 0)
                 untypedSnapshot = new List<HandlerEntry>(list);
@@ -307,6 +364,7 @@ public static class EventBus
         int invoked = 0;
         foreach (var entry in snapshot)
         {
+            var sw = entry.DiagInfo != null ? Stopwatch.StartNew() : null;
             try
             {
                 entry.Handler(evt);
@@ -316,6 +374,14 @@ public static class EventBus
             {
                 ArcanumServices.Get<Vintagestory.API.Common.ICoreAPI>()?.Logger?.Warning(
                     "[ArcanumLib] EventBus handler for {0} threw: {1}", label, ex.Message);
+                if (entry.DiagInfo != null)
+                    entry.DiagInfo.LastError = ex.Message;
+            }
+            if (sw != null && entry.DiagInfo != null)
+            {
+                sw.Stop();
+                entry.DiagInfo.InvocationCount++;
+                entry.DiagInfo.TotalInvocationMs += sw.Elapsed.TotalMilliseconds;
             }
         }
         return invoked;
@@ -346,7 +412,75 @@ public static class EventBus
         lock (_syncLock)
         {
             _handlers.Clear();
+            _allEntries.Clear();
+            _publishedTags.Clear();
             _registrationCounter = 0;
+        }
+    }
+
+    /// <summary>
+    /// Records a tag as having been published. Used for dangling-handler detection.
+    /// </summary>
+    private static void RecordPublishedTag(string tag)
+    {
+        if (string.IsNullOrEmpty(tag)) return;
+        if (!_publishedTags.Contains(tag))
+            _publishedTags.Add(tag);
+    }
+
+    /// <summary>
+    /// Returns a diagnostic snapshot of all known EventBus subscriptions,
+    /// including invocation counts, timing, and errors.
+    /// </summary>
+    public static List<EventBusSubscriptionInfo> GetDiagnostics()
+    {
+        var result = new List<EventBusSubscriptionInfo>();
+        lock (_syncLock)
+        {
+            // Clean up dead weak references
+            _allEntries.RemoveAll(wr => !wr.TryGetTarget(out _));
+
+            foreach (var wr in _allEntries)
+            {
+                if (wr.TryGetTarget(out var entry) && entry.DiagInfo != null)
+                    result.Add(entry.DiagInfo);
+            }
+        }
+        return result;
+    }
+
+    /// <summary>
+    /// Returns tags that have active subscribers but were never published.
+    /// Useful for detecting typo'd event names.
+    /// </summary>
+    public static List<string> GetDanglingSubscriptions()
+    {
+        var result = new List<string>();
+        lock (_syncLock)
+        {
+            foreach (var kvp in _handlers)
+            {
+                if (kvp.Value.Count == 0) continue;
+                string tag = kvp.Key.Tag;
+                if (string.IsNullOrEmpty(tag)) continue;
+                if (!_publishedTags.Contains(tag))
+                    result.Add($"{kvp.Key.EventType.Name}[{tag}]");
+            }
+        }
+        return result;
+    }
+
+    /// <summary>
+    /// Returns the number of active (non-disposed) subscriptions.
+    /// </summary>
+    public static int ActiveSubscriptionCount()
+    {
+        lock (_syncLock)
+        {
+            int count = 0;
+            foreach (var kvp in _handlers)
+                count += kvp.Value.Count;
+            return count;
         }
     }
 

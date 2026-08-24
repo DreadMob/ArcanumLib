@@ -51,6 +51,12 @@ This folder contains API documentation for `ArcanumLib` — a shared Vintage Sto
 | [EventBus](EventBus.md) | Typed publish/subscribe event bus for cross-mod communication. |
 | [CommandBuilder](CommandBuilder.md) | Fluent command framework with typed arguments, permissions, and autocomplete. |
 
+## Diagnostics
+
+| Page | What it covers |
+|------|----------------|
+| [Diagnostics](Diagnostics.md) | Automatic startup checks for services, ModSystems, EventBus health, dependency versions, and runtime monitoring (tick time, memory, entities). |
+
 ## Persistence
 
 | Page | What it covers |
