@@ -12,9 +12,9 @@ namespace ArcanumLib.Performance;
 /// single network sync. Useful for reducing packet spam when stats change rapidly
 /// (equipment swaps, buffs, debuffs).
 /// </summary>
-public class StatCoalescingEngine : ModSystem
+public static class StatCoalescingEngine
 {
-    private ICoreServerAPI? _sapi;
+    private static ICoreServerAPI? _sapi;
 
     /// <summary>
     /// Enables or disables coalescing at runtime. When disabled, queued stats are applied
@@ -52,16 +52,20 @@ public class StatCoalescingEngine : ModSystem
     private static readonly Dictionary<long, CoalescedUpdate> PendingUpdates = new();
     private static readonly object _syncLock = new();
 
-    public override bool ShouldLoad(EnumAppSide forSide) => forSide == EnumAppSide.Server;
-
-    public override void StartServerSide(ICoreServerAPI api)
+    /// <summary>
+    /// Starts the coalescing engine on the server and hooks player disconnect cleanup.
+    /// </summary>
+    public static void Start(ICoreServerAPI api)
     {
         _sapi = api;
         api.Event.PlayerDisconnect += OnPlayerDisconnect;
         api.Logger.Notification("[ArcanumLib] StatCoalescingEngine started.");
     }
 
-    public override void Dispose()
+    /// <summary>
+    /// Stops the coalescing engine, cancels pending deferred work and clears the queue.
+    /// </summary>
+    public static void Stop()
     {
         if (_sapi != null)
         {
@@ -81,7 +85,7 @@ public class StatCoalescingEngine : ModSystem
                 PendingUpdates.Clear();
             }
         }
-        base.Dispose();
+        _sapi = null;
     }
 
     /// <summary>
@@ -307,7 +311,7 @@ public class StatCoalescingEngine : ModSystem
         return (DefaultCategory, statKey);
     }
 
-    private void OnPlayerDisconnect(IServerPlayer player)
+    private static void OnPlayerDisconnect(IServerPlayer player)
     {
         long entityId = player.Entity.EntityId;
 

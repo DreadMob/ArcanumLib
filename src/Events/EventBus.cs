@@ -32,7 +32,12 @@ public sealed class EventBusSubscription : IDisposable
     {
         if (_disposed) return;
         _disposed = true;
-        try { _unsubscribe?.Invoke(); } catch { /* swallow */ }
+        try { _unsubscribe?.Invoke(); }
+        catch (Exception ex)
+        {
+            ArcanumServices.Get<Vintagestory.API.Common.ICoreAPI>()?.Logger?.Warning(
+                "[ArcanumLib] EventBus subscription unsubscribe failed: {0}", ex.Message);
+        }
         _unsubscribe = null;
     }
 }

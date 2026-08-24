@@ -17,6 +17,9 @@ public class ArcanumCard : GuiElement
     private readonly bool _drawOrnament;
     private readonly Action<Context, ElementBounds>? _drawContent;
 
+    /// <summary>
+    /// Creates a card with customizable fill, border, accent strip, inner border, corner ornament and custom content drawing.
+    /// </summary>
     public ArcanumCard(
         ICoreClientAPI capi,
         ElementBounds bounds,
@@ -36,6 +39,7 @@ public class ArcanumCard : GuiElement
         _drawContent = drawContent;
     }
 
+    /// <summary>Composes the card background with optional accent strip, ornament and custom content.</summary>
     public override void ComposeElements(Context ctx, ImageSurface surface)
     {
         Bounds.CalcWorldBounds();

@@ -65,7 +65,7 @@ public static class StatusEffectManager
     /// <param name="effect">The effect to apply.</param>
     /// <param name="durationMs">Duration in milliseconds.</param>
     /// <param name="data">Optional payload.</param>
-    /// <returns>The active or updated effect instance, or null if the entity was null.</returns>
+    /// <returns>The active or updated effect instance, or <c>null</c> if the entity is null or no service is registered.</returns>
     public static IStatusEffectInstance? Apply(Entity? entity, IStatusEffect effect, float durationMs, object? data = null)
         => Current?.Apply(entity, effect, durationMs, data);
 
@@ -74,7 +74,7 @@ public static class StatusEffectManager
     /// </summary>
     /// <param name="entity">The target entity.</param>
     /// <param name="effectCode">The effect code to remove.</param>
-    /// <returns>True if any effect was removed.</returns>
+    /// <returns><c>true</c> if any effect was removed.</returns>
     public static bool Remove(Entity? entity, string effectCode)
         => Current?.Remove(entity, effectCode) ?? false;
 
@@ -83,7 +83,7 @@ public static class StatusEffectManager
     /// </summary>
     /// <param name="entity">The target entity.</param>
     /// <param name="instanceId">The unique instance id.</param>
-    /// <returns>True if the instance was removed.</returns>
+    /// <returns><c>true</c> if the instance was removed.</returns>
     public static bool Remove(Entity? entity, long instanceId)
         => Current?.Remove(entity, instanceId) ?? false;
 
@@ -91,22 +91,24 @@ public static class StatusEffectManager
     /// Removes all active effects from the entity.
     /// </summary>
     /// <param name="entity">The target entity.</param>
-    /// <returns>True if any effect was removed.</returns>
+    /// <returns><c>true</c> if any effect was removed.</returns>
     public static bool RemoveAll(Entity? entity)
         => Current?.RemoveAll(entity) ?? false;
 
     /// <summary>
-    /// Removes all effects matching the given category (Buff or Debuff) from the entity.
+    /// Removes all effects matching the given category from the entity.
     /// </summary>
     /// <param name="entity">The target entity.</param>
-    /// <param name="category">The category to remove.</param>
-    /// <returns>True if any effect was removed.</returns>
+    /// <param name="category">The category to remove (Buff, Debuff, or None).</param>
+    /// <returns><c>true</c> if any effect was removed.</returns>
     public static bool RemoveByCategory(Entity? entity, EffectCategory category)
         => Current?.RemoveByCategory(entity, category) ?? false;
 
     /// <summary>
     /// Adds a full immunity to effects with the given tag on the entity.
     /// </summary>
+    /// <param name="entity">The target entity.</param>
+    /// <param name="tag">The effect tag.</param>
     public static void AddImmunity(Entity? entity, string tag)
     {
         if (entity != null) EffectResistanceStore.AddImmunity(entity, tag);
@@ -115,6 +117,8 @@ public static class StatusEffectManager
     /// <summary>
     /// Removes an immunity by tag from the entity.
     /// </summary>
+    /// <param name="entity">The target entity.</param>
+    /// <param name="tag">The effect tag.</param>
     public static void RemoveImmunity(Entity? entity, string tag)
     {
         if (entity != null) EffectResistanceStore.RemoveImmunity(entity, tag);
@@ -124,6 +128,9 @@ public static class StatusEffectManager
     /// Adds a resistance (0..1) to effects with the given tag on the entity.
     /// 0 = no resistance, 0.5 = 50% duration reduction, 1 = full immunity.
     /// </summary>
+    /// <param name="entity">The target entity.</param>
+    /// <param name="tag">The effect tag.</param>
+    /// <param name="amount">The resistance amount, from 0 to 1.</param>
     public static void AddResistance(Entity? entity, string tag, float amount)
     {
         if (entity != null) EffectResistanceStore.AddResistance(entity, tag, amount);
@@ -132,6 +139,8 @@ public static class StatusEffectManager
     /// <summary>
     /// Removes a resistance by tag from the entity.
     /// </summary>
+    /// <param name="entity">The target entity.</param>
+    /// <param name="tag">The effect tag.</param>
     public static void RemoveResistance(Entity? entity, string tag)
     {
         if (entity != null) EffectResistanceStore.RemoveResistance(entity, tag);
@@ -140,6 +149,9 @@ public static class StatusEffectManager
     /// <summary>
     /// Returns true if the entity is fully immune to the given tag.
     /// </summary>
+    /// <param name="entity">The target entity.</param>
+    /// <param name="tag">The effect tag.</param>
+    /// <returns><c>true</c> if the entity is immune; otherwise <c>false</c>.</returns>
     public static bool IsImmune(Entity? entity, string tag)
         => entity != null && EffectResistanceStore.IsImmune(entity, tag);
 
@@ -148,7 +160,7 @@ public static class StatusEffectManager
     /// </summary>
     /// <param name="entity">The target entity.</param>
     /// <param name="effectCode">The effect code.</param>
-    /// <returns>True if at least one matching effect is active.</returns>
+    /// <returns><c>true</c> if at least one matching effect is active.</returns>
     public static bool Has(Entity? entity, string effectCode)
         => Current?.Has(entity, effectCode) ?? false;
 

@@ -106,11 +106,13 @@ public class ArcanumList<T> : GuiElement
     private float MaxScroll => Math.Max(0f, TotalHeight - VisibleHeight);
     private bool ScrollNeeded => TotalHeight > VisibleHeight + 0.1f;
 
+    /// <summary>Skips static composition; the list renders dynamically in <see cref="RenderInteractiveElements"/>.</summary>
     public override void ComposeElements(Context ctxStatic, ImageSurface surfaceStatic)
     {
         // The list renders dynamically in RenderInteractiveElements.
     }
 
+    /// <summary>Updates hover state, regenerates the cached texture if needed, and renders the list.</summary>
     public override void RenderInteractiveElements(float deltaTime)
     {
         if (Bounds?.ParentBounds == null) return;
@@ -337,6 +339,7 @@ public class ArcanumList<T> : GuiElement
         }
     }
 
+    /// <summary>Handles mouse down for scrollbar dragging and row selection.</summary>
     public override void OnMouseDownOnElement(ICoreClientAPI api, MouseEvent args)
     {
         if (Bounds == null) return;
@@ -380,6 +383,7 @@ public class ArcanumList<T> : GuiElement
         }
     }
 
+    /// <summary>Handles mouse move for scrollbar dragging and hover state.</summary>
     public override void OnMouseMove(ICoreClientAPI api, MouseEvent args)
     {
         if (Bounds == null) return;
@@ -403,6 +407,7 @@ public class ArcanumList<T> : GuiElement
         }
     }
 
+    /// <summary>Handles mouse up to end scrollbar dragging.</summary>
     public override void OnMouseUp(ICoreClientAPI api, MouseEvent args)
     {
         if (_dragging)
@@ -413,6 +418,7 @@ public class ArcanumList<T> : GuiElement
         }
     }
 
+    /// <summary>Handles mouse wheel scrolling inside the list.</summary>
     public override void OnMouseWheel(ICoreClientAPI api, MouseWheelEventArgs args)
     {
         if (Bounds == null || !ScrollNeeded) return;
@@ -438,6 +444,7 @@ public class ArcanumList<T> : GuiElement
         args.SetHandled(true);
     }
 
+    /// <summary>Releases the cached list texture.</summary>
     public override void Dispose()
     {
         _texture?.Dispose();

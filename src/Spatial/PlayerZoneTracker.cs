@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using ArcanumLib.Common;
 using Vintagestory.API.Common;
 using Vintagestory.API.Config;
 using Vintagestory.API.MathTools;
@@ -331,9 +332,14 @@ public class PlayerZoneTracker : ModSystem
     {
         if (_sapi == null) return;
 
-        foreach (var p in _sapi.World.AllOnlinePlayers)
+        IEnumerable<IPlayer> players = OnlinePlayerCache.IsLoaded
+            ? (IEnumerable<IPlayer>)OnlinePlayerCache.All
+            : _sapi.World.AllOnlinePlayers;
+
+        foreach (var p in players)
         {
-            if (p is not IServerPlayer sp || sp.Entity?.Pos == null) continue;
+            var sp = p as IServerPlayer;
+            if (sp?.Entity?.Pos == null) continue;
 
             var pos = sp.Entity.Pos.XYZ;
             int dim = sp.Entity.Pos.Dimension;

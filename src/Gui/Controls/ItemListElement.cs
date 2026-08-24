@@ -190,7 +190,11 @@ namespace ArcanumLib.Gui.Controls
                     ? GetRowIdAt(api.Input.MouseY)
                     : null;
             }
-            catch { return; }
+            catch (Exception ex)
+            {
+                api?.Logger?.Warning("[ItemListElement] hover detection failed: {0}", ex.Message);
+                return;
+            }
 
             if (!string.Equals(newHover, hoveredRowId, StringComparison.Ordinal))
             {

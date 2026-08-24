@@ -108,9 +108,36 @@ namespace ArcanumLib.Items
         public string GetChargeKey() => AttributePrefix + ChargeAttributeName;
 
         /// <summary>
-        /// Builds all candidate generic charge attribute keys (generic + legacy prefixes).
+        /// Builds all candidate charge attribute keys (generic + legacy prefixes + suffixed variants).
         /// </summary>
         public IEnumerable<string> GetAllChargeKeys()
+        {
+            foreach (var key in GetAllChargeBaseKeys())
+                yield return key;
+
+            if (!string.IsNullOrWhiteSpace(TimeChargeSuffix))
+            {
+                yield return AttributePrefix + TimeChargeSuffix;
+                foreach (var prefix in LegacyAttributePrefixes)
+                    yield return string.IsNullOrWhiteSpace(prefix) ? TimeChargeSuffix : prefix + TimeChargeSuffix;
+            }
+
+            if (!string.IsNullOrWhiteSpace(UseChargeSuffix))
+            {
+                yield return AttributePrefix + UseChargeSuffix;
+                foreach (var prefix in LegacyAttributePrefixes)
+                    yield return string.IsNullOrWhiteSpace(prefix) ? UseChargeSuffix : prefix + UseChargeSuffix;
+            }
+
+            if (!string.IsNullOrWhiteSpace(PercentChargeSuffix))
+            {
+                yield return AttributePrefix + PercentChargeSuffix;
+                foreach (var prefix in LegacyAttributePrefixes)
+                    yield return string.IsNullOrWhiteSpace(prefix) ? PercentChargeSuffix : prefix + PercentChargeSuffix;
+            }
+        }
+
+        private IEnumerable<string> GetAllChargeBaseKeys()
         {
             yield return GetChargeKey();
             foreach (var prefix in LegacyAttributePrefixes)

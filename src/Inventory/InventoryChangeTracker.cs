@@ -11,7 +11,7 @@ namespace ArcanumLib.Inventory;
 /// recomputation should run. Fingerprinting is throttled and cached to avoid
 /// expensive work on every tick.
 /// </summary>
-public class InventoryChangeTracker
+public class InventoryChangeTracker : IDisposable
 {
     private readonly ICoreAPI _api;
     private readonly string _inventoryCode;
@@ -68,6 +68,11 @@ public class InventoryChangeTracker
         long entityId = player.EntityId;
         long now = _api.World.ElapsedMilliseconds;
 
+        var inv = player.Player.InventoryManager.GetOwnInventory(_inventoryCode);
+        if (inv == null) return false;
+
+        var current = BuildFingerprint(inv);
+
         lock (_syncLock)
         {
             // Throttle per-player checks.
@@ -79,15 +84,7 @@ public class InventoryChangeTracker
                 }
             }
             _lastCheckTimes[entityId] = now;
-        }
 
-        var inv = player.Player.InventoryManager.GetOwnInventory(_inventoryCode);
-        if (inv == null) return false;
-
-        var current = BuildFingerprint(inv);
-
-        lock (_syncLock)
-        {
             if (_lastFingerprints.TryGetValue(entityId, out var last))
             {
                 if (last.Equals(current))

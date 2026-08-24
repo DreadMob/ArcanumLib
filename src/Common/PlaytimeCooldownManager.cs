@@ -9,7 +9,7 @@ namespace ArcanumLib.Common
     /// </summary>
     public class PlaytimeCooldownManager
     {
-        private readonly PlaytimeTracker _playtimeTracker;
+        private readonly PlaytimeTracker? _playtimeTracker;
 
         // key format: "uid:category" (e.g. "player123:runes")
         private readonly Dictionary<string, long> _cooldowns = new(StringComparer.OrdinalIgnoreCase);
@@ -18,9 +18,14 @@ namespace ArcanumLib.Common
         private readonly Dictionary<string, long> _lastCombatSeconds = new(StringComparer.OrdinalIgnoreCase);
 
         /// <summary>
+        /// Creates a cooldown manager backed by the global playtime tracker.
+        /// </summary>
+        public PlaytimeCooldownManager() : this(PlaytimeTracker.Current) { }
+
+        /// <summary>
         /// Creates a cooldown manager backed by the given playtime tracker.
         /// </summary>
-        public PlaytimeCooldownManager(PlaytimeTracker playtimeTracker)
+        public PlaytimeCooldownManager(PlaytimeTracker? playtimeTracker)
         {
             _playtimeTracker = playtimeTracker;
         }

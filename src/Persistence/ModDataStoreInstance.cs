@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using Vintagestory.API.Server;
@@ -12,11 +13,12 @@ namespace ArcanumLib.Persistence
     /// Generic implementation of a versioned per-savegame data store.
     /// </summary>
     /// <typeparam name="T">The data type stored by the consumer.</typeparam>
-    public class ModDataStoreInstance<T> : IModDataStore<T>
+    internal sealed class ModDataStoreInstance<T> : IModDataStore<T>
     {
         private readonly ICoreServerAPI? _sapi;
         private readonly Func<T> _factory;
         private readonly List<(int fromVersion, Func<JToken, JToken> migration)> _migrations = new();
+        private readonly ReaderWriterLockSlim _dataLock = new(LockRecursionPolicy.SupportsRecursion);
         private T? _data;
         private bool _isLoaded;
         private bool _isDirty;
@@ -44,17 +46,38 @@ namespace ArcanumLib.Persistence
         /// <summary>
         /// Whether the store has been loaded at least once.
         /// </summary>
-        public bool IsLoaded => _isLoaded;
+        public bool IsLoaded
+        {
+            get
+            {
+                _dataLock.EnterReadLock();
+                try { return _isLoaded; }
+                finally { _dataLock.ExitReadLock(); }
+            }
+        }
 
         /// <summary>
         /// Whether the live data has changed since the last save.
         /// </summary>
-        public bool IsDirty => _isDirty;
+        public bool IsDirty
+        {
+            get
+            {
+                _dataLock.EnterReadLock();
+                try { return _isDirty; }
+                finally { _dataLock.ExitReadLock(); }
+            }
+        }
 
         /// <summary>
         /// Marks the store as dirty so the next <see cref="Save"/> will persist the data.
         /// </summary>
-        public void MarkDirty() => _isDirty = true;
+        public void MarkDirty()
+        {
+            _dataLock.EnterWriteLock();
+            try { _isDirty = true; }
+            finally { _dataLock.ExitWriteLock(); }
+        }
 
         /// <summary>
         /// The live data object.
@@ -63,12 +86,18 @@ namespace ArcanumLib.Persistence
         {
             get
             {
-                if (!_isLoaded)
+                _dataLock.EnterUpgradeableReadLock();
+                try
                 {
-                    Load();
+                    if (!_isLoaded)
+                    {
+                        _dataLock.EnterWriteLock();
+                        try { LoadCore(); }
+                        finally { _dataLock.ExitWriteLock(); }
+                    }
+                    return _data!;
                 }
-
-                return _data!;
+                finally { _dataLock.ExitUpgradeableReadLock(); }
             }
         }
 
@@ -80,6 +109,9 @@ namespace ArcanumLib.Persistence
         /// <param name="storeId">The store id.</param>
         /// <param name="dataVersion">The current schema version.</param>
         /// <param name="factory">Factory for creating a fresh data instance.</param>
+        /// <exception cref="ArgumentException">Thrown when <paramref name="modId"/> or <paramref name="storeId"/> is empty.</exception>
+        /// <exception cref="ArgumentOutOfRangeException">Thrown when <paramref name="dataVersion"/> is less than 1.</exception>
+        /// <exception cref="ArgumentNullException">Thrown when <paramref name="factory"/> is null.</exception>
         public ModDataStoreInstance(ICoreServerAPI? sapi, string modId, string storeId, int dataVersion, Func<T> factory)
         {
             if (string.IsNullOrWhiteSpace(modId))
@@ -104,17 +136,27 @@ namespace ArcanumLib.Persistence
         /// </summary>
         /// <param name="fromVersion">The source schema version.</param>
         /// <param name="migration">A function that transforms the previous JSON payload into the next version.</param>
+        /// <exception cref="ArgumentNullException">Thrown when <paramref name="migration"/> is null.</exception>
         public void RegisterMigration(int fromVersion, Func<JToken, JToken> migration)
         {
             if (migration == null) throw new ArgumentNullException(nameof(migration));
 
-            _migrations.Add((fromVersion, migration));
+            _dataLock.EnterWriteLock();
+            try { _migrations.Add((fromVersion, migration)); }
+            finally { _dataLock.ExitWriteLock(); }
         }
 
         /// <summary>
         /// Loads the data from the current savegame, applying migrations if needed.
         /// </summary>
         public void Load()
+        {
+            _dataLock.EnterWriteLock();
+            try { LoadCore(); }
+            finally { _dataLock.ExitWriteLock(); }
+        }
+
+        private void LoadCore()
         {
             _data = _factory();
             _isDirty = false;
@@ -177,7 +219,7 @@ namespace ArcanumLib.Persistence
                     }
                 }
 
-                _data = JsonConvert.DeserializeObject<T>(token.ToString());
+                _data = token.ToObject<T>();
                 if (_data == null)
                 {
                     _data = _factory();
@@ -199,27 +241,37 @@ namespace ArcanumLib.Persistence
         /// </summary>
         public void Save()
         {
-            if (!_isDirty) return;
-
-            var saveGame = _sapi?.WorldManager?.SaveGame;
-            if (saveGame == null)
-            {
-                return;
-            }
-
+            _dataLock.EnterWriteLock();
             try
             {
-                var payload = JsonConvert.SerializeObject(Data);
-                var envelope = new ModDataStoreEnvelope { Version = DataVersion, Payload = payload };
-                var json = JsonConvert.SerializeObject(envelope);
-                var bytes = Encoding.UTF8.GetBytes(json);
-                saveGame.StoreData(StoreKey, bytes);
-                _isDirty = false;
+                if (!_isDirty) return;
+
+                if (!_isLoaded)
+                {
+                    LoadCore();
+                }
+
+                var saveGame = _sapi?.WorldManager?.SaveGame;
+                if (saveGame == null)
+                {
+                    return;
+                }
+
+                try
+                {
+                    var payload = JsonConvert.SerializeObject(_data);
+                    var envelope = new ModDataStoreEnvelope { Version = DataVersion, Payload = payload };
+                    var json = JsonConvert.SerializeObject(envelope);
+                    var bytes = Encoding.UTF8.GetBytes(json);
+                    saveGame.StoreData(StoreKey, bytes);
+                    _isDirty = false;
+                }
+                catch (Exception ex)
+                {
+                    _sapi?.Logger?.Warning("[ArcanumLib] [ModDataStore] Failed to save {0}: {1}", StoreKey, ex.Message);
+                }
             }
-            catch (Exception ex)
-            {
-                _sapi?.Logger?.Warning("[ArcanumLib] [ModDataStore] Failed to save {0}: {1}", StoreKey, ex.Message);
-            }
+            finally { _dataLock.ExitWriteLock(); }
         }
 
     }

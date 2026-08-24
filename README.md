@@ -6,7 +6,6 @@
 [![Game Version](https://img.shields.io/badge/Vintage%20Story-1.22.1+-green.svg)](https://www.vintagestory.at/)
 [![Version](https://img.shields.io/badge/Version-1.0.0--rc1-orange.svg)](resources/modinfo.json)
 [![C#](https://img.shields.io/badge/C%23-.NET%2010-purple.svg)]()
-[![C#](https://img.shields.io/badge/C%23-.NET%2010-purple.svg)]()
 
 ---
 
@@ -80,8 +79,8 @@ See the [`docs/`](docs) folder for full API documentation and examples.
 | **CustomTabContent** | Data-driven scrollable tab content with decorative Cairo icons and `CustomTabData` model. |
 | **GuiDateTimePicker** | Reusable date/time picker for `GuiComposer` with Now/Clear buttons. |
 | **Custom Icons** | `ICustomIconRenderer`, `CustomIconRegistry`, and `CustomTabIconRenderer` for custom Cairo-drawn GUI icons. |
-|| **HUDs & Overlays** | `HudPanel`/`HudDialog`/`HudClientSystem`, `TransientOverlay` for toasts, `PacketIconHud` for packet-driven icon bars, and `IHudElementRenderer` element registry. |
-|| **Holograms** | `SingleHologramRenderer` and `AreaHologramRenderer` for floating block labels with `IHologramTextSource`, versioned texture caching, and 3D projection. |
+| **HUDs & Overlays** | `HudPanel`/`HudDialog`/`HudClientSystem`, `TransientOverlay` for toasts, `PacketIconHud` for packet-driven icon bars, and `IHudElementRenderer` element registry. |
+| **Holograms** | `SingleHologramRenderer` and `AreaHologramRenderer` for floating block labels with `IHologramTextSource`, versioned texture caching, and 3D projection. |
 | **ImageIconCache** | Load, cache and draw icon image surfaces with circle, hexagon, and diamond clipping plus optional tinting. |
 | **ModeIconBuilder** | Factory for tool-mode icons (in-game icon, letter, or live `ItemStack` rendering). |
 

@@ -14,6 +14,7 @@ namespace ArcanumLib.Effects;
 public class StatusEffectService
 {
     private readonly ConcurrentDictionary<long, StatusEffectContainer> _containers = new();
+    private readonly object _sync = new();
     private long _nextInstanceId;
 
     /// <summary>
@@ -48,56 +49,52 @@ public class StatusEffectService
     /// <param name="effect">The effect to apply.</param>
     /// <param name="durationMs">Duration in milliseconds.</param>
     /// <param name="data">Optional payload.</param>
-    /// <returns>The active or updated effect instance, or null if the entity was null.</returns>
+    /// <returns>The active or updated effect instance, or <c>null</c> if the entity is null or the effect was resisted.</returns>
     public IStatusEffectInstance? Apply(Entity? entity, IStatusEffect effect, float durationMs, object? data = null)
     {
         if (entity == null) return null;
 
-        // Check immunities and resistances
-        if (EffectResistanceStore.IsImmuneToEffect(entity, effect)) return null;
-        float durationMult = EffectResistanceStore.GetDurationMultiplier(entity, effect);
-        if (durationMult <= 0f) return null;
-        float adjustedDuration = durationMs * durationMult;
-
-        var container = _containers.GetOrAdd(entity.EntityId, _ => new StatusEffectContainer(entity, GetNextInstanceId));
-        StatusEffectInstance? instance;
-        StatusEffectInstance? oldInstance;
-        StatusEffectApplyResult result;
-
-        lock (container)
+        lock (_sync)
         {
-            (instance, result, oldInstance) = container.Apply(effect, adjustedDuration, data);
+            // Check immunities and resistances
+            if (EffectResistanceStore.IsImmuneToEffect(entity, effect)) return null;
+            float durationMult = EffectResistanceStore.GetDurationMultiplier(entity, effect);
+            if (durationMult <= 0f) return null;
+            float adjustedDuration = durationMs * durationMult;
+
+            var container = _containers.GetOrAdd(entity.EntityId, _ => new StatusEffectContainer(entity, GetNextInstanceId));
+            var (instance, result, oldInstance) = container.Apply(effect, adjustedDuration, data);
+
+            if (instance == null) return null;
+
+            switch (result)
+            {
+                case StatusEffectApplyResult.New:
+                    SafeApply(entity, instance);
+                    OnEffectApplied?.Invoke(entity, instance);
+                    break;
+
+                case StatusEffectApplyResult.Refreshed:
+                    OnEffectRefreshed?.Invoke(entity, instance);
+                    break;
+
+                case StatusEffectApplyResult.Stacked:
+                    SafeApply(entity, instance);
+                    OnEffectStacked?.Invoke(entity, instance);
+                    break;
+
+                case StatusEffectApplyResult.Overridden:
+                    if (oldInstance != null)
+                    {
+                        SafeRemove(entity, oldInstance, expired: false);
+                    }
+                    SafeApply(entity, instance);
+                    OnEffectApplied?.Invoke(entity, instance);
+                    break;
+            }
+
+            return instance;
         }
-
-        if (instance == null) return null;
-
-        switch (result)
-        {
-            case StatusEffectApplyResult.New:
-                SafeApply(entity, instance);
-                OnEffectApplied?.Invoke(entity, instance);
-                break;
-
-            case StatusEffectApplyResult.Refreshed:
-                OnEffectRefreshed?.Invoke(entity, instance);
-                break;
-
-            case StatusEffectApplyResult.Stacked:
-                SafeApply(entity, instance);
-                OnEffectStacked?.Invoke(entity, instance);
-                break;
-
-            case StatusEffectApplyResult.Overridden:
-                if (oldInstance != null)
-                {
-                    SafeRemove(entity, oldInstance, expired: false);
-                }
-                SafeApply(entity, instance);
-                OnEffectApplied?.Invoke(entity, instance);
-                break;
-        }
-
-        return instance;
     }
 
     /// <summary>
@@ -105,30 +102,29 @@ public class StatusEffectService
     /// </summary>
     /// <param name="entity">The target entity.</param>
     /// <param name="effectCode">The effect code to remove.</param>
-    /// <returns>True if any effect was removed.</returns>
+    /// <returns><c>true</c> if any effect was removed.</returns>
     public bool Remove(Entity? entity, string effectCode)
     {
         if (entity == null) return false;
 
-        if (!_containers.TryGetValue(entity.EntityId, out var container)) return false;
-
-        IReadOnlyList<StatusEffectInstance> removed;
-        lock (container)
+        lock (_sync)
         {
-            removed = container.RemoveByCode(effectCode);
-        }
+            if (!_containers.TryGetValue(entity.EntityId, out var container)) return false;
 
-        foreach (var instance in removed)
-        {
-            SafeRemove(entity, instance, expired: false);
-        }
+            var removed = container.RemoveByCode(effectCode);
 
-        if (container.IsEmpty)
-        {
-            _containers.TryRemove(entity.EntityId, out _);
-        }
+            foreach (var instance in removed)
+            {
+                SafeRemove(entity, instance, expired: false);
+            }
 
-        return removed.Count > 0;
+            if (container.IsEmpty)
+            {
+                _containers.TryRemove(entity.EntityId, out _);
+            }
+
+            return removed.Count > 0;
+        }
     }
 
     /// <summary>
@@ -136,56 +132,54 @@ public class StatusEffectService
     /// </summary>
     /// <param name="entity">The target entity.</param>
     /// <param name="instanceId">The unique instance id.</param>
-    /// <returns>True if the instance was removed.</returns>
+    /// <returns><c>true</c> if the instance was removed.</returns>
     public bool Remove(Entity? entity, long instanceId)
     {
         if (entity == null) return false;
 
-        if (!_containers.TryGetValue(entity.EntityId, out var container)) return false;
-
-        StatusEffectInstance? instance;
-        lock (container)
+        lock (_sync)
         {
-            instance = container.RemoveById(instanceId);
-        }
+            if (!_containers.TryGetValue(entity.EntityId, out var container)) return false;
 
-        if (instance != null)
-        {
-            SafeRemove(entity, instance, expired: false);
-        }
+            var instance = container.RemoveById(instanceId);
 
-        if (container.IsEmpty)
-        {
-            _containers.TryRemove(entity.EntityId, out _);
-        }
+            if (instance != null)
+            {
+                SafeRemove(entity, instance, expired: false);
+            }
 
-        return instance != null;
+            if (container.IsEmpty)
+            {
+                _containers.TryRemove(entity.EntityId, out _);
+            }
+
+            return instance != null;
+        }
     }
 
     /// <summary>
     /// Removes all active effects from the entity.
     /// </summary>
     /// <param name="entity">The target entity.</param>
-    /// <returns>True if any effect was removed.</returns>
+    /// <returns><c>true</c> if any effect was removed.</returns>
     public bool RemoveAll(Entity? entity)
     {
         if (entity == null) return false;
 
-        if (!_containers.TryGetValue(entity.EntityId, out var container)) return false;
-
-        IReadOnlyList<StatusEffectInstance> removed;
-        lock (container)
+        lock (_sync)
         {
-            removed = container.RemoveAll();
-        }
+            if (!_containers.TryGetValue(entity.EntityId, out var container)) return false;
 
-        foreach (var instance in removed)
-        {
-            SafeRemove(entity, instance, expired: false);
-        }
+            var removed = container.RemoveAll();
 
-        _containers.TryRemove(entity.EntityId, out _);
-        return removed.Count > 0;
+            foreach (var instance in removed)
+            {
+                SafeRemove(entity, instance, expired: false);
+            }
+
+            _containers.TryRemove(entity.EntityId, out _);
+            return removed.Count > 0;
+        }
     }
 
     /// <summary>
@@ -193,30 +187,29 @@ public class StatusEffectService
     /// </summary>
     /// <param name="entity">The target entity.</param>
     /// <param name="category">The category to remove (Buff, Debuff, or None).</param>
-    /// <returns>True if any effect was removed.</returns>
+    /// <returns><c>true</c> if any effect was removed.</returns>
     public bool RemoveByCategory(Entity? entity, EffectCategory category)
     {
         if (entity == null || category == EffectCategory.None) return false;
 
-        if (!_containers.TryGetValue(entity.EntityId, out var container)) return false;
-
-        IReadOnlyList<StatusEffectInstance> removed;
-        lock (container)
+        lock (_sync)
         {
-            removed = container.RemoveByCategory(category);
-        }
+            if (!_containers.TryGetValue(entity.EntityId, out var container)) return false;
 
-        foreach (var instance in removed)
-        {
-            SafeRemove(entity, instance, expired: false);
-        }
+            var removed = container.RemoveByCategory(category);
 
-        if (container.IsEmpty)
-        {
-            _containers.TryRemove(entity.EntityId, out _);
-        }
+            foreach (var instance in removed)
+            {
+                SafeRemove(entity, instance, expired: false);
+            }
 
-        return removed.Count > 0;
+            if (container.IsEmpty)
+            {
+                _containers.TryRemove(entity.EntityId, out _);
+            }
+
+            return removed.Count > 0;
+        }
     }
 
     /// <summary>
@@ -224,15 +217,14 @@ public class StatusEffectService
     /// </summary>
     /// <param name="entity">The target entity.</param>
     /// <param name="effectCode">The effect code.</param>
-    /// <returns>True if at least one matching effect is active.</returns>
+    /// <returns><c>true</c> if at least one matching effect is active.</returns>
     public bool Has(Entity? entity, string effectCode)
     {
         if (entity == null) return false;
 
-        if (!_containers.TryGetValue(entity.EntityId, out var container)) return false;
-
-        lock (container)
+        lock (_sync)
         {
+            if (!_containers.TryGetValue(entity.EntityId, out var container)) return false;
             return container.Instances.Any(i => i.Code == effectCode);
         }
     }
@@ -246,10 +238,9 @@ public class StatusEffectService
     {
         if (entity == null) return Array.Empty<IStatusEffectInstance>();
 
-        if (!_containers.TryGetValue(entity.EntityId, out var container)) return Array.Empty<IStatusEffectInstance>();
-
-        lock (container)
+        lock (_sync)
         {
+            if (!_containers.TryGetValue(entity.EntityId, out var container)) return Array.Empty<IStatusEffectInstance>();
             return container.Instances.ToArray();
         }
     }
@@ -260,41 +251,40 @@ public class StatusEffectService
     /// <param name="dt">Seconds since the last tick.</param>
     public void Tick(float dt)
     {
-        foreach (var kvp in _containers)
+        lock (_sync)
         {
-            var container = kvp.Value;
-            var entity = container.Entity;
-            if (entity is null)
+            foreach (var kvp in _containers)
             {
-                _containers.TryRemove(kvp.Key, out _);
-                continue;
-            }
+                var container = kvp.Value;
+                var entity = container.Entity;
+                if (entity is null)
+                {
+                    _containers.TryRemove(kvp.Key, out _);
+                    continue;
+                }
 
-            StatusEffectTickResult result;
-            lock (container)
-            {
-                result = container.Tick(dt);
-            }
+                var result = container.Tick(dt);
 
-            foreach (var instance in result.Expired)
-            {
-                SafeRemove(entity, instance, expired: true);
-            }
+                foreach (var instance in result.Expired)
+                {
+                    SafeRemove(entity, instance, expired: true);
+                }
 
-            foreach (var instance in result.RemovedByDeath)
-            {
-                SafeRemove(entity, instance, expired: false);
-            }
+                foreach (var instance in result.RemovedByDeath)
+                {
+                    SafeRemove(entity, instance, expired: false);
+                }
 
-            foreach (var instance in result.Alive)
-            {
-                if (instance.Effect.HasTick)
-                    SafeTick(entity, instance, dt);
-            }
+                foreach (var instance in result.Alive)
+                {
+                    if (instance.Effect.HasTick)
+                        SafeTick(entity, instance, dt);
+                }
 
-            if (container.IsEmpty)
-            {
-                _containers.TryRemove(kvp.Key, out _);
+                if (container.IsEmpty)
+                {
+                    _containers.TryRemove(kvp.Key, out _);
+                }
             }
         }
     }
@@ -304,8 +294,11 @@ public class StatusEffectService
     /// </summary>
     public void Clear()
     {
-        _containers.Clear();
-        Interlocked.Exchange(ref _nextInstanceId, 0);
+        lock (_sync)
+        {
+            _containers.Clear();
+            Interlocked.Exchange(ref _nextInstanceId, 0);
+        }
     }
 
     private long GetNextInstanceId() => Interlocked.Increment(ref _nextInstanceId);

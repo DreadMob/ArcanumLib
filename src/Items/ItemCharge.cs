@@ -22,7 +22,7 @@ namespace ArcanumLib.Items
 
         /// <summary>
         /// Finds the charge attribute key on the stack. Prefers the generic key,
-        /// then legacy keys, then any key ending with a charge suffix.
+        /// then legacy keys, then explicitly configured suffixed charge keys.
         /// Returns null if no charge key is found.
         /// </summary>
         public static string? FindChargeKey(ItemStack? stack, ItemChargeConfig? config = null)
@@ -33,15 +33,6 @@ namespace ArcanumLib.Items
             foreach (var key in config.GetAllChargeKeys())
             {
                 if (stack.Attributes.HasAttribute(key))
-                    return key;
-            }
-
-            if (stack.Attributes is not TreeAttribute tree) return null;
-
-            foreach (var kvp in tree)
-            {
-                string key = kvp.Key;
-                if (key.EndsWith(config.TimeChargeSuffix) || key.EndsWith(config.UseChargeSuffix))
                     return key;
             }
 

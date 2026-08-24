@@ -12,11 +12,16 @@ namespace ArcanumLib.Effects;
 /// </summary>
 public class StatusEffectModSystem : ModSystem
 {
-    private long _listenerId;
-    private ICoreAPI? _api;
+    private long _clientListenerId;
+    private long _serverListenerId;
+    private ICoreClientAPI? _capi;
+    private ICoreServerAPI? _sapi;
     private readonly List<IEventAPI> _despawnEvents = new();
     private readonly EntityDespawnDelegate _despawnHandler;
 
+    /// <summary>
+    /// Initializes the entity despawn handler used to remove active status effects.
+    /// </summary>
     public StatusEffectModSystem()
     {
         _despawnHandler = (entity, _) => StatusEffectManager.RemoveAll(entity);
@@ -35,9 +40,9 @@ public class StatusEffectModSystem : ModSystem
     /// </summary>
     public override void StartClientSide(ICoreClientAPI capi)
     {
-        _api = capi;
+        _capi = capi;
         EnsureService();
-        _listenerId = capi.Event.RegisterGameTickListener(dt => StatusEffectManager.Tick(dt), 1000);
+        _clientListenerId = capi.Event.RegisterGameTickListener(dt => StatusEffectManager.Tick(dt), 1000);
         capi.Event.OnEntityDespawn += _despawnHandler;
         _despawnEvents.Add(capi.Event);
     }
@@ -47,22 +52,37 @@ public class StatusEffectModSystem : ModSystem
     /// </summary>
     public override void StartServerSide(ICoreServerAPI sapi)
     {
-        _api = sapi;
+        _sapi = sapi;
         EnsureService();
-        _listenerId = sapi.Event.RegisterGameTickListener(dt => StatusEffectManager.Tick(dt), 1000);
+        _serverListenerId = sapi.Event.RegisterGameTickListener(dt => StatusEffectManager.Tick(dt), 1000);
         sapi.Event.OnEntityDespawn += _despawnHandler;
         _despawnEvents.Add(sapi.Event);
     }
 
     /// <summary>
-    /// Unregisters the tick listener and despawn handler.
+    /// Unregisters the tick listeners and despawn handlers.
     /// </summary>
     public override void Dispose()
     {
+        if (_clientListenerId != 0 && _capi != null)
+        {
+            try { _capi.Event.UnregisterGameTickListener(_clientListenerId); }
+            catch (Exception ex) { _capi?.Logger?.Warning("[ArcanumLib] Failed to unregister client status effect tick listener: {0}", ex.Message); }
+            _clientListenerId = 0;
+        }
+
+        if (_serverListenerId != 0 && _sapi != null)
+        {
+            try { _sapi.Event.UnregisterGameTickListener(_serverListenerId); }
+            catch (Exception ex) { _sapi?.Logger?.Warning("[ArcanumLib] Failed to unregister server status effect tick listener: {0}", ex.Message); }
+            _serverListenerId = 0;
+        }
+
+        ICoreAPI? api = (ICoreAPI?)_capi ?? _sapi;
         foreach (var events in _despawnEvents)
         {
             try { events.OnEntityDespawn -= _despawnHandler; }
-            catch (Exception ex) { _api?.Logger?.Warning("[ArcanumLib] Failed to unregister despawn handler: {0}", ex.Message); }
+            catch (Exception ex) { api?.Logger?.Warning("[ArcanumLib] Failed to unregister despawn handler: {0}", ex.Message); }
         }
         _despawnEvents.Clear();
 

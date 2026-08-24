@@ -28,6 +28,7 @@ public class ArcanumDialogBackground : GuiElement
         this.drawAccentStrip = drawAccentStrip;
     }
 
+    /// <summary>Composes the dialog background with shadow, gradient, borders and decorative elements.</summary>
     public override void ComposeElements(Context ctx, ImageSurface surface)
     {
         Bounds.CalcWorldBounds();

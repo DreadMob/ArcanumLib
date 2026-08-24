@@ -12,7 +12,7 @@ namespace ArcanumLib.Actions;
 /// Tracks per-player, per-action cooldowns and delegates execution to
 /// <see cref="ActionRegistry"/>.
 /// </summary>
-public class ActionExecutorService
+internal sealed class ActionExecutorService
 {
     private readonly ICoreServerAPI? _sapi;
     private readonly Dictionary<long, Dictionary<string, long>> _cooldowns = new();

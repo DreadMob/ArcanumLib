@@ -1,5 +1,5 @@
 using System;
-using System.Collections.Generic;
+using System.Collections.Concurrent;
 using Cairo;
 using ArcanumLib.Gui.Theme;
 
@@ -11,7 +11,7 @@ namespace ArcanumLib.Gui.Icons
     /// </summary>
     public static class CustomIconRegistry
     {
-        private static readonly Dictionary<string, ICustomIconRenderer> _renderers =
+        private static readonly ConcurrentDictionary<string, ICustomIconRenderer> _renderers =
             new(StringComparer.OrdinalIgnoreCase);
 
         /// <summary>Register a renderer for the given key. Overwrites any existing.</summary>
@@ -73,7 +73,7 @@ namespace ArcanumLib.Gui.Icons
 
         /// <summary>Remove a registered renderer.</summary>
         public static bool Unregister(string key)
-            => _renderers.Remove(key);
+            => _renderers.Remove(key, out _);
 
         /// <summary>Clear every registered renderer.</summary>
         public static void Clear() => _renderers.Clear();

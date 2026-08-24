@@ -15,13 +15,14 @@ namespace ArcanumLib.Performance;
 /// tick listener to check for due schedules. This is server-side only because
 /// in-game time is authoritative on the server.
 /// </remarks>
-public class GameTimeScheduler : ModSystem
+public static class GameTimeScheduler
 {
-    private ICoreServerAPI? _sapi;
-    private long _tickListenerId;
-    private double _lastTotalHours;
-    private readonly List<GameSchedule> _schedules = new();
+    private static ICoreServerAPI? _sapi;
+    private static long _tickListenerId;
+    private static double _lastTotalHours;
+    private static readonly List<GameSchedule> _schedules = new();
     private static readonly object _syncLock = new();
+    private static bool _started;
 
     /// <summary>
     /// Enables or disables the scheduler at runtime. When disabled, schedules
@@ -34,35 +35,47 @@ public class GameTimeScheduler : ModSystem
     /// </summary>
     public static int CheckIntervalMs { get; set; } = 2000;
 
-    public override bool ShouldLoad(EnumAppSide forSide) => forSide == EnumAppSide.Server;
-
-    public override void StartServerSide(ICoreServerAPI api)
+    /// <summary>
+    /// Starts the in-game time scheduler on the server.
+    /// </summary>
+    public static void Start(ICoreServerAPI api)
     {
-        _sapi = api;
-        _instance = this;
-        // Calendar may be null during StartServerSide on some run phases.
-        // Use -1 as a sentinel; OnTick will capture the first real hour.
-        _lastTotalHours = api.World?.Calendar?.TotalHours ?? -1.0;
-        _tickListenerId = api.Event.RegisterGameTickListener(OnTick, CheckIntervalMs);
-        api.Logger.Notification("[ArcanumLib] GameTimeScheduler started.");
-    }
-
-    public override void Dispose()
-    {
-        if (_sapi != null && _tickListenerId != 0)
-        {
-            _sapi.Event.UnregisterGameTickListener(_tickListenerId);
-            _tickListenerId = 0;
-        }
+        if (api == null) throw new ArgumentNullException(nameof(api));
 
         lock (_syncLock)
         {
-            _schedules.Clear();
-        }
+            if (_started)
+            {
+                Stop();
+            }
 
-        _instance = null;
-        _sapi = null;
-        base.Dispose();
+            _started = true;
+            _sapi = api;
+            // Calendar may be null during start on some run phases.
+            // Use -1 as a sentinel; OnTick will capture the first real hour.
+            _lastTotalHours = api.World?.Calendar?.TotalHours ?? -1.0;
+            _tickListenerId = api.Event.RegisterGameTickListener(OnTick, CheckIntervalMs);
+            api.Logger.Notification("[ArcanumLib] GameTimeScheduler started.");
+        }
+    }
+
+    /// <summary>
+    /// Stops the in-game time scheduler and clears all pending schedules.
+    /// </summary>
+    public static void Stop()
+    {
+        lock (_syncLock)
+        {
+            if (_sapi != null && _tickListenerId != 0)
+            {
+                _sapi.Event.UnregisterGameTickListener(_tickListenerId);
+                _tickListenerId = 0;
+            }
+
+            _schedules.Clear();
+            _started = false;
+            _sapi = null;
+        }
     }
 
     /// <summary>
@@ -86,9 +99,9 @@ public class GameTimeScheduler : ModSystem
 
         lock (_syncLock)
         {
-            if (_instance == null)
+            if (!_started)
                 throw new InvalidOperationException("GameTimeScheduler has not been started.");
-            _instance._schedules.Add(schedule);
+            _schedules.Add(schedule);
         }
 
         return schedule.Id;
@@ -114,9 +127,9 @@ public class GameTimeScheduler : ModSystem
 
         lock (_syncLock)
         {
-            if (_instance == null)
+            if (!_started)
                 throw new InvalidOperationException("GameTimeScheduler has not been started.");
-            _instance._schedules.Add(schedule);
+            _schedules.Add(schedule);
         }
 
         return schedule.Id;
@@ -131,25 +144,19 @@ public class GameTimeScheduler : ModSystem
         if (action == null) throw new ArgumentNullException(nameof(action));
         if (hours <= 0) throw new ArgumentOutOfRangeException(nameof(hours), "Hours must be positive.");
 
-        double now;
-        lock (_syncLock)
-        {
-            if (_instance == null)
-                throw new InvalidOperationException("GameTimeScheduler has not been started.");
-            now = _instance._sapi?.World.Calendar.TotalHours ?? 0;
-        }
-
         var schedule = new GameSchedule
         {
             Id = NextId(),
             Mode = ScheduleMode.AfterHours,
-            TargetTotalHours = now + hours,
             Action = action
         };
 
         lock (_syncLock)
         {
-            _instance._schedules.Add(schedule);
+            if (!_started)
+                throw new InvalidOperationException("GameTimeScheduler has not been started.");
+            schedule.TargetTotalHours = (_sapi?.World.Calendar.TotalHours ?? 0) + hours;
+            _schedules.Add(schedule);
         }
 
         return schedule.Id;
@@ -162,8 +169,8 @@ public class GameTimeScheduler : ModSystem
     {
         lock (_syncLock)
         {
-            if (_instance == null) return;
-            _instance._schedules.RemoveAll(s => s.Id == scheduleId);
+            if (!_started) return;
+            _schedules.RemoveAll(s => s.Id == scheduleId);
         }
     }
 
@@ -174,7 +181,7 @@ public class GameTimeScheduler : ModSystem
     {
         lock (_syncLock)
         {
-            _instance?._schedules.Clear();
+            _schedules.Clear();
         }
     }
 
@@ -185,16 +192,15 @@ public class GameTimeScheduler : ModSystem
     {
         lock (_syncLock)
         {
-            return _instance?._schedules.Count ?? 0;
+            return _started ? _schedules.Count : 0;
         }
     }
 
-    private static GameTimeScheduler? _instance;
     private static int _nextId;
 
     private static int NextId() => System.Threading.Interlocked.Increment(ref _nextId);
 
-    private void OnTick(float dt)
+    private static void OnTick(float dt)
     {
         if (!IsEnabled || _sapi?.World?.Calendar == null) return;
 

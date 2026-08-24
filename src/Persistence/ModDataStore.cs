@@ -31,6 +31,9 @@ namespace ArcanumLib.Persistence
         /// <param name="storeId">The store id.</param>
         /// <param name="dataVersion">The current schema version. Start at 1 and increment when the data shape changes.</param>
         /// <returns>The store instance.</returns>
+        /// <exception cref="ArgumentNullException">Thrown when <paramref name="sapi"/> is null.</exception>
+        /// <exception cref="ArgumentException">Thrown when <paramref name="modId"/> or <paramref name="storeId"/> is empty.</exception>
+        /// <exception cref="ArgumentOutOfRangeException">Thrown when <paramref name="dataVersion"/> is not positive.</exception>
         public static IModDataStore<T> GetOrCreate<T>(ICoreServerAPI sapi, string modId, string storeId, int dataVersion = 1) where T : new()
         {
             return GetOrCreate(sapi, modId, storeId, dataVersion, () => new T());
@@ -46,6 +49,9 @@ namespace ArcanumLib.Persistence
         /// <param name="dataVersion">The current schema version.</param>
         /// <param name="factory">Factory for creating a fresh data instance.</param>
         /// <returns>The store instance.</returns>
+        /// <exception cref="ArgumentNullException">Thrown when <paramref name="sapi"/> or <paramref name="factory"/> is null.</exception>
+        /// <exception cref="ArgumentException">Thrown when <paramref name="modId"/> or <paramref name="storeId"/> is empty.</exception>
+        /// <exception cref="ArgumentOutOfRangeException">Thrown when <paramref name="dataVersion"/> is not positive.</exception>
         public static IModDataStore<T> GetOrCreate<T>(ICoreServerAPI sapi, string modId, string storeId, int dataVersion, Func<T> factory)
         {
             if (sapi == null) throw new ArgumentNullException(nameof(sapi));
@@ -68,6 +74,9 @@ namespace ArcanumLib.Persistence
         /// <param name="storeId">The store id.</param>
         /// <param name="dataVersion">The current schema version.</param>
         /// <returns>The store instance.</returns>
+        /// <exception cref="InvalidOperationException">Thrown when the server API has not been set.</exception>
+        /// <exception cref="ArgumentException">Thrown when <paramref name="modId"/> or <paramref name="storeId"/> is empty.</exception>
+        /// <exception cref="ArgumentOutOfRangeException">Thrown when <paramref name="dataVersion"/> is not positive.</exception>
         public static IModDataStore<T> GetOrCreate<T>(string modId, string storeId, int dataVersion = 1) where T : new()
         {
             return GetOrCreate<T>(modId, storeId, dataVersion, () => new T());
@@ -82,6 +91,10 @@ namespace ArcanumLib.Persistence
         /// <param name="dataVersion">The current schema version.</param>
         /// <param name="factory">Factory for creating a fresh data instance.</param>
         /// <returns>The store instance.</returns>
+        /// <exception cref="InvalidOperationException">Thrown when the server API has not been set.</exception>
+        /// <exception cref="ArgumentNullException">Thrown when <paramref name="factory"/> is null.</exception>
+        /// <exception cref="ArgumentException">Thrown when <paramref name="modId"/> or <paramref name="storeId"/> is empty.</exception>
+        /// <exception cref="ArgumentOutOfRangeException">Thrown when <paramref name="dataVersion"/> is not positive.</exception>
         public static IModDataStore<T> GetOrCreate<T>(string modId, string storeId, int dataVersion, Func<T> factory)
         {
             if (_sapi == null)

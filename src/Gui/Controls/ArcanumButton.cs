@@ -89,12 +89,14 @@ public class ArcanumButton : GuiElement
         cachedTexture = new LoadedTexture(capi);
     }
 
+    /// <summary>Skips composition; the button texture is generated on first render.</summary>
     public override void ComposeElements(Context ctxStatic, ImageSurface surfaceStatic)
     {
         // Don't regenerate during composition - the rendering context may not be ready.
         // The texture will be generated on first render instead.
     }
 
+    /// <summary>Handles hover state, regenerates the cached texture if needed, and renders the button.</summary>
     public override void RenderInteractiveElements(float deltaTime)
     {
         if (Bounds?.ParentBounds == null) return;
@@ -262,6 +264,7 @@ public class ArcanumButton : GuiElement
         }
     }
 
+    /// <summary>Sets the pressed state when the button is clicked.</summary>
     public override void OnMouseDownOnElement(ICoreClientAPI api, MouseEvent args)
     {
         if (!enabled) return;
@@ -272,6 +275,7 @@ public class ArcanumButton : GuiElement
         args.Handled = true;
     }
 
+    /// <summary>Triggers the click handler when the button is released while still inside the bounds.</summary>
     public override void OnMouseUpOnElement(ICoreClientAPI api, MouseEvent args)
     {
         if (!enabled) return;
@@ -295,6 +299,7 @@ public class ArcanumButton : GuiElement
         }
     }
 
+    /// <summary>Releases the cached button texture.</summary>
     public override void Dispose()
     {
         cachedTexture?.Dispose();

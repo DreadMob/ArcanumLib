@@ -1,8 +1,9 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Text.Json;
-using ArcanumLib.Common;
+using ArcanumLib.Persistence;
 using Vintagestory.API.Server;
 
 namespace ArcanumLib.Common
@@ -10,39 +11,55 @@ namespace ArcanumLib.Common
     /// <summary>
     /// Tracks total online time per player via PlayerJoin / PlayerLeave events.
     /// Also tracks first join date, last online date, and login streaks.
-    /// Persists data to a JSON file in the server's ModData directory.
+    /// Persists data through <see cref="ModDataStore"/> so it survives savegame copy/delete.
     /// </summary>
-    public class PlaytimeTracker
+    public class PlaytimeTracker : IDisposable
     {
-        private readonly Dictionary<string, PlayerPlaytimeData> _playerData = new(StringComparer.OrdinalIgnoreCase);
+        private readonly ICoreServerAPI? _sapi;
+        private readonly IModDataStore<PlaytimeData>? _store;
         private readonly Dictionary<string, long> _playerSessionStartMs = new(StringComparer.OrdinalIgnoreCase);
-        private readonly ICoreServerAPI _sapi;
-        private readonly EventScope _events;
-        private readonly string _dataFileName;
+        private readonly EventScope? _events;
+        private readonly string _legacyDataFileName;
+
+        /// <summary>
+        /// Global instance created by <see cref="PlaytimeTrackerModSystem"/>.
+        /// Consumers can use this instead of constructing their own tracker.
+        /// </summary>
+        public static PlaytimeTracker? Current { get; set; }
 
         /// <summary>Fired when a session is saved: (playerUid, totalMs).</summary>
         public event Action<string, long>? OnSessionSaved;
 
         /// <summary>
-        /// Creates a new tracker. The <paramref name="dataFileName"/> is the JSON file name
-        /// (without path) used for persistence inside the mod's ModData directory.
+        /// Creates a new tracker backed by <see cref="ModDataStore"/>.
+        /// The optional <paramref name="legacyDataFileName"/> is used once to migrate data from the
+        /// old flat-JSON persistence format. New data is always written through the data store.
         /// </summary>
-        public PlaytimeTracker(ICoreServerAPI sapi, string dataFileName = "playtime_tracker.json")
+        public PlaytimeTracker(ICoreServerAPI sapi, string legacyDataFileName = "playtime_tracker.json")
         {
-            _sapi = sapi;
-            _dataFileName = dataFileName ?? "playtime_tracker.json";
-            LoadData();
+            _sapi = sapi ?? throw new ArgumentNullException(nameof(sapi));
+            _legacyDataFileName = legacyDataFileName ?? "playtime_tracker.json";
+
+            _store = ModDataStore.GetOrCreate<PlaytimeData>(sapi, "arcanumlib", "playtime", 1);
+            _ = _store.Data; // force load
+            MigrateFromLegacyFile();
+
             _events = sapi.CreateEventScope()
                 .Add(() => sapi.Event.PlayerJoin += OnPlayerJoin, () => sapi.Event.PlayerJoin -= OnPlayerJoin)
                 .Add(() => sapi.Event.PlayerLeave += OnPlayerLeave, () => sapi.Event.PlayerLeave -= OnPlayerLeave)
                 .Add(() => sapi.Event.GameWorldSave += OnServerSave, () => sapi.Event.GameWorldSave -= OnServerSave);
         }
 
+        /// <summary>
+        /// Releases event subscriptions and saves pending data.
+        /// </summary>
         public void Dispose()
         {
-            _events.Dispose();
+            _events?.Dispose();
             SaveData();
         }
+
+        private Dictionary<string, PlayerPlaytimeData> PlayerData => _store?.Data.Players ?? new();
 
         private void OnPlayerJoin(IServerPlayer byPlayer)
         {
@@ -50,11 +67,7 @@ namespace ArcanumLib.Common
             long now = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
             _playerSessionStartMs[uid] = now;
 
-            if (!_playerData.TryGetValue(uid, out var data))
-            {
-                data = new PlayerPlaytimeData { FirstJoinMs = now };
-                _playerData[uid] = data;
-            }
+            var data = GetOrCreateData(uid);
             data.LastOnlineMs = now;
 
             // Update login streak
@@ -74,6 +87,11 @@ namespace ArcanumLib.Common
                 // dayDiff == 0 → same day, keep streak
             }
             data.LastLoginDayMs = todayMs;
+
+            if (data.FirstJoinMs == 0)
+                data.FirstJoinMs = now;
+
+            _store?.MarkDirty();
         }
 
         private void OnPlayerLeave(IServerPlayer byPlayer)
@@ -83,11 +101,7 @@ namespace ArcanumLib.Common
             if (_playerSessionStartMs.TryGetValue(uid, out long startMs))
             {
                 long sessionMs = now - startMs;
-                if (!_playerData.TryGetValue(uid, out var data))
-                {
-                    data = new PlayerPlaytimeData();
-                    _playerData[uid] = data;
-                }
+                var data = GetOrCreateData(uid);
                 data.TotalMs += sessionMs;
                 data.LastOnlineMs = now;
                 _playerSessionStartMs.Remove(uid);
@@ -103,7 +117,7 @@ namespace ArcanumLib.Common
             foreach (var kv in _playerSessionStartMs)
             {
                 long sessionMs = now - kv.Value;
-                long totalMs = (_playerData.GetValueOrDefault(kv.Key)?.TotalMs ?? 0) + sessionMs;
+                long totalMs = (PlayerData.GetValueOrDefault(kv.Key)?.TotalMs ?? 0) + sessionMs;
                 OnSessionSaved?.Invoke(kv.Key, totalMs);
             }
         }
@@ -117,7 +131,7 @@ namespace ArcanumLib.Common
         /// <summary>Total playtime in milliseconds for the given player.</summary>
         public long GetPlaytimeMs(string playerUid)
         {
-            long totalMs = _playerData.GetValueOrDefault(playerUid)?.TotalMs ?? 0;
+            long totalMs = PlayerData.GetValueOrDefault(playerUid)?.TotalMs ?? 0;
             if (_playerSessionStartMs.TryGetValue(playerUid, out long startMs))
             {
                 totalMs += DateTimeOffset.UtcNow.ToUnixTimeMilliseconds() - startMs;
@@ -133,7 +147,7 @@ namespace ArcanumLib.Common
         {
             var result = new Dictionary<string, float>(StringComparer.OrdinalIgnoreCase);
             long now = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
-            foreach (var kv in _playerData)
+            foreach (var kv in PlayerData)
             {
                 long totalMs = kv.Value.TotalMs;
                 if (_playerSessionStartMs.TryGetValue(kv.Key, out long startMs))
@@ -146,7 +160,9 @@ namespace ArcanumLib.Common
         /// <summary>First join timestamp in UTC milliseconds, or null if unknown.</summary>
         public long? GetFirstJoinMs(string playerUid)
         {
-            return _playerData.GetValueOrDefault(playerUid)?.FirstJoinMs;
+            var data = PlayerData.GetValueOrDefault(playerUid);
+            if (data == null || data.FirstJoinMs == 0) return null;
+            return data.FirstJoinMs;
         }
 
         /// <summary>Last online timestamp in UTC milliseconds. Returns now if currently online.</summary>
@@ -154,23 +170,21 @@ namespace ArcanumLib.Common
         {
             if (_playerSessionStartMs.ContainsKey(playerUid))
                 return DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
-            return _playerData.GetValueOrDefault(playerUid)?.LastOnlineMs;
+            var data = PlayerData.GetValueOrDefault(playerUid);
+            if (data == null || data.LastOnlineMs == 0) return null;
+            return data.LastOnlineMs;
         }
 
         /// <summary>Current login streak (consecutive days).</summary>
         public int GetLoginStreak(string playerUid)
         {
-            return _playerData.GetValueOrDefault(playerUid)?.LoginStreak ?? 0;
+            return PlayerData.GetValueOrDefault(playerUid)?.LoginStreak ?? 0;
         }
 
         /// <summary>Sets the first join timestamp for a player.</summary>
         public void SetFirstJoinMs(string playerUid, long ms)
         {
-            if (!_playerData.TryGetValue(playerUid, out var data))
-            {
-                data = new PlayerPlaytimeData();
-                _playerData[playerUid] = data;
-            }
+            var data = GetOrCreateData(playerUid);
             data.FirstJoinMs = ms;
             SaveData();
         }
@@ -180,11 +194,7 @@ namespace ArcanumLib.Common
         /// </summary>
         public void SetTotalMs(string playerUid, long totalMs)
         {
-            if (!_playerData.TryGetValue(playerUid, out var data))
-            {
-                data = new PlayerPlaytimeData();
-                _playerData[playerUid] = data;
-            }
+            var data = GetOrCreateData(playerUid);
             data.TotalMs = Math.Max(0, totalMs);
             SaveData();
         }
@@ -199,11 +209,7 @@ namespace ArcanumLib.Common
             foreach (var kv in playtimes)
             {
                 if (string.IsNullOrWhiteSpace(kv.Key)) continue;
-                if (!_playerData.TryGetValue(kv.Key, out var data))
-                {
-                    data = new PlayerPlaytimeData();
-                    _playerData[kv.Key] = data;
-                }
+                var data = GetOrCreateData(kv.Key);
                 data.TotalMs = Math.Max(0, kv.Value);
                 count++;
             }
@@ -211,34 +217,38 @@ namespace ArcanumLib.Common
             return count;
         }
 
+        private PlayerPlaytimeData GetOrCreateData(string playerUid)
+        {
+            if (PlayerData.TryGetValue(playerUid, out var data)) return data;
+            data = new PlayerPlaytimeData();
+            PlayerData[playerUid] = data;
+            return data;
+        }
+
         private static long ToDayStartMs(long ms)
         {
             return ms - (ms % 86400000L);
         }
 
-        private string DataFilePath
+        private void MigrateFromLegacyFile()
         {
-            get
-            {
-                if (_sapi == null) return string.Empty;
-                return Path.Combine(_sapi.GetOrCreateDataPath("ModData"), _dataFileName);
-            }
-        }
+            if (_sapi == null || _store == null) return;
+            if (PlayerData.Count > 0) return;
 
-        private void LoadData()
-        {
             try
             {
-                string path = DataFilePath;
-                if (string.IsNullOrEmpty(path) || !File.Exists(path)) return;
+                string path = Path.Combine(_sapi.GetOrCreateDataPath("ModData"), _legacyDataFileName);
+                if (!File.Exists(path)) return;
 
                 string json = File.ReadAllText(path);
                 var data = JsonSerializer.Deserialize<Dictionary<string, PlayerPlaytimeData>>(json);
                 if (data != null)
                 {
-                    _playerData.Clear();
                     foreach (var kv in data)
-                        _playerData[kv.Key] = kv.Value;
+                        PlayerData[kv.Key] = kv.Value;
+                    _store.MarkDirty();
+                    _store.Save();
+                    _sapi.Logger?.Notification("[PlaytimeTracker] Migrated legacy playtime data into ModDataStore.");
                     return;
                 }
 
@@ -246,57 +256,41 @@ namespace ArcanumLib.Common
                 var oldData = JsonSerializer.Deserialize<Dictionary<string, long>>(json);
                 if (oldData != null)
                 {
-                    _playerData.Clear();
                     foreach (var kv in oldData)
-                    {
-                        _playerData[kv.Key] = new PlayerPlaytimeData { TotalMs = kv.Value };
-                    }
-                    _sapi?.Logger?.Notification("[PlaytimeTracker] Migrated old playtime data format.");
+                        PlayerData[kv.Key] = new PlayerPlaytimeData { TotalMs = kv.Value };
+                    _store.MarkDirty();
+                    _store.Save();
+                    _sapi.Logger?.Notification("[PlaytimeTracker] Migrated old flat playtime data into ModDataStore.");
                 }
             }
             catch (Exception ex)
             {
-                _sapi?.Logger?.Warning("[PlaytimeTracker] Failed to load data: {0}", ex.Message);
+                _sapi?.Logger?.Warning("[PlaytimeTracker] Failed to migrate legacy data: {0}", ex.Message);
             }
         }
 
         private void SaveData()
         {
+            if (_store == null) return;
+
             try
             {
-                string path = DataFilePath;
-                if (string.IsNullOrEmpty(path)) return;
-
-                string dir = Path.GetDirectoryName(path)!;
-                if (!Directory.Exists(dir))
-                    Directory.CreateDirectory(dir);
-
-                // Fold active sessions into TotalMs and reset their start to now.
                 long now = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
                 var activeUids = new List<string>(_playerSessionStartMs.Keys);
                 foreach (var uid in activeUids)
                 {
-                    if (_playerData.TryGetValue(uid, out var data))
+                    if (PlayerData.TryGetValue(uid, out var data))
                         data.TotalMs += now - _playerSessionStartMs[uid];
                     _playerSessionStartMs[uid] = now;
                 }
 
-                string json = JsonSerializer.Serialize(_playerData);
-                File.WriteAllText(path, json);
+                _store.MarkDirty();
+                _store.Save();
             }
             catch (Exception ex)
             {
                 _sapi?.Logger?.Warning("[PlaytimeTracker] Failed to save data: {0}", ex.Message);
             }
-        }
-
-        private class PlayerPlaytimeData
-        {
-            public long TotalMs { get; set; }
-            public long FirstJoinMs { get; set; }
-            public long LastOnlineMs { get; set; }
-            public int LoginStreak { get; set; }
-            public long LastLoginDayMs { get; set; }
         }
     }
 }

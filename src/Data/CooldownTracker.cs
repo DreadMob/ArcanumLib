@@ -17,6 +17,7 @@ namespace ArcanumLib.Data
     /// </summary>
     public static class CooldownTracker
     {
+        private static readonly object _syncLock = new();
         /// <summary>
         /// Returns true if the cooldown has never started or if the given duration has passed.
         /// </summary>
@@ -38,23 +39,26 @@ namespace ArcanumLib.Data
         {
             if (entity?.Api?.World is null) return false;
 
-            long lastStartMs = entity.WatchedAttributes?.GetLong(key, 0) ?? 0;
-            if (lastStartMs == 0) return true;
-
-            double multiplier = multiplierFactory?.Invoke(entity) ?? fallbackMultiplier;
-            long now = entity.Api.World.ElapsedMilliseconds;
-            long cooldownMs = (long)(durationSeconds * 1000.0 * multiplier);
-
-            // Server restart: ElapsedMilliseconds resets to 0, but WatchedAttributes persist.
-            // If lastStartMs is in the future, the stored cooldown is stale.
-            if (lastStartMs > now && now >= 0)
+            lock (_syncLock)
             {
-                entity.WatchedAttributes?.SetLong(key, 0);
-                entity.WatchedAttributes?.MarkPathDirty(key);
-                return true;
-            }
+                long lastStartMs = entity.WatchedAttributes?.GetLong(key, 0) ?? 0;
+                if (lastStartMs == 0) return true;
 
-            return now - lastStartMs >= cooldownMs;
+                double multiplier = multiplierFactory?.Invoke(entity) ?? fallbackMultiplier;
+                long now = entity.Api.World.ElapsedMilliseconds;
+                long cooldownMs = (long)(durationSeconds * 1000.0 * multiplier);
+
+                // Server restart: ElapsedMilliseconds resets to 0, but WatchedAttributes persist.
+                // If lastStartMs is in the future, the stored cooldown is stale.
+                if (lastStartMs > now && now >= 0)
+                {
+                    entity.WatchedAttributes?.SetLong(key, 0);
+                    entity.WatchedAttributes?.MarkPathDirty(key);
+                    return true;
+                }
+
+                return now - lastStartMs >= cooldownMs;
+            }
         }
 
         /// <summary>
@@ -64,9 +68,12 @@ namespace ArcanumLib.Data
         {
             if (entity?.Api?.World is null || entity.WatchedAttributes is null) return;
 
-            long now = entity.Api.World.ElapsedMilliseconds;
-            entity.WatchedAttributes.SetLong(key, now);
-            entity.WatchedAttributes.MarkPathDirty(key);
+            lock (_syncLock)
+            {
+                long now = entity.Api.World.ElapsedMilliseconds;
+                entity.WatchedAttributes.SetLong(key, now);
+                entity.WatchedAttributes.MarkPathDirty(key);
+            }
         }
 
         /// <summary>
@@ -85,24 +92,27 @@ namespace ArcanumLib.Data
         {
             if (entity?.Api?.World is null) return 0;
 
-            long lastStartMs = entity.WatchedAttributes?.GetLong(key, 0) ?? 0;
-            if (lastStartMs == 0) return 0;
-
-            long now = entity.Api.World.ElapsedMilliseconds;
-
-            // Server restart: ElapsedMilliseconds resets to 0, but WatchedAttributes persist.
-            if (lastStartMs > now && now >= 0)
+            lock (_syncLock)
             {
-                entity.WatchedAttributes?.SetLong(key, 0);
-                entity.WatchedAttributes?.MarkPathDirty(key);
-                return 0;
+                long lastStartMs = entity.WatchedAttributes?.GetLong(key, 0) ?? 0;
+                if (lastStartMs == 0) return 0;
+
+                long now = entity.Api.World.ElapsedMilliseconds;
+
+                // Server restart: ElapsedMilliseconds resets to 0, but WatchedAttributes persist.
+                if (lastStartMs > now && now >= 0)
+                {
+                    entity.WatchedAttributes?.SetLong(key, 0);
+                    entity.WatchedAttributes?.MarkPathDirty(key);
+                    return 0;
+                }
+
+                double multiplier = multiplierFactory?.Invoke(entity) ?? fallbackMultiplier;
+                long cooldownMs = (long)(durationSeconds * 1000.0 * multiplier);
+                long elapsed = now - lastStartMs;
+
+                return Math.Max(0, cooldownMs - elapsed);
             }
-
-            double multiplier = multiplierFactory?.Invoke(entity) ?? fallbackMultiplier;
-            long cooldownMs = (long)(durationSeconds * 1000.0 * multiplier);
-            long elapsed = now - lastStartMs;
-
-            return Math.Max(0, cooldownMs - elapsed);
         }
 
         /// <summary>
@@ -121,12 +131,36 @@ namespace ArcanumLib.Data
         {
             if (entity?.Api?.World is null || durationSeconds <= 0) return 1f;
 
-            double multiplier = multiplierFactory?.Invoke(entity) ?? fallbackMultiplier;
-            long totalMs = (long)(durationSeconds * 1000.0 * multiplier);
-            if (totalMs <= 0) return 1f;
+            lock (_syncLock)
+            {
+                double multiplier = multiplierFactory?.Invoke(entity) ?? fallbackMultiplier;
+                long totalMs = (long)(durationSeconds * 1000.0 * multiplier);
+                if (totalMs <= 0) return 1f;
 
-            long remainingMs = GetRemainingCooldownMs(entity, key, durationSeconds, multiplierFactory, fallbackMultiplier);
-            return 1f - (float)remainingMs / totalMs;
+                long remainingMs = GetRemainingCooldownMsCore(entity, key, durationSeconds, multiplierFactory, fallbackMultiplier);
+                return 1f - (float)remainingMs / totalMs;
+            }
+        }
+
+        private static long GetRemainingCooldownMsCore(Entity entity, string key, double durationSeconds, CooldownMultiplier? multiplierFactory, double fallbackMultiplier)
+        {
+            long lastStartMs = entity.WatchedAttributes?.GetLong(key, 0) ?? 0;
+            if (lastStartMs == 0) return 0;
+
+            long now = entity.Api.World.ElapsedMilliseconds;
+
+            if (lastStartMs > now && now >= 0)
+            {
+                entity.WatchedAttributes?.SetLong(key, 0);
+                entity.WatchedAttributes?.MarkPathDirty(key);
+                return 0;
+            }
+
+            double multiplier = multiplierFactory?.Invoke(entity) ?? fallbackMultiplier;
+            long cooldownMs = (long)(durationSeconds * 1000.0 * multiplier);
+            long elapsed = now - lastStartMs;
+
+            return Math.Max(0, cooldownMs - elapsed);
         }
 
         /// <summary>
@@ -136,8 +170,11 @@ namespace ArcanumLib.Data
         {
             if (entity?.WatchedAttributes is null) return;
 
-            entity.WatchedAttributes.SetLong(key, 0);
-            entity.WatchedAttributes.MarkPathDirty(key);
+            lock (_syncLock)
+            {
+                entity.WatchedAttributes.SetLong(key, 0);
+                entity.WatchedAttributes.MarkPathDirty(key);
+            }
         }
     }
 }

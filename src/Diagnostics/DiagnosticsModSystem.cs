@@ -136,13 +136,9 @@ public class DiagnosticsModSystem : ModSystem
         var expectedSystems = new (string ClassName, bool Required)[]
         {
             ("ArcanumLibModSystem", true),
-            ("ActionRegistryModSystem", true),
+            ("ArcanumDataModSystem", true),
+            ("ArcanumPerformanceModSystem", true),
             ("StatusEffectModSystem", false),
-            ("PityTrackerModSystem", false),
-            ("ModDataStoreModSystem", false),
-            ("StatCoalescingEngine", false),
-            ("GameTimeScheduler", false),
-            ("DeferredWork", false),
         };
 
         var loadedSystems = sapi.ModLoader.Systems.Select(s => s.GetType().Name).ToHashSet();

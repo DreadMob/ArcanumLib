@@ -23,6 +23,9 @@ namespace ArcanumLib.Network
         /// <summary>
         /// Creates a wrapper for the named channel.
         /// </summary>
+        /// <param name="api">The core API, either client or server.</param>
+        /// <param name="name">The channel name.</param>
+        /// <exception cref="ArgumentNullException">Thrown when <paramref name="api"/> or <paramref name="name"/> is null.</exception>
         public TypedNetworkChannel(ICoreAPI api, string name)
         {
             _api = api ?? throw new ArgumentNullException(nameof(api));
@@ -32,6 +35,7 @@ namespace ArcanumLib.Network
         /// <summary>
         /// Registers the channel if it does not already exist for the current API side.
         /// </summary>
+        /// <returns>The current channel for method chaining.</returns>
         public TypedNetworkChannel Register()
         {
             if (_serverChannel == null && _clientChannel == null)
@@ -45,6 +49,8 @@ namespace ArcanumLib.Network
         /// <summary>
         /// Registers a message type on the channel.
         /// </summary>
+        /// <typeparam name="T">The packet type. Must have a parameterless constructor.</typeparam>
+        /// <returns>The current channel for method chaining.</returns>
         public TypedNetworkChannel AddMessageType<T>() where T : new()
         {
             EnsureChannel();
@@ -59,6 +65,9 @@ namespace ArcanumLib.Network
         /// <summary>
         /// Registers a message type and a server-side handler with the sending player.
         /// </summary>
+        /// <typeparam name="T">The packet type. Must have a parameterless constructor.</typeparam>
+        /// <param name="handler">The handler invoked when a packet is received from a player.</param>
+        /// <returns>The current channel for method chaining.</returns>
         public TypedNetworkChannel OnServer<T>(Action<IServerPlayer, T> handler) where T : new()
         {
             AddMessageType<T>();
@@ -69,6 +78,9 @@ namespace ArcanumLib.Network
         /// <summary>
         /// Registers a message type and a client-side handler.
         /// </summary>
+        /// <typeparam name="T">The packet type. Must have a parameterless constructor.</typeparam>
+        /// <param name="handler">The handler invoked when a packet is received.</param>
+        /// <returns>The current channel for method chaining.</returns>
         public TypedNetworkChannel On<T>(Action<T> handler) where T : new()
         {
             AddMessageType<T>();
@@ -77,8 +89,11 @@ namespace ArcanumLib.Network
         }
 
         /// <summary>
-        /// Sends a packet from the current side. On the server, no-op if no players are connected.
+        /// Sends a packet from the current side. On the client the packet is sent to the server.
+        /// On the server the packet is broadcast to all currently connected players (no-op if none are connected).
         /// </summary>
+        /// <typeparam name="T">The packet type.</typeparam>
+        /// <param name="message">The packet to send.</param>
         public void Send<T>(T message)
         {
             if (_serverChannel != null)
@@ -95,6 +110,9 @@ namespace ArcanumLib.Network
         /// <summary>
         /// Sends a packet to a specific player from the server.
         /// </summary>
+        /// <typeparam name="T">The packet type.</typeparam>
+        /// <param name="message">The packet to send.</param>
+        /// <param name="player">The target player.</param>
         public void SendToPlayer<T>(T message, IServerPlayer player)
         {
             if (player == null) return;

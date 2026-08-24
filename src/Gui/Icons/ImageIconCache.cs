@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
 using ArcanumLib.Gui.Theme;
@@ -26,8 +27,8 @@ public enum IconFit
 public static class ImageIconCache
 {
     private static ICoreClientAPI? _capi;
-    private static readonly Dictionary<string, ImageSurface> _surfaces = new(StringComparer.OrdinalIgnoreCase);
-    private static readonly Dictionary<string, long> _missing = new(StringComparer.OrdinalIgnoreCase);
+    private static readonly ConcurrentDictionary<string, ImageSurface?> _surfaces = new(StringComparer.OrdinalIgnoreCase);
+    private static readonly ConcurrentDictionary<string, long> _missing = new(StringComparer.OrdinalIgnoreCase);
     private const long MissingRetryMs = 60000;
 
     public static void Init(ICoreClientAPI capi)
@@ -144,7 +145,10 @@ public static class ImageIconCache
                 if (_surfaces.TryGetValue(assetPath, out var existing) && existing != null)
                 {
                     try { existing.Dispose(); }
-                    catch { /* non-critical */ }
+                    catch (Exception ex)
+                    {
+                        _capi?.Logger?.Warning("[ImageIconCache] failed to dispose existing surface for '{0}': {1}", assetPath, ex.Message);
+                    }
                 }
                 _surfaces[assetPath] = surface;
             }
@@ -305,7 +309,7 @@ public static class ImageIconCache
         if (!_missing.TryGetValue(assetPath, out long failedAt)) return false;
         long now = _capi?.World?.ElapsedMilliseconds ?? DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
         if (now - failedAt < MissingRetryMs) return true;
-        _missing.Remove(assetPath);
+        _missing.Remove(assetPath, out _);
         return false;
     }
 

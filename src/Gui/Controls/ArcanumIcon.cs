@@ -18,6 +18,9 @@ public class ArcanumIcon : GuiElement
     private readonly IconFit _fit;
     private readonly bool _tint;
 
+    /// <summary>
+    /// Creates a static icon element that renders an asset from <see cref="ImageIconCache"/>.
+    /// </summary>
     public ArcanumIcon(
         ICoreClientAPI capi,
         ElementBounds bounds,
@@ -34,6 +37,7 @@ public class ArcanumIcon : GuiElement
         _tint = tint;
     }
 
+    /// <summary>Renders the clipped and tinted icon, or a placeholder if the asset fails to load.</summary>
     public override void ComposeElements(Context ctx, ImageSurface surface)
     {
         if (string.IsNullOrWhiteSpace(_assetPath) || _radius <= 0)
