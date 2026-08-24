@@ -28,8 +28,6 @@ This folder contains API documentation for `ArcanumLib` — a shared Vintage Sto
 | [Custom Icons](CustomIcons.md) | `ICustomIconRenderer`, `CustomIconRegistry`, and `CustomTabIconRenderer` for custom Cairo-drawn GUI icons. |
 | [ImageIconCache](ImageIconCache.md) | Load, cache and draw icon image surfaces with circle, hexagon, and diamond clipping plus optional tinting. |
 | [ModeIconBuilder](ModeIconBuilder.md) | Factory for `SkillItem` tool-mode icons (in-game icon, letter, or live `ItemStack` rendering). |
-| [RGBA](RGBA.md) | Lightweight Cairo-friendly color struct with hex parsing, ARGB conversion, lerping, and alpha overrides. |
-| [ShapeCloner](ShapeCloner.md) | Deep-clones Vintage Story `Shape` objects (textures, faces, attachment points) for safe mutation. |
 
 ## Items & Equipment
 
@@ -83,7 +81,6 @@ This folder contains API documentation for `ArcanumLib` — a shared Vintage Sto
 | Page | What it covers |
 |------|----------------|
 | [WeightedRandom](WeightedRandom.md) | Weighted random picks and reusable weighted tables with merge strategies. |
-| [ShapeCloner](ShapeCloner.md) | Deep-clones Vintage Story `Shape` objects for safe mutation. |
 | [PositionUtils](PositionUtils.md) | Random horizontal offsets and ground-level position finding around entities. |
 | [BlockEntitySearchUtils](BlockEntitySearchUtils.md) | Chunk-based block entity counting within a region. |
 
@@ -97,16 +94,14 @@ This folder contains API documentation for `ArcanumLib` — a shared Vintage Sto
 
 | Page | What it covers |
 |------|----------------|
-| [ApiExtensions](ApiExtensions.md) | `IsClient` / `IsServer` helpers for `ICoreAPI`, `IWorldAccessor`. |
 | [ChatFormatUtil](ChatFormatUtil.md) | Colorize chat and HUD text with `<font>` tags; alert-prefixed messages. |
 | [DamageHelper](DamageHelper.md) | Factory for `DamageSource` with common field combinations (Entity/Player/Weather/Internal). |
-| [EntityHealthExtensions](EntityHealthExtensions.md) | Read and scale entity health through `WatchedAttributes` or `EntityBehaviorHealth`. |
-| [PlayerExtensions](PlayerExtensions.md) | `HasValidPosition`, `GetAliveEntities`, and `GetAliveServerEntities`. |
 | [LoggerExtensions](LoggerExtensions.md) | Non-critical warning logging and `SafeExecute` wrappers. |
 | [EventScope](EventScope.md) | Disposable event subscription scope with automatic unsubscription. |
 | [PlaytimeTracker](PlaytimeTracker.md) | Per-player online time tracking, login streaks, real-time cooldowns, and combat-state checks. |
 | [WatchedAttributes](WatchedAttributes.md) | Get-or-create, set-if-missing, and set-and-mark-dirty helpers for `ITreeAttribute`. |
 | [CooldownTracker](CooldownTracker.md) | Per-entity cooldown state in `WatchedAttributes` with readiness, remaining, and progress checks. |
+| [Misc Helpers](MiscHelpers.md) | Thin sugar: `IsClient`/`IsServer`, `RGBA`, `Pretty`, `Wildcard`, `CollectibleNameResolver`, `EntityHealthExtensions`, `PlayerExtensions`, `ShapeCloner`. |
 
 ## Networking
 
