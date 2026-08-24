@@ -355,9 +355,10 @@ public class DiagnosticsModSystem : ModSystem
         {
             foreach (var mod in mods)
             {
-                if (string.Equals(mod?.Info?.ModID, "arcanumlib", StringComparison.OrdinalIgnoreCase))
+                if (mod?.Info is { ModID: not null } info &&
+                    string.Equals(info.ModID, "arcanumlib", StringComparison.OrdinalIgnoreCase))
                 {
-                    arcanumVersion = mod.Info.Version ?? "";
+                    arcanumVersion = info.Version ?? "";
                     break;
                 }
             }

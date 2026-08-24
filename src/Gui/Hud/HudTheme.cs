@@ -10,10 +10,10 @@ namespace ArcanumLib.Gui.Hud;
 public class HudTheme
 {
     /// <summary>Frame renderer name, e.g. "cartouche", "bone", "glass", "none".</summary>
-    public string frame;
+    public string frame = null!;
 
     /// <summary>Corner symbol name, e.g. "ankh", "crossbone", "void", "none".</summary>
-    public string frameSymbol;
+    public string frameSymbol = null!;
 
     /// <summary>If true, the four corner frame symbols are not drawn (L-shaped corners remain).</summary>
     public bool? hideCornerSymbols;
@@ -31,13 +31,13 @@ public class HudTheme
     public bool? textShadow;
 
     /// <summary>Colour palette. Individual fields are null when not specified in JSON.</summary>
-    public HudThemeColors colors;
+    public HudThemeColors colors = null!;
 
     /// <summary>Font size overrides. Individual fields are null when not specified.</summary>
-    public HudThemeFonts fonts;
+    public HudThemeFonts fonts = null!;
 
     /// <summary>Layout spacing overrides. Individual fields are null when not specified.</summary>
-    public HudThemeLayout layout;
+    public HudThemeLayout layout = null!;
 
     /// <summary>Create a copy of this theme with non-null fields from <paramref name="overlay"/> applied.</summary>
     public virtual HudTheme Merge(HudTheme overlay)

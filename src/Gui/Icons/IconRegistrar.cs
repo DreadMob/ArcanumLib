@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using System.Reflection;
 
 namespace ArcanumLib.Gui.Icons
@@ -29,7 +30,7 @@ namespace ArcanumLib.Gui.Icons
             }
             catch (ReflectionTypeLoadException ex)
             {
-                types = ex.Types ?? Array.Empty<Type>();
+                types = ex.Types?.OfType<Type>().ToArray() ?? Array.Empty<Type>();
             }
 
             foreach (var type in types)

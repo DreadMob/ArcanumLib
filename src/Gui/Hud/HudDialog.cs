@@ -16,19 +16,19 @@ public abstract class HudDialog<TSnapshot, THudDefinition, TTheme, TPanel> : Hud
     where TPanel : HudPanel<TSnapshot, THudDefinition, TTheme>
 {
     /// <summary>Override in the derived class to hide the dialog by default.</summary>
-    public override string ToggleKeyCombinationCode => null;
+    public override string ToggleKeyCombinationCode => null!;
 
     /// <summary>The dialog should not block mouse events for the rest of the UI.</summary>
     public override bool ShouldReceiveMouseEvents() => false;
 
     /// <summary>Current snapshot to display.</summary>
-    protected TSnapshot _currentSnapshot;
+    protected TSnapshot? _currentSnapshot;
 
     /// <summary>Definition that drives layout and element data.</summary>
-    protected THudDefinition _definition;
+    protected THudDefinition _definition = null!;
 
     /// <summary>Currently rendered panel.</summary>
-    protected TPanel _panel;
+    protected TPanel? _panel;
 
     /// <summary>Last measured panel width, used to recreate the composer on size changes.</summary>
     protected int _lastPanelWidth;
@@ -114,6 +114,7 @@ public abstract class HudDialog<TSnapshot, THudDefinition, TTheme, TPanel> : Hud
                 .Compose();
         }
 
+        if (_panel == null) return;
         _panel.Update(_currentSnapshot, _definition, theme);
     }
 

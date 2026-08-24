@@ -80,7 +80,7 @@ public class SingleHologramRenderer : IRenderer, IDisposable
             _texture = HologramTextureGenerator.Generate(_capi, text, _options, version);
         }
 
-        if (_texture == null || !_texture.IsValid) return;
+        if (_texture?.Texture == null || _texture.Texture.TextureId == 0) return;
 
         float scale = HologramRenderUtils.ComputeScale((float)screenPos.Z);
         float w = scale * _texture.Width;

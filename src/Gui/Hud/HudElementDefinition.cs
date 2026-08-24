@@ -14,7 +14,7 @@ public class HudElementDefinition
     public bool enabled = true;
 
     /// <summary>Element type name (e.g. "title", "bar", "timer", "icon-text").</summary>
-    public string type;
+    public string type = null!;
 
     /// <summary>Screen position anchor: "top-center", "top-left", "top-right", "bottom-center".</summary>
     public string position = "top-center";
@@ -26,28 +26,28 @@ public class HudElementDefinition
     public int offsetX;
 
     /// <summary>Format string for dynamic elements (e.g. "{0}/{1}", "{0}:{1:00}").</summary>
-    public string format;
+    public string format = null!;
 
     /// <summary>Localization key for static text elements (e.g. title).</summary>
-    public string textKey;
+    public string textKey = null!;
 
     /// <summary>Font size multiplier (1.0 = default).</summary>
     public float fontScale = 1.0f;
 
     /// <summary>Icon identifier to override the default icon for this type.</summary>
-    public string icon;
+    public string icon = null!;
 
     /// <summary>Hex color override for this element's text (e.g. "F0C86A"). Empty = use theme default.</summary>
-    public string textColor;
+    public string textColor = null!;
 
     /// <summary>Hex color override for this element's icon (e.g. "D49D5A"). Empty = use theme default.</summary>
-    public string iconColor;
+    public string iconColor = null!;
 
     /// <summary>If true, draw a decorative horizontal bar to the right of the text for this element.</summary>
     public bool showBar;
 
     /// <summary>Alias for <see cref="textColor"/>; used if <see cref="textColor"/> is not set.</summary>
-    public string color;
+    public string color = null!;
 
     /// <summary>
     /// Conditional visibility: comma-separated conditions.

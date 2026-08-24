@@ -22,13 +22,14 @@ public static class HudThemeResolver
     public static TTheme Resolve<TTheme>(
         string name,
         Dictionary<string, TTheme>? customThemes,
-        Func<string, TTheme>? builtInFactory,
+        Func<string, TTheme?>? builtInFactory,
         TTheme baseTheme) where TTheme : HudTheme
     {
         if (string.IsNullOrWhiteSpace(name)) return baseTheme;
 
         TTheme? overlay = null;
-        customThemes?.TryGetValue(name, out overlay);
+        if (customThemes?.TryGetValue(name, out var found) == true)
+            overlay = found;
         if (overlay == null)
             overlay = builtInFactory?.Invoke(name);
         if (overlay == null)

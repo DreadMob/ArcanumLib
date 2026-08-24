@@ -122,7 +122,7 @@ public class AreaHologramRenderer : IRenderer, IDisposable
                 entry.Texture = HologramTextureGenerator.Generate(_capi, text, _options, version);
             }
 
-            if (entry.Texture == null || !entry.Texture.IsValid) continue;
+            if (entry.Texture?.Texture == null || entry.Texture.Texture.TextureId == 0) continue;
 
             float scale = HologramRenderUtils.ComputeScale((float)screenPos.Z);
             float w = scale * entry.Texture.Width;
@@ -150,7 +150,8 @@ public class AreaHologramRenderer : IRenderer, IDisposable
     private void RefreshCache(int px, int py, int pz, long nowMs)
     {
         var next = new Dictionary<BlockPos, AreaHologramCache>();
-        var blockAccessor = _capi?.World?.BlockAccessor;
+        if (_capi == null) return;
+        var blockAccessor = _capi.World.BlockAccessor;
         if (blockAccessor == null) return;
 
         int chunkSize = GlobalConstants.ChunkSize;

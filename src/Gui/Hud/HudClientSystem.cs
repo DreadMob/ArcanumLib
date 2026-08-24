@@ -179,7 +179,7 @@ public abstract class HudClientSystem<TSnapshot, THudDefinition, TTheme, TPanel,
             _capi.Gui.RegisterDialog(_hud);
         }
 
-        _hud.SetDefinition(definition);
+        _hud.SetDefinition(definition!);
         _hud.OnSnapshotReceived(snapshot);
         OnSnapshotApplied(snapshot);
     }

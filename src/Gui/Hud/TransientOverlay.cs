@@ -15,7 +15,7 @@ public abstract class TransientOverlay<TModel> : GuiDialog
     where TModel : class
 {
     /// <summary>Dialog should not block the rest of the UI.</summary>
-    public override string ToggleKeyCombinationCode => null;
+    public override string ToggleKeyCombinationCode => null!;
 
     /// <summary>Overlay draws above the world.</summary>
     public override EnumDialogType DialogType => EnumDialogType.HUD;

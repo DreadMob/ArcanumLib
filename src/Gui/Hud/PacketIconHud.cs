@@ -13,7 +13,7 @@ public abstract class PacketIconHud<TPacket, TEntry> : HudElement
     where TPacket : class, IHudPacket<TEntry>
 {
     /// <summary>Dialog should not block the rest of the UI.</summary>
-    public override string ToggleKeyCombinationCode => null;
+    public override string ToggleKeyCombinationCode => null!;
 
     /// <summary>Should not receive mouse events.</summary>
     public override bool ShouldReceiveMouseEvents() => false;

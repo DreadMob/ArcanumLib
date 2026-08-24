@@ -185,7 +185,7 @@ public static class EventBus
         lock (_syncLock)
         {
             entry.RegistrationOrder = _registrationCounter++;
-            var key = new EventKey(typeof(T), tag);
+            var key = new EventKey(typeof(T), tag ?? "");
             if (!_handlers.TryGetValue(key, out var list))
             {
                 list = new List<HandlerEntry>();
@@ -200,7 +200,7 @@ public static class EventBus
             _allEntries.Add(new WeakReference<HandlerEntry>(entry));
         }
 
-        var capturedKey = new EventKey(typeof(T), tag);
+        var capturedKey = new EventKey(typeof(T), tag ?? "");
         return new EventBusSubscription(() =>
         {
             lock (_syncLock)
@@ -286,7 +286,7 @@ public static class EventBus
         lock (_syncLock)
         {
             entry.RegistrationOrder = _registrationCounter++;
-            var key = new EventKey(typeof(object), tag);
+            var key = new EventKey(typeof(object), tag ?? "");
             if (!_handlers.TryGetValue(key, out var list))
             {
                 list = new List<HandlerEntry>();
@@ -301,7 +301,7 @@ public static class EventBus
             _allEntries.Add(new WeakReference<HandlerEntry>(entry));
         }
 
-        var capturedKey = new EventKey(typeof(object), tag);
+        var capturedKey = new EventKey(typeof(object), tag ?? "");
         return new EventBusSubscription(() =>
         {
             lock (_syncLock)

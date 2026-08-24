@@ -8,24 +8,24 @@ namespace ArcanumLib.Gui.Hud;
 [Serializable]
 public class HudThemeColors
 {
-    public string bgTop;
-    public string bgBottom;
+    public string bgTop = null!;
+    public string bgBottom = null!;
     public double? bgAlpha;
-    public string border;
+    public string border = null!;
     public double? borderAlpha;
-    public string textPrimary;
-    public string textSecondary;
-    public string accent;
-    public string accentSecondary;
-    public string danger;
-    public string success;
-    public string barBg;
-    public string barFill;
-    public string barFillLow;
-    public string parchment;
-    public string bossName;
-    public string challengePassed;
-    public string challengePending;
+    public string textPrimary = null!;
+    public string textSecondary = null!;
+    public string accent = null!;
+    public string accentSecondary = null!;
+    public string danger = null!;
+    public string success = null!;
+    public string barBg = null!;
+    public string barFill = null!;
+    public string barFillLow = null!;
+    public string parchment = null!;
+    public string bossName = null!;
+    public string challengePassed = null!;
+    public string challengePending = null!;
 
     public HudThemeColors Merge(HudThemeColors other)
     {
