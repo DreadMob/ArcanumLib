@@ -3,7 +3,7 @@ using Vintagestory.API.Client;
 using Vintagestory.API.Common;
 using Vintagestory.API.MathTools;
 
-namespace ArcanumLib.Gui.Hologram;
+namespace ArcanumLib.Hologram;
 
 /// <summary>
 /// Renders a single floating hologram above one <see cref="IHologramTextSource"/>.

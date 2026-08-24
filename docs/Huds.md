@@ -34,7 +34,7 @@ parent: Arcanum GUI Toolkit
 
 ## Transient overlays
 
-`TransientOverlay<TModel>` is a generic `GuiDialog` for short-lived overlays such as quest completion, boss defeated, or achievement toasts.
+`TransientOverlay<TModel>` is a generic `GuiDialog` for short-lived overlays such as milestone, combat, or achievement toasts.
 
 ```csharp
 using ArcanumLib.Gui.Hud;

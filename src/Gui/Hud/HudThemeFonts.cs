@@ -11,8 +11,9 @@ public class HudThemeFonts
     public double? label;
     public double? value;
     public double? timer;
-    public double? bossName;
+    public double? title;
 
+    /// <summary>Merges the other font sizes over this instance, returning a new set.</summary>
     public HudThemeFonts Merge(HudThemeFonts other)
     {
         if (other == null) return this;
@@ -21,7 +22,7 @@ public class HudThemeFonts
             label = other.label ?? label,
             value = other.value ?? value,
             timer = other.timer ?? timer,
-            bossName = other.bossName ?? bossName
+            title = other.title ?? title
         };
     }
 }

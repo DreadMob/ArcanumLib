@@ -18,7 +18,7 @@ Match collectibles and item stacks against include/exclude tag-sets and code pat
 - Filter items by tag (e.g. "all metal ingots").
 - Exclude certain tags (e.g. "not raw ore").
 - Combine tag matching with code wildcard patterns (e.g. `game:ingot-*`).
-- Build loot filters, recipe validators, or quest target matchers.
+- Build loot filters, recipe validators, or target matchers.
 
 ## Quick example
 

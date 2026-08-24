@@ -1,7 +1,7 @@
 using System;
 using Vintagestory.API.Client;
 
-namespace ArcanumLib.Gui.Hologram;
+namespace ArcanumLib.Hologram;
 
 /// <summary>
 /// Holds the generated <see cref="LoadedTexture"/> for a hologram, plus metadata used to track updates.

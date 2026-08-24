@@ -36,10 +36,10 @@ public class HudThemeLayout
     public double? tierLabelHeight;
     /// <summary>Extra gap below a tier-label element (px).</summary>
     public double? tierLabelGap;
-    /// <summary>Line height for boss-name text (px).</summary>
-    public double? bossNameLineHeight;
-    /// <summary>Extra gap below boss-name (px).</summary>
-    public double? bossNameGap;
+    /// <summary>Line height for title text (px).</summary>
+    public double? titleLineHeight;
+    /// <summary>Extra gap below title (px).</summary>
+    public double? titleGap;
     /// <summary>Line height for fight-timer text (px).</summary>
     public double? timerLineHeight;
     /// <summary>Extra gap below fight-timer (px).</summary>
@@ -47,6 +47,7 @@ public class HudThemeLayout
     /// <summary>Row height for a single challenge-list entry (px). Falls back to lineHeight.</summary>
     public double? challengeRowHeight;
 
+    /// <summary>Factory that returns the base layout dimensions for a generic HUD.</summary>
     public static HudThemeLayout Default => new()
     {
         lineHeight = 20, headerHeight = 24, barHeight = 12, barWidth = 180,
@@ -54,11 +55,12 @@ public class HudThemeLayout
         playerListGap = 8, playerRowHeight = 18,
         modifierHeight = 17, modifierGap = 4,
         tierLabelHeight = 16, tierLabelGap = 4,
-        bossNameLineHeight = 16, bossNameGap = 4,
+        titleLineHeight = 16, titleGap = 4,
         timerLineHeight = 22, timerGap = 2,
         challengeRowHeight = 18
     };
 
+    /// <summary>Merges the other spacing values over this instance, returning a new layout.</summary>
     public HudThemeLayout Merge(HudThemeLayout other)
     {
         if (other == null) return this;
@@ -79,8 +81,8 @@ public class HudThemeLayout
             modifierGap = other.modifierGap ?? modifierGap ?? d.modifierGap,
             tierLabelHeight = other.tierLabelHeight ?? tierLabelHeight ?? d.tierLabelHeight,
             tierLabelGap = other.tierLabelGap ?? tierLabelGap ?? d.tierLabelGap,
-            bossNameLineHeight = other.bossNameLineHeight ?? bossNameLineHeight ?? d.bossNameLineHeight,
-            bossNameGap = other.bossNameGap ?? bossNameGap ?? d.bossNameGap,
+            titleLineHeight = other.titleLineHeight ?? titleLineHeight ?? d.titleLineHeight,
+            titleGap = other.titleGap ?? titleGap ?? d.titleGap,
             timerLineHeight = other.timerLineHeight ?? timerLineHeight ?? d.timerLineHeight,
             timerGap = other.timerGap ?? timerGap ?? d.timerGap,
             challengeRowHeight = other.challengeRowHeight ?? challengeRowHeight ?? d.challengeRowHeight

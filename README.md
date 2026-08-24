@@ -6,7 +6,7 @@
 [![Game Version](https://img.shields.io/badge/Vintage%20Story-1.22.1+-green.svg)](https://www.vintagestory.at/)
 [![Version](https://img.shields.io/badge/Version-1.0.0--rc1-orange.svg)](resources/modinfo.json)
 [![C#](https://img.shields.io/badge/C%23-.NET%2010-purple.svg)]()
-[![Alegacy Quest Framework](https://img.shields.io/badge/Used%20by-Alegacy%20Quest%20Framework-2563eb?style=for-the-badge&logo=gitlab)](https://gitlab.com/DreadMob/Alegacy-Quest-Framework)
+[![C#](https://img.shields.io/badge/C%23-.NET%2010-purple.svg)]()
 
 ---
 
@@ -29,7 +29,7 @@ The library is built around a few headline features that have no vanilla equival
 
 Beyond those, the library ships thinner helpers (color structs, wildcard matching, watched-attributes helpers, damage source factories, etc.) collected under [Misc Helpers](docs/MiscHelpers.md) so they don't dilute the main feature pages.
 
-The library is currently used by the **[Alegacy Quest Framework](https://gitlab.com/DreadMob/Alegacy-Quest-Framework)** and is designed to be reusable by any Vintage Story mod that wants the same infrastructure.
+The library is designed to be reusable by any Vintage Story mod that wants the same infrastructure.
 
 ---
 
@@ -186,7 +186,8 @@ ArcanumLib/
 ├── ArcanumLibModSystem.cs    — Vintage Story entry point, lifecycle, and API registration
 ├── src/
 │   ├── Core/                  — ArcanumServices, ArcanumLibModSystem
-│   ├── Gui/                   — theme, composer, controls, layout, icons, radial menu, huds, holograms
+│   ├── Gui/                   — theme, composer, controls, layout, icons, radial menu, huds
+│   ├── Hologram/              — floating block text, texture caching, 3D projection
 │   ├── Geometry/              — PositionUtils, BlockEntitySearchUtils
 │   ├── Caching/               — TimedCache and SimpleLRUCache
 │   ├── Common/                — EventScope, CleanupScope, PlaytimeTracker, PlaytimeCooldownManager

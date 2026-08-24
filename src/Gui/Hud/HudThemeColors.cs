@@ -8,25 +8,25 @@ namespace ArcanumLib.Gui.Hud;
 [Serializable]
 public class HudThemeColors
 {
-    public string bgTop = null!;
-    public string bgBottom = null!;
+    public required string bgTop;
+    public required string bgBottom;
     public double? bgAlpha;
-    public string border = null!;
+    public required string border;
     public double? borderAlpha;
-    public string textPrimary = null!;
-    public string textSecondary = null!;
-    public string accent = null!;
-    public string accentSecondary = null!;
-    public string danger = null!;
-    public string success = null!;
-    public string barBg = null!;
-    public string barFill = null!;
-    public string barFillLow = null!;
-    public string parchment = null!;
-    public string bossName = null!;
-    public string challengePassed = null!;
-    public string challengePending = null!;
+    public required string textPrimary;
+    public required string textSecondary;
+    public required string accent;
+    public required string accentSecondary;
+    public required string danger;
+    public required string success;
+    public required string barBg;
+    public required string barFill;
+    public required string barFillLow;
+    public required string parchment;
+    public required string title;
+    public required string pending;
 
+    /// <summary>Merges the other colours over this instance, returning a new palette.</summary>
     public HudThemeColors Merge(HudThemeColors other)
     {
         if (other == null) return this;
@@ -47,9 +47,8 @@ public class HudThemeColors
             barFill = other.barFill ?? barFill,
             barFillLow = other.barFillLow ?? barFillLow,
             parchment = other.parchment ?? parchment,
-            bossName = other.bossName ?? bossName,
-            challengePassed = other.challengePassed ?? challengePassed,
-            challengePending = other.challengePending ?? challengePending
+            title = other.title ?? title,
+            pending = other.pending ?? pending
         };
     }
 }

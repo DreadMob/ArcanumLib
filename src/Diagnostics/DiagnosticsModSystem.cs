@@ -54,7 +54,11 @@ public class DiagnosticsModSystem : ModSystem
 
         RegisterCommand(sapi);
         StartMonitoring(sapi);
-        RunDiagnostics(sapi);
+        // Delay the first diagnostics pass so event-driven systems have a chance
+        // to publish at least once (player join, objective accepted, etc.). Running
+        // immediately at startup produces false "never-published" warnings for
+        // events that simply haven't fired yet.
+        sapi.Event.RegisterCallback(_ => RunDiagnostics(sapi), 30000);
     }
 
     // ── Static diagnostics ──

@@ -2,7 +2,7 @@ using System;
 using ArcanumLib.Gui.Theme;
 using Cairo;
 
-namespace ArcanumLib.Gui.Hologram;
+namespace ArcanumLib.Hologram;
 
 /// <summary>
 /// Configuration for generating a hologram texture from plain text.
@@ -61,4 +61,28 @@ public class HologramTextureOptions
     /// Optional per-line renderer. Return <c>true</c> from <see cref="IHologramLineRenderer.RenderLine"/> to skip the default centered draw.
     /// </summary>
     public IHologramLineRenderer? RenderLine { get; set; }
+
+    /// <summary>
+    /// Creates a shallow copy of these options. Useful for applying per-source overrides.
+    /// </summary>
+    public HologramTextureOptions Clone() => new()
+    {
+        FontSize = FontSize,
+        LineWidth = LineWidth,
+        LineHeightMultiplier = LineHeightMultiplier,
+        MaxLines = MaxLines,
+        PaddingTop = PaddingTop,
+        PaddingBottom = PaddingBottom,
+        PaddingX = PaddingX,
+        Centered = Centered,
+        BackgroundColor = BackgroundColor,
+        BorderColor = BorderColor,
+        TextColor = TextColor,
+        DrawBackground = DrawBackground,
+        ShadowColor = ShadowColor,
+        FontFace = FontFace,
+        FontWeight = FontWeight,
+        FontSlant = FontSlant,
+        RenderLine = RenderLine
+    };
 }

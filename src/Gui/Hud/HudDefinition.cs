@@ -14,13 +14,13 @@ public class HudDefinition<TElement> where TElement : HudElementDefinition
     public bool enabled = true;
 
     /// <summary>Layout identifier for grouping similar HUD layouts.</summary>
-    public string layout = null!;
+    public required string layout;
 
     /// <summary>Visual style or fallback theme name.</summary>
-    public string style = null!;
+    public required string style;
 
     /// <summary>Theme name referencing an external theme source. Takes priority over <see cref="style"/>.</summary>
-    public string theme = null!;
+    public required string theme;
 
     /// <summary>Override the theme's panel width (in pixels). Null = use theme's panelWidth.</summary>
     public int? panelWidth;
@@ -35,7 +35,7 @@ public class HudDefinition<TElement> where TElement : HudElementDefinition
     public string playerBoardPosition = "bottom";
 
     /// <summary>Ordered list of HUD elements to render.</summary>
-    public List<TElement> elements = null!;
+    public required List<TElement> elements;
 
     /// <summary>Resolves the effective theme name: <see cref="theme"/> → <see cref="style"/> → "default".</summary>
     public string EffectiveTheme => !string.IsNullOrWhiteSpace(theme) ? theme

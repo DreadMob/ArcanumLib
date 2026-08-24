@@ -3,7 +3,7 @@ using ArcanumLib.Gui.Theme;
 using Cairo;
 using Vintagestory.API.Client;
 
-namespace ArcanumLib.Gui.Hologram;
+namespace ArcanumLib.Hologram;
 
 /// <summary>
 /// Generates a <see cref="HologramTexture"/> from a string using Cairo.

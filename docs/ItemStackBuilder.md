@@ -11,7 +11,7 @@ Fluent builder for constructing `ItemStack` instances with attributes, durabilit
 
 ## What is it for?
 
-`ItemStackBuilder` removes the boilerplate of creating `ItemStack` instances with specific collectible codes, attributes, durability, and stack sizes. It is useful for loot tables, quest rewards, test fixtures, and any code that constructs stacks programmatically.
+`ItemStackBuilder` removes the boilerplate of creating `ItemStack` instances with specific collectible codes, attributes, durability, and stack sizes. It is useful for loot tables, rewards, test fixtures, and any code that constructs stacks programmatically.
 
 ## When to use it
 

@@ -65,8 +65,10 @@ public abstract class HudPanel<TSnapshot, THudDefinition, TTheme> : GuiElement, 
     /// <summary>Renders the full panel content into the provided Cairo context.</summary>
     protected abstract void DrawPanelContent(Context ctx, int width, int height);
 
+    /// <summary>Composes the static panel surface; the default implementation is empty.</summary>
     public override void ComposeElements(Context ctxStatic, ImageSurface surfaceStatic) { }
 
+    /// <summary>Renders the cached panel texture and regenerates it when the cache key changes.</summary>
     public override void RenderInteractiveElements(float deltaTime)
     {
         if (Bounds?.ParentBounds == null) return;

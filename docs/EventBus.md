@@ -14,7 +14,7 @@ Vintage Story mods communicate through direct `ModSystem` references or watched 
 
 ## When to use it
 
-- Notify other mods when something happens in your mod (player death, boss spawn, quest completion).
+- Notify other mods when something happens in your mod (player death, combat, objective completion).
 - React to events from another mod without adding a project reference.
 - Decouple systems that would otherwise call each other directly.
 

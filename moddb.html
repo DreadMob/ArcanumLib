@@ -1,0 +1,108 @@
+<div class="cl-preview-section">
+<div style="background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%); border-radius: 16px; padding: 42px 28px; margin-bottom: 20px; text-align: center;">
+<p style="color: #fbbf24; font-size: 2em; font-weight: 800; margin: 0 0 6px 0; letter-spacing: -0.5px;">Arcanum Lib</p>
+<p style="color: #94a3b8; font-size: 0.95em; margin: 0; letter-spacing: 1.5px; text-transform: uppercase;">Shared utility library for Vintage Story</p>
+</div>
+</div>
+
+<div class="cl-preview-section">
+<div style="background: #ffffff; border: 1px solid #e2e8f0; border-left: 4px solid #f59e0b; border-radius: 12px; padding: 22px 24px; margin-bottom: 16px; box-shadow: 0 1px 3px rgba(0,0,0,0.04);">
+<p style="color: #334155; line-height: 1.75; margin: 0;"><strong style="color: #0f172a;">Arcanum Lib</strong> is a client/server library for Vintage Story mod developers. It collects common patterns &mdash; GUI, HUDs, holograms, status effects, events, commands, data persistence, particles, and more &mdash; into one reusable assembly. The library does <strong style="color: #b45309;">not</strong> add in-game content by itself; it is meant to be referenced by other mods as a dependency.</p>
+</div>
+</div>
+
+<div class="cl-preview-section">
+<div style="background: #fffbeb; border: 1px solid #fcd34d; border-radius: 12px; padding: 16px 20px; margin-bottom: 20px;">
+<p style="color: #92400e; font-weight: 700; margin: 0 0 6px 0; font-size: 0.9em;">⚠️ Before you install</p>
+<p style="color: #78350f; margin: 0; line-height: 1.65; font-size: 0.9em;">Arcanum Lib is a <strong>library mod</strong> and does nothing on its own. Install it only if another mod requires it, or if you are writing a mod that uses the ArcanumLib assembly.</p>
+</div>
+</div>
+
+<div class="cl-preview-section">
+<div style="background: #ffffff; border: 1px solid #e2e8f0; border-top: 3px solid #0ea5e9; border-radius: 12px; padding: 24px; margin-bottom: 14px; box-shadow: 0 1px 3px rgba(0,0,0,0.04);">
+<div style="display: flex; align-items: center; gap: 10px; margin-bottom: 14px;"><span style="background: #f0f9ff; color: #0ea5e9; width: 28px; height: 28px; border-radius: 6px; display: inline-flex; align-items: center; justify-content: center; font-size: 0.85em;">🖥</span> <span style="color: #0f172a; font-weight: 700; font-size: 1.1em;">GUI &amp; HUDs</span></div>
+<p style="color: #6b7280; margin: 0 0 12px 0; font-size: 0.9em;">Cairo-based UI toolkit and reusable screen overlays for in-game information.</p>
+<ul style="color: #374151; line-height: 2; margin: 0; padding-left: 20px; list-style: none;">
+<li style="position: relative; padding-left: 14px;"><span style="position: absolute; left: 0; color: #0ea5e9;">&rsaquo;</span> <strong style="color: #0f172a;">HudPanel</strong> / <strong style="color: #0f172a;">HudDialog</strong> / <strong style="color: #0f172a;">HudClientSystem</strong> for packet-driven player HUDs</li>
+<li style="position: relative; padding-left: 14px;"><span style="position: absolute; left: 0; color: #0ea5e9;">&rsaquo;</span> Themed colour palette, layout spacing, and font size overrides</li>
+<li style="position: relative; padding-left: 14px;"><span style="position: absolute; left: 0; color: #0ea5e9;">&rsaquo;</span> <strong style="color: #0f172a;">PacketIconHud</strong> and <strong style="color: #0f172a;">TransientOverlay</strong> for timed icons and notifications</li>
+<li style="position: relative; padding-left: 14px;"><span style="position: absolute; left: 0; color: #0ea5e9;">&rsaquo;</span> Scrollable item lists, custom icon registry, radial menu, and date/time picker</li>
+</ul>
+</div>
+</div>
+
+<div class="cl-preview-section">
+<div style="background: #ffffff; border: 1px solid #e2e8f0; border-top: 3px solid #8b5cf6; border-radius: 12px; padding: 24px; margin-bottom: 14px; box-shadow: 0 1px 3px rgba(0,0,0,0.04);">
+<div style="display: flex; align-items: center; gap: 10px; margin-bottom: 14px;"><span style="background: #f5f3ff; color: #8b5cf6; width: 28px; height: 28px; border-radius: 6px; display: inline-flex; align-items: center; justify-content: center; font-size: 0.85em;">✨</span> <span style="color: #0f172a; font-weight: 700; font-size: 1.1em;">Holograms</span></div>
+<p style="color: #6b7280; margin: 0 0 12px 0; font-size: 0.9em;">3D floating text labels drawn in world space without heavy manual Cairo setup.</p>
+<ul style="color: #374151; line-height: 2; margin: 0; padding-left: 20px; list-style: none;">
+<li style="position: relative; padding-left: 14px;"><span style="position: absolute; left: 0; color: #8b5cf6;">&rsaquo;</span> <strong style="color: #0f172a;">SingleHologramRenderer</strong> and <strong style="color: #0f172a;">AreaHologramRenderer</strong> with chunk scanning</li>
+<li style="position: relative; padding-left: 14px;"><span style="position: absolute; left: 0; color: #8b5cf6;">&rsaquo;</span> Per-source text, colour, range, and height offset via <code style="background: #f3f4f6; padding: 1px 5px; border-radius: 4px; color: #0f172a;">IHologramTextSource</code></li>
+<li style="position: relative; padding-left: 14px;"><span style="position: absolute; left: 0; color: #8b5cf6;">&rsaquo;</span> Versioned Cairo texture caching with 3D-to-2D projection and distance scaling</li>
+<li style="position: relative; padding-left: 14px;"><span style="position: absolute; left: 0; color: #8b5cf6;">&rsaquo;</span> Optional per-line renderer for custom styles, progress bars, and separators</li>
+</ul>
+</div>
+</div>
+
+<div class="cl-preview-section">
+<div style="background: #ffffff; border: 1px solid #e2e8f0; border-top: 3px solid #ef4444; border-radius: 12px; padding: 24px; margin-bottom: 14px; box-shadow: 0 1px 3px rgba(0,0,0,0.04);">
+<div style="display: flex; align-items: center; gap: 10px; margin-bottom: 14px;"><span style="background: #fef2f2; color: #ef4444; width: 28px; height: 28px; border-radius: 6px; display: inline-flex; align-items: center; justify-content: center; font-size: 0.85em;">⚔</span> <span style="color: #0f172a; font-weight: 700; font-size: 1.1em;">Status Effects</span></div>
+<p style="color: #6b7280; margin: 0 0 12px 0; font-size: 0.9em;">Timed buff and debuff system with a packet-driven icon HUD.</p>
+<ul style="color: #374151; line-height: 2; margin: 0; padding-left: 20px; list-style: none;">
+<li style="position: relative; padding-left: 14px;"><span style="position: absolute; left: 0; color: #ef4444;">&rsaquo;</span> Stacking, refresh, override, and independent application modes</li>
+<li style="position: relative; padding-left: 14px;"><span style="position: absolute; left: 0; color: #ef4444;">&rsaquo;</span> Configurable duration, charges, and attribute modifiers</li>
+<li style="position: relative; padding-left: 14px;"><span style="position: absolute; left: 0; color: #ef4444;">&rsaquo;</span> Built-in client icon HUD with timers and tooltips</li>
+</ul>
+</div>
+</div>
+
+<div class="cl-preview-section">
+<div style="background: #ffffff; border: 1px solid #e2e8f0; border-top: 3px solid #10b981; border-radius: 12px; padding: 24px; margin-bottom: 14px; box-shadow: 0 1px 3px rgba(0,0,0,0.04);">
+<div style="display: flex; align-items: center; gap: 10px; margin-bottom: 14px;"><span style="background: #f0fdf4; color: #10b981; width: 28px; height: 28px; border-radius: 6px; display: inline-flex; align-items: center; justify-content: center; font-size: 0.85em;">⚡</span> <span style="color: #0f172a; font-weight: 700; font-size: 1.1em;">Events, Actions &amp; Commands</span></div>
+<p style="color: #6b7280; margin: 0 0 12px 0; font-size: 0.9em;">Cross-mod communication and command construction made simpler.</p>
+<ul style="color: #374151; line-height: 2; margin: 0; padding-left: 20px; list-style: none;">
+<li style="position: relative; padding-left: 14px;"><span style="position: absolute; left: 0; color: #10b981;">&rsaquo;</span> Typed event bus with keyed subscriptions and diagnostics</li>
+<li style="position: relative; padding-left: 14px;"><span style="position: absolute; left: 0; color: #10b981;">&rsaquo;</span> String-based action registry for quest and NPC triggers</li>
+<li style="position: relative; padding-left: 14px;"><span style="position: absolute; left: 0; color: #10b981;">&rsaquo;</span> Fluent command builder with argument parsing and localizations</li>
+</ul>
+</div>
+</div>
+
+<div class="cl-preview-section">
+<div style="background: #ffffff; border: 1px solid #e2e8f0; border-top: 3px solid #f59e0b; border-radius: 12px; padding: 24px; margin-bottom: 14px; box-shadow: 0 1px 3px rgba(0,0,0,0.04);">
+<div style="display: flex; align-items: center; gap: 10px; margin-bottom: 14px;"><span style="background: #fffbeb; color: #f59e0b; width: 28px; height: 28px; border-radius: 6px; display: inline-flex; align-items: center; justify-content: center; font-size: 0.85em;">💾</span> <span style="color: #0f172a; font-weight: 700; font-size: 1.1em;">Data &amp; Persistence</span></div>
+<p style="color: #6b7280; margin: 0 0 12px 0; font-size: 0.9em;">Safe per-world and per-player storage helpers.</p>
+<ul style="color: #374151; line-height: 2; margin: 0; padding-left: 20px; list-style: none;">
+<li style="position: relative; padding-left: 14px;"><span style="position: absolute; left: 0; color: #f59e0b;">&rsaquo;</span> Versioned <strong style="color: #0f172a;">ModDataStore</strong> with migration support</li>
+<li style="position: relative; padding-left: 14px;"><span style="position: absolute; left: 0; color: #f59e0b;">&rsaquo;</span> Pity tracker, playtime tracker, and cooldown scheduler</li>
+<li style="position: relative; padding-left: 14px;"><span style="position: absolute; left: 0; color: #f59e0b;">&rsaquo;</span> Validation helpers and typed config/JSON loaders</li>
+</ul>
+</div>
+</div>
+
+<div class="cl-preview-section">
+<div style="background: #ffffff; border: 1px solid #e2e8f0; border-top: 3px solid #06b6d4; border-radius: 12px; padding: 24px; margin-bottom: 14px; box-shadow: 0 1px 3px rgba(0,0,0,0.04);">
+<div style="display: flex; align-items: center; gap: 10px; margin-bottom: 14px;"><span style="background: #ecfeff; color: #06b6d4; width: 28px; height: 28px; border-radius: 6px; display: inline-flex; align-items: center; justify-content: center; font-size: 0.85em;">🧰</span> <span style="color: #0f172a; font-weight: 700; font-size: 1.1em;">Helpers</span></div>
+<p style="color: #6b7280; margin: 0 0 12px 0; font-size: 0.9em;">Miscellaneous utilities used across many Vintage Story subsystems.</p>
+<ul style="color: #374151; line-height: 2; margin: 0; padding-left: 20px; list-style: none;">
+<li style="position: relative; padding-left: 14px;"><span style="position: absolute; left: 0; color: #06b6d4;">&rsaquo;</span> Position/geometry, block search, and land/zone trackers</li>
+<li style="position: relative; padding-left: 14px;"><span style="position: absolute; left: 0; color: #06b6d4;">&rsaquo;</span> Item stack builder, damage helpers, and chat formatting</li>
+<li style="position: relative; padding-left: 14px;"><span style="position: absolute; left: 0; color: #06b6d4;">&rsaquo;</span> Particle builder, random weighting, text utilities, and categorized logging</li>
+</ul>
+</div>
+</div>
+
+<div class="cl-preview-section">
+<div style="background: #f0f9ff; border: 1px solid #bae6fd; border-radius: 12px; padding: 22px 24px; margin-bottom: 20px;">
+<p style="color: #0c4a6e; font-weight: 700; margin: 0 0 10px 0; font-size: 1.05em;">For mod developers</p>
+<p style="color: #334155; margin: 0 0 12px 0; line-height: 1.7;">Reference <code style="background: #e0f2fe; padding: 2px 6px; border-radius: 4px; color: #0c4a6e;">ArcanumLib.dll</code> in your project and add this to your <code style="background: #e0f2fe; padding: 2px 6px; border-radius: 4px; color: #0c4a6e;">modinfo.json</code>:</p>
+<p style="background: #ffffff; border: 1px solid #cbd5e1; border-radius: 8px; padding: 14px; color: #0f172a; font-family: monospace; font-size: 0.85em; margin: 0 0 12px 0;">"dependencies": { "arcanumlib": "1.0.0-rc1" }</p>
+<p style="color: #334155; margin: 0; line-height: 1.7; font-size: 0.9em;">Full API documentation is included in the <code style="background: #e0f2fe; padding: 2px 6px; border-radius: 4px; color: #0c4a6e;">docs/</code> folder of the release archive.</p>
+</div>
+</div>
+
+<div class="cl-preview-section">
+<div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 20px 24px; text-align: center; margin-bottom: 12px;">
+<p style="color: #64748b; margin: 0; font-size: 0.9em;">Released under the MIT license &middot; Not affiliated with Vintage Story or Anego Studios</p>
+</div>
+</div>

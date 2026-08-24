@@ -133,12 +133,12 @@ Total tracked: 24
 Active: 22
 
   [ACTIVE] EncounterCompletedEvent[encounter.completed] calls=142 avg=0.32ms
-  [ACTIVE] QuestEvent[quest.accepted] calls=89 avg=0.15ms
+  [ACTIVE] MyModEvent[custom.category] calls=89 avg=0.15ms
   [DISPOSED] PlayerEvent[player.join] calls=3 avg=0.08ms
   ...
 
 Dangling (never published): 2
-  - QuestEvent[quest.abandond]
+  - MyModEvent[custom.abandond]
   - PlayerDeathEvent[player.deaht]
 === End EventBus ===
 ```

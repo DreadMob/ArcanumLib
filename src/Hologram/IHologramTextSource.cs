@@ -1,7 +1,7 @@
 using Vintagestory.API.Common;
 using Vintagestory.API.MathTools;
 
-namespace ArcanumLib.Gui.Hologram;
+namespace ArcanumLib.Hologram;
 
 /// <summary>
 /// Describes a block entity (or other world object) that provides hologram text.

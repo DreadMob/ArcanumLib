@@ -7,7 +7,7 @@ namespace ArcanumLib.Gui.Icons
     /// registration into <see cref="CustomIconRegistry"/> via
     /// <see cref="IconRegistrar.ScanAndRegister"/>.
     /// The key should be a globally unique string, typically prefixed with the mod id
-    /// (e.g. <c>vsquest:bossintoxaura</c>).
+    /// (e.g. <c>mymod:myicon</c>).
     /// </summary>
     [AttributeUsage(AttributeTargets.Class, AllowMultiple = false, Inherited = false)]
     public sealed class IconKeyAttribute : Attribute

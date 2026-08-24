@@ -7,7 +7,7 @@ using Vintagestory.API.MathTools;
 namespace ArcanumLib.Gui.Hud;
 
 /// <summary>
-/// Generic full-screen transient overlay (toast, achievement, boss-defeat, quest-objective, etc.).
+/// Generic full-screen transient overlay (toast, achievement, combat, milestone, etc.).
 /// Manages auto-open, optional sound, elapsed-time tracking and auto-close.
 /// Derived types implement <see cref="OnDrawContent"/> and set <see cref="DurationSeconds"/>.
 /// </summary>

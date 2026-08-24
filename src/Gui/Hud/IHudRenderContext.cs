@@ -24,7 +24,7 @@ public interface IHudRenderContext
     /// <summary>Resolves a theme colour by key (e.g. "accent", "textPrimary").</summary>
     RGBA ThemeRGBA(string key, double alpha = 1.0);
 
-    /// <summary>Resolves a theme font size by key (e.g. "timer", "bossName").</summary>
+    /// <summary>Resolves a theme font size by key (e.g. "timer", "title").</summary>
     double ThemeFont(string key);
 
     /// <summary>Resolves the text colour for an element, honouring per-element overrides.</summary>

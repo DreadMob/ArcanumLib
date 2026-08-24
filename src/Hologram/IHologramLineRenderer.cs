@@ -1,6 +1,6 @@
 using Cairo;
 
-namespace ArcanumLib.Gui.Hologram;
+namespace ArcanumLib.Hologram;
 
 /// <summary>
 /// Custom renderer for a single line of a hologram texture.

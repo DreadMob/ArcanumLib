@@ -17,8 +17,9 @@ public static class HudTextResolver
     /// </summary>
     /// <param name="text">The raw text, localization key, or mob-code marker.</param>
     /// <param name="mobNameResolver">Optional resolver for "mob:" markers.</param>
+    /// <param name="customResolver">Optional resolver called before <see cref="Lang.Get"/> for keys containing a ':'.</param>
     /// <returns>The localized or resolved string, or <paramref name="text"/> if no localization matched.</returns>
-    public static string Resolve(string text, Func<string, string?>? mobNameResolver = null)
+    public static string Resolve(string text, Func<string, string?>? mobNameResolver = null, Func<string, string?>? customResolver = null)
     {
         if (string.IsNullOrWhiteSpace(text)) return text;
 
@@ -40,19 +41,33 @@ public static class HudTextResolver
             for (int i = 0; i < parts.Length; i++)
             {
                 string part = parts[i].Trim();
-                parts[i] = part.Contains(':') ? ResolveSingle(part) : part;
+                parts[i] = part.Contains(':') ? ResolveSingle(part, null) : part;
             }
             return string.Join(" — ", parts);
         }
 
         if (text.Contains(':'))
-            return ResolveSingle(text);
+            return ResolveSingle(text, customResolver);
 
         return text;
     }
 
-    private static string ResolveSingle(string key)
+    private static string ResolveSingle(string key, Func<string, string?>? customResolver)
     {
+        if (customResolver != null)
+        {
+            try
+            {
+                string? custom = customResolver(key);
+                if (!string.IsNullOrWhiteSpace(custom) && !string.Equals(custom, key, StringComparison.OrdinalIgnoreCase))
+                    return custom;
+            }
+            catch
+            {
+                // Resolver failure — continue to vanilla fallback.
+            }
+        }
+
         string? value = Lang.Get(key);
         if (string.IsNullOrWhiteSpace(value) || string.Equals(value, key, StringComparison.OrdinalIgnoreCase))
             return key;

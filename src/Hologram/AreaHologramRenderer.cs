@@ -1,11 +1,12 @@
 using System;
 using System.Collections.Generic;
+using ArcanumLib.Gui.Theme;
 using Vintagestory.API.Client;
 using Vintagestory.API.Common;
 using Vintagestory.API.Config;
 using Vintagestory.API.MathTools;
 
-namespace ArcanumLib.Gui.Hologram;
+namespace ArcanumLib.Hologram;
 
 /// <summary>
 /// Renders multiple floating holograms in an area by scanning nearby chunks for <see cref="IHologramTextSource"/>.
@@ -119,7 +120,8 @@ public class AreaHologramRenderer : IRenderer, IDisposable
             if (entry.Texture == null || entry.Texture.Version != version || !entry.Texture.IsValid)
             {
                 entry.Texture?.Dispose();
-                entry.Texture = HologramTextureGenerator.Generate(_capi, text, _options, version);
+                var options = GetOptionsForSource(entry.Source);
+                entry.Texture = HologramTextureGenerator.Generate(_capi, text, options, version);
             }
 
             if (entry.Texture?.Texture == null || entry.Texture.Texture.TextureId == 0) continue;
@@ -205,7 +207,8 @@ public class AreaHologramRenderer : IRenderer, IDisposable
                         }
 
                         long version = source.GetHologramVersion();
-                        var texture = HologramTextureGenerator.Generate(_capi, text, _options, version);
+                        var options = GetOptionsForSource(source);
+                        var texture = HologramTextureGenerator.Generate(_capi, text, options, version);
                         next[bePos] = new AreaHologramCache
                         {
                             Source = source,
@@ -231,6 +234,15 @@ public class AreaHologramRenderer : IRenderer, IDisposable
         _lastCacheRefreshPx = px;
         _lastCacheRefreshPy = py;
         _lastCacheRefreshPz = pz;
+    }
+
+    private HologramTextureOptions GetOptionsForSource(IHologramTextSource source)
+    {
+        var options = _options.Clone();
+        var color = source.GetHologramColor();
+        if (color is { Length: >= 4 })
+            options.TextColor = new RGBA(color[0], color[1], color[2], color[3]);
+        return options;
     }
 
     private static int DivFloor(int a, int b)

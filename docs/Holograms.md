@@ -9,7 +9,7 @@ parent: Arcanum GUI Toolkit
 
 ## What is it for?
 
-`ArcanumLib.Gui.Hologram` provides a reusable way to draw floating text labels above blocks in the world. It takes care of Cairo texture generation, 3D to 2D projection, distance scaling, and caching so consumer mods only need to supply the text and position.
+`ArcanumLib.Hologram` provides a reusable way to draw floating text labels above blocks in the world. It takes care of Cairo texture generation, 3D to 2D projection, distance scaling, and caching so consumer mods only need to supply the text and position.
 
 ## When to use it
 
@@ -35,7 +35,7 @@ parent: Arcanum GUI Toolkit
 The block entity (or any object with a fixed position) can implement `IHologramTextSource`:
 
 ```csharp
-using ArcanumLib.Gui.Hologram;
+using ArcanumLib.Hologram;
 using Vintagestory.API.Common;
 
 public class MyHologramBlockEntity : BlockEntity, IHologramTextSource
@@ -123,7 +123,7 @@ _hologramRenderer = new AreaHologramRenderer(
 `HologramTextureOptions.RenderLine` is an optional `IHologramLineRenderer` that lets a mod override how a single line is drawn. Return `true` to skip the default centered text.
 
 ```csharp
-using ArcanumLib.Gui.Hologram;
+using ArcanumLib.Hologram;
 using Cairo;
 
 public class MyLineRenderer : IHologramLineRenderer

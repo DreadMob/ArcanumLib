@@ -30,7 +30,7 @@ ArcanumServices.Register(tracker);
 
 ```csharp
 var tracker = ArcanumServices.Get<PityTracker>();
-tracker?.RecordOpen(playerUid, "my:boss", rolledTier);
+tracker?.RecordOpen(playerUid, "my:milestone", rolledTier);
 ```
 
 ### Shut down

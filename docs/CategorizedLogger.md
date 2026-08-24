@@ -20,8 +20,8 @@ File and console logger with per-category files, structured events, and throttle
 using ArcanumLib.Logging;
 
 CategorizedLogger.Init(api, new LogConfig { Mode = LogMode.Verbose }, "myMod", "MyMod");
-CategorizedLogger.Instance?.Info("combat", "Player hit boss for {0}", damage);
-CategorizedLogger.Instance?.Warning("combat", "Boss enraged", ex);
+CategorizedLogger.Instance?.Info("combat", "Player hit target for {0}", damage);
+CategorizedLogger.Instance?.Warning("combat", "Target enraged", ex);
 ```
 
 ## Notes

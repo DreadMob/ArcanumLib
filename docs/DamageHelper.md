@@ -23,13 +23,13 @@ parent: Common & Utility
 using ArcanumLib.Common;
 
 // Entity-sourced damage
-target.ReceiveDamage(DamageHelper.Create(boss, EnumDamageType.BluntAttack, 2), 50f);
+target.ReceiveDamage(DamageHelper.Create(enemy, EnumDamageType.BluntAttack, 2), 50f);
 
 // Player-sourced damage with tier
 entity.ReceiveDamage(DamageHelper.CreatePlayer(player.Entity, EnumDamageType.SlashAttack, 3), 40f);
 
 // Projectile damage (source entity + cause entity)
-target.ReceiveDamage(DamageHelper.Create(boss, projectile, EnumDamageType.PiercingAttack, 3), 80f);
+target.ReceiveDamage(DamageHelper.Create(enemy, projectile, EnumDamageType.PiercingAttack, 3), 80f);
 
 // Weather damage (lightning)
 entity.ReceiveDamage(DamageHelper.CreateWeather(pos, EnumDamageType.Lightning, 0.5f), 100f);

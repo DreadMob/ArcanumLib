@@ -9,7 +9,7 @@ namespace ArcanumLib.Inventory;
 /// <summary>
 /// Fluent builder for constructing <see cref="ItemStack"/> instances with
 /// attributes, durability, stack size, and custom collectible codes. Useful for
-/// loot tables, quest rewards, and test fixtures.
+/// loot tables, rewards, and test fixtures.
 /// </summary>
 public sealed class ItemStackBuilder
 {

@@ -62,9 +62,9 @@ if (PositionUtils.TryFindLocalFloor(blockAccessor, pos, anchorY: 70, maxDelta: 3
 ### Horizontal distance
 
 ```csharp
-double dist = PositionUtils.HorizontalDistanceTo(player.Pos.XYZ, boss.Pos.XYZ);
+double dist = PositionUtils.HorizontalDistanceTo(player.Pos.XYZ, target.Pos.XYZ);
 
-if (PositionUtils.IsWithinHorizontalRange(player.Entity, boss.Pos.XYZ, range: 12))
+if (PositionUtils.IsWithinHorizontalRange(player.Entity, target.Pos.XYZ, range: 12))
 {
     // Player is within 12 blocks (ignoring Y)
 }

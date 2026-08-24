@@ -25,7 +25,7 @@ using ArcanumLib.Common;
 string msg = ChatFormatUtil.Font("Hello!", "#4ADE80");
 
 // Alert prefix: red [!] + white text
-string alert = ChatFormatUtil.PrefixAlert("Boss defeated!");
+string alert = ChatFormatUtil.PrefixAlert("Enemy defeated!");
 
 // Custom colors
 string custom = ChatFormatUtil.PrefixAlert("Warning", "#ff5555", "#fbbf24");
