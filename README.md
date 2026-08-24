@@ -18,6 +18,8 @@ The library is built around a few headline features that have no vanilla equival
 
 - **Status Effects** — timed buffs/debuffs with stacking, refresh, override, and independent modes. No vanilla equivalent.
 - **Action Registry** — JSON-declared actions with typed handlers, cooldowns, and permissions. Lets content packs add behaviour without recompiling.
+- **EventBus** — typed publish/subscribe event bus for cross-mod communication. Mods publish events without knowing who subscribes.
+- **CommandBuilder** — fluent command framework with typed arguments, permissions, and autocomplete. Replaces manual `CmdArgs` parsing.
 - **Particle Effect Builder** — fluent builder with named presets (explosions, auras, impacts, shockwaves, ambient). Replaces 20-field `SimpleParticleProperties` setup with one line.
 - **Radial Menu** — Cairo-styled pie menu with pluggable `IRadialMenuStyle` themes. No vanilla equivalent.
 - **ModDataStore** — versioned per-savegame persistence with schema migrations. Replaces raw `StoreData` string dictionaries.
@@ -77,7 +79,7 @@ See the [`docs/`](docs) folder for full API documentation and examples.
 | **GuiDateTimePicker** | Reusable date/time picker for `GuiComposer` with Now/Clear buttons. |
 | **Custom Icons** | `ICustomIconRenderer`, `CustomIconRegistry`, and `CustomTabIconRenderer` for custom Cairo-drawn GUI icons. |
 | **ImageIconCache** | Load, cache and draw icon image surfaces with circle, hexagon, and diamond clipping plus optional tinting. |
-| **ModeIconBuilder** | Factory for `SkillItem` tool-mode icons (in-game icon, letter, or live `ItemStack` rendering). |
+| **ModeIconBuilder** | Factory for tool-mode icons (in-game icon, letter, or live `ItemStack` rendering). |
 
 ### Items & Equipment
 
@@ -95,6 +97,13 @@ See the [`docs/`](docs) folder for full API documentation and examples.
 | **ArcanumLibModSystem** | Central `ModSystem` that registers the client/server API and clears caches on unload. |
 | **ActionRegistry / ActionExecutor** | Typed action registry with JSON-declared actions, cooldowns, and permissions. |
 | **CategorizedLogger** | File and console logger with per-category files and throttled debug output. |
+
+### Events & Commands
+
+| Module | Description |
+|--------|-------------|
+| **EventBus** | Typed publish/subscribe event bus for cross-mod communication. Mods publish events without knowing who subscribes. |
+| **CommandBuilder** | Fluent command framework with typed arguments, permission gating, and autocomplete. |
 
 ### Persistence & Progression
 
@@ -177,6 +186,8 @@ ArcanumLib/
 │   ├── Geometry/              — PositionUtils, BlockEntitySearchUtils
 │   ├── Caching/               — TimedCache and SimpleLRUCache
 │   ├── Common/                — EventScope, CleanupScope, PlaytimeTracker, PlaytimeCooldownManager
+│   ├── Events/                — EventBus, IEvent
+│   ├── Commands/              — CommandBuilder
 │   ├── Data/                  — TagSet, WatchedAttributes, and CooldownTracker
 │   ├── Validation/            — ValidationResult
 │   ├── Assets/                — ModAssetLoader, ModAssetRegistry

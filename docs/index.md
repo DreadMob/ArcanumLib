@@ -89,6 +89,13 @@ Keep the server/client responsive.
 | [TimedCache]({{ site.baseurl }}{% link TimedCache.md %}) | Thread-safe cache with TTL eviction. |
 | [CleanupScope]({{ site.baseurl }}{% link CleanupScope.md %}) | Cancel listeners, work, and nested disposables in one call. |
 
+## Events & Commands
+
+| Page | Purpose |
+|------|---------|
+| [EventBus]({{ site.baseurl }}{% link EventBus.md %}) | Typed publish/subscribe event bus for cross-mod communication. |
+| [CommandBuilder]({{ site.baseurl }}{% link CommandBuilder.md %}) | Fluent command framework with typed arguments, permissions, and autocomplete. |
+
 ## Logging
 
 Categorized file logging for any mod.

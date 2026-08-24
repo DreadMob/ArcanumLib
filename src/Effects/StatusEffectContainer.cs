@@ -116,6 +116,22 @@ namespace ArcanumLib.Effects
         }
 
         /// <summary>
+        /// Removes all instances matching the given category.
+        /// </summary>
+        public IReadOnlyList<StatusEffectInstance> RemoveByCategory(EffectCategory category)
+        {
+            if (category == EffectCategory.None)
+                return Array.Empty<StatusEffectInstance>();
+
+            var removed = _instances.Where(i => i.Effect.Category == category).ToList();
+            foreach (var instance in removed)
+            {
+                _instances.Remove(instance);
+            }
+            return removed;
+        }
+
+        /// <summary>
         /// Removes the instance with the given id.
         /// </summary>
         public StatusEffectInstance? RemoveById(long id)

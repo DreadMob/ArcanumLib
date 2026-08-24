@@ -44,6 +44,13 @@ public class ActionExecutorService
             }
         }
 
+        // Declarative condition check.
+        if (descriptor.Condition != null && !descriptor.Condition.Evaluate(context))
+        {
+            return ActionResult.NotAvailable(
+                $"Condition for action '{descriptor.Id}' was not satisfied.");
+        }
+
         // Cooldown check.
         if (descriptor.CooldownMs > 0 && context.PlayerEntity != null)
         {

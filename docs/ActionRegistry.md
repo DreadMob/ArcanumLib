@@ -107,6 +107,47 @@ else
 | `Args` | String arguments passed to the handler. |
 | `CooldownMs` | Per-player cooldown in ms. |
 | `RequiredPermission` | VS privilege required to execute. |
+| `Condition` | Optional declarative condition evaluated before the handler. |
+
+### Declarative conditions
+
+Actions can declare a `condition` in JSON that is evaluated before the handler runs. If the condition fails, the action returns `NotAvailable` without calling the handler.
+
+```json
+{
+    "id": "giveitem",
+    "args": ["game:ingot-iron", "1"],
+    "condition": {
+        "type": "All",
+        "conditions": [
+            { "type": "HasKey", "key": "reputation" },
+            { "type": "MinValue", "key": "reputation", "value": "100" }
+        ]
+    }
+}
+```
+
+The context's `Extra` dictionary is checked. Set values before executing:
+
+```csharp
+var context = new ActionContext(sapi, player, itemSlot, targetPos);
+context.Extra["reputation"] = 150;
+ActionResult result = ActionExecutor.Execute(descriptor, context);
+```
+
+#### Condition types
+
+| Type | Description |
+|------|-------------|
+| `Always` | Always true. |
+| `MinValue` | `Extra[key] >= value`. |
+| `MaxValue` | `Extra[key] <= value`. |
+| `HasKey` | `Extra` contains `key`. |
+| `Equals` | `Extra[key]` equals `value` (string comparison). |
+| `Permission` | Player has the privilege named in `value`. |
+| `All` | All nested `conditions` must be true. |
+| `Any` | At least one nested `condition` must be true. |
+| `Not` | Negates the first nested condition. |
 
 ### ActionResult
 

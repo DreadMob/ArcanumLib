@@ -1,3 +1,5 @@
+using ArcanumLib.Effects;
+using ArcanumLib.Events;
 using ArcanumLib.Gui.Icons;
 using ArcanumLib.Helpers;
 using Vintagestory.API.Client;
@@ -48,6 +50,8 @@ public class ArcanumLibModSystem : ModSystem
     {
         ImageIconCache.Dispose();
         CollectibleNameResolver.Clear();
+        EventBus.ClearAll();
+        EffectResistanceStore.ClearAll();
         ArcanumServices.Shutdown();
         base.Dispose();
     }

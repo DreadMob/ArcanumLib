@@ -27,7 +27,7 @@ This folder contains API documentation for `ArcanumLib` — a shared Vintage Sto
 | [GuiDateTimePicker](GuiDateTimePicker.md) | Reusable date/time picker for `GuiComposer` with Now/Clear buttons and parameterized lang keys. |
 | [Custom Icons](CustomIcons.md) | `ICustomIconRenderer`, `CustomIconRegistry`, and `CustomTabIconRenderer` for custom Cairo-drawn GUI icons. |
 | [ImageIconCache](ImageIconCache.md) | Load, cache and draw icon image surfaces with circle, hexagon, and diamond clipping plus optional tinting. |
-| [ModeIconBuilder](ModeIconBuilder.md) | Factory for `SkillItem` tool-mode icons (in-game icon, letter, or live `ItemStack` rendering). |
+| [ModeIconBuilder](ModeIconBuilder.md) | Factory for tool-mode icons (in-game icon, letter, or live `ItemStack` rendering). |
 
 ## Items & Equipment
 
@@ -43,6 +43,13 @@ This folder contains API documentation for `ArcanumLib` — a shared Vintage Sto
 |------|----------------|
 | [ArcanumServices](ArcanumServices.md) | World-scoped service registry for cross-mod instance lookup and lifecycle. |
 | [ArcanumLibModSystem](ArcanumLibModSystem.md) | Central lifecycle `ModSystem` that registers APIs and clears state on unload. |
+
+## Events & Commands
+
+| Page | What it covers |
+|------|----------------|
+| [EventBus](EventBus.md) | Typed publish/subscribe event bus for cross-mod communication. |
+| [CommandBuilder](CommandBuilder.md) | Fluent command framework with typed arguments, permissions, and autocomplete. |
 
 ## Persistence
 

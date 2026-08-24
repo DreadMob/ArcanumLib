@@ -81,6 +81,18 @@ int finalQuality = Math.Max(guaranteed, rolledQuality);
 tracker.RecordOpen(playerUid, "mymod:rewards:common", finalQuality);
 ```
 
+### Check opens until guarantee
+
+```csharp
+// How many opens until the next guaranteed high-tier drop?
+int remaining = tracker.GetOpensUntilGuarantee(playerUid, "mymod:rewards:common");
+
+// Or for a specific tier:
+int untilLegendary = tracker.GetOpensUntilGuarantee(playerUid, "mymod:rewards:common", qualityTierIndex: 4);
+```
+
+Returns 0 if a guarantee is already due, or -1 if the definition/player is not found.
+
 ### Legacy migration
 
 ```csharp

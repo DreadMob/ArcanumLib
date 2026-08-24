@@ -84,9 +84,44 @@ Fluent builder for `SimpleParticleProperties`.
 | `Model(model)` | Set particle model. |
 | `Cube()` | Use cube particle model. |
 | `Quad()` | Use quad particle model. |
+| `Delay(seconds)` | Delay the first spawn by the given seconds. |
+| `Repeat(intervalSec, durationSec)` | Repeat the spawn at the given interval for the given total duration. |
+| `FollowEntity(entity, offset?)` | Make the spawn area follow an entity, recomputing position each spawn. |
 | `Build()` | Build the `SimpleParticleProperties`. |
-| `Spawn(sapi)` | Build and spawn on server. |
-| `Spawn(world)` | Build and spawn on any world. |
+| `Spawn(sapi)` | Build and spawn on server. Supports delay/repeat/follow. |
+| `Spawn(world)` | Build and spawn on any world. Supports delay/repeat/follow. |
+
+### Delayed and repeating spawns
+
+```csharp
+// Spawn after 2 seconds
+new ParticleEffectBuilder()
+    .Count(20, 30)
+    .Color(ParticleUtils.Colors.Fire)
+    .Position(center)
+    .Delay(2f)
+    .Spawn(sapi);
+
+// Repeat every 0.5 seconds for 5 seconds
+new ParticleEffectBuilder()
+    .Count(5, 10)
+    .Color(ParticleUtils.Colors.Arcane)
+    .Position(center)
+    .Repeat(intervalSec: 0.5f, durationSec: 5f)
+    .Spawn(sapi);
+```
+
+### Following an entity
+
+```csharp
+// Particles follow the entity, updated every spawn
+new ParticleEffectBuilder()
+    .Count(10, 15)
+    .Color(ParticleUtils.Colors.Holy)
+    .FollowEntity(entity, offset: new Vec3d(0, 1, 0))
+    .Repeat(intervalSec: 0.2f, durationSec: 3f)
+    .Spawn(sapi);
+```
 
 ### ParticleUtils.Colors
 

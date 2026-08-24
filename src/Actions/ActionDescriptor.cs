@@ -34,5 +34,13 @@ namespace ArcanumLib.Actions
         /// </summary>
         [JsonProperty("requiredPermission")]
         public string RequiredPermission { get; set; } = "";
+
+        /// <summary>
+        /// Optional declarative condition evaluated before the handler runs.
+        /// If the condition evaluates to false, the action returns
+        /// <see cref="ActionOutcome.NotAvailable"/> without calling the handler.
+        /// </summary>
+        [JsonProperty("condition")]
+        public ActionCondition? Condition { get; set; }
     }
 }

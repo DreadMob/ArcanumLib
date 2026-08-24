@@ -96,6 +96,54 @@ public static class StatusEffectManager
         => Current?.RemoveAll(entity) ?? false;
 
     /// <summary>
+    /// Removes all effects matching the given category (Buff or Debuff) from the entity.
+    /// </summary>
+    /// <param name="entity">The target entity.</param>
+    /// <param name="category">The category to remove.</param>
+    /// <returns>True if any effect was removed.</returns>
+    public static bool RemoveByCategory(Entity? entity, EffectCategory category)
+        => Current?.RemoveByCategory(entity, category) ?? false;
+
+    /// <summary>
+    /// Adds a full immunity to effects with the given tag on the entity.
+    /// </summary>
+    public static void AddImmunity(Entity? entity, string tag)
+    {
+        if (entity != null) EffectResistanceStore.AddImmunity(entity, tag);
+    }
+
+    /// <summary>
+    /// Removes an immunity by tag from the entity.
+    /// </summary>
+    public static void RemoveImmunity(Entity? entity, string tag)
+    {
+        if (entity != null) EffectResistanceStore.RemoveImmunity(entity, tag);
+    }
+
+    /// <summary>
+    /// Adds a resistance (0..1) to effects with the given tag on the entity.
+    /// 0 = no resistance, 0.5 = 50% duration reduction, 1 = full immunity.
+    /// </summary>
+    public static void AddResistance(Entity? entity, string tag, float amount)
+    {
+        if (entity != null) EffectResistanceStore.AddResistance(entity, tag, amount);
+    }
+
+    /// <summary>
+    /// Removes a resistance by tag from the entity.
+    /// </summary>
+    public static void RemoveResistance(Entity? entity, string tag)
+    {
+        if (entity != null) EffectResistanceStore.RemoveResistance(entity, tag);
+    }
+
+    /// <summary>
+    /// Returns true if the entity is fully immune to the given tag.
+    /// </summary>
+    public static bool IsImmune(Entity? entity, string tag)
+        => entity != null && EffectResistanceStore.IsImmune(entity, tag);
+
+    /// <summary>
     /// Returns true if the entity has an active effect with the given code.
     /// </summary>
     /// <param name="entity">The target entity.</param>

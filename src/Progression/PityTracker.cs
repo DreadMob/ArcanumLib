@@ -230,6 +230,55 @@ namespace ArcanumLib.Progression
         }
 
         /// <summary>
+        /// Returns the number of opens remaining until the next guaranteed quality drop
+        /// for the given player and definition. Returns 0 if a guarantee is already due.
+        /// Returns -1 if the definition or player is not found, or no rules are configured.
+        /// </summary>
+        /// <param name="playerUid">The player UID.</param>
+        /// <param name="definitionId">The pity definition id.</param>
+        /// <param name="qualityTierIndex">Optional: return opens until this specific tier. If omitted, returns the lowest remaining across all rules.</param>
+        public int GetOpensUntilGuarantee(string playerUid, string definitionId, int qualityTierIndex = -1)
+        {
+            if (string.IsNullOrWhiteSpace(playerUid) || string.IsNullOrWhiteSpace(definitionId)) return -1;
+
+            lock (_syncLock)
+            {
+                if (!_definitions.TryGetValue(definitionId, out var def) || def == null) return -1;
+
+                var data = TryGetPlayerData(playerUid);
+                var key = MakeKey(playerUid, definitionId);
+                int currentOpens = 0;
+                if (data != null && data.counters.TryGetValue(key, out var counters))
+                {
+                    currentOpens = counters.totalOpens;
+                }
+
+                int bestRemaining = int.MaxValue;
+                bool anyRule = false;
+
+                foreach (var rule in def.rules)
+                {
+                    if (rule.opensUntilGuarantee <= 0) continue;
+                    if (qualityTierIndex >= 0 && rule.qualityTierIndex != qualityTierIndex) continue;
+
+                    anyRule = true;
+                    int opensSince = 0;
+                    if (data != null && data.counters.TryGetValue(key, out var ruleCounters))
+                    {
+                        opensSince = ruleCounters.opensSinceQuality.GetValueOrDefault(rule.qualityTierIndex, 0);
+                    }
+
+                    int remaining = rule.opensUntilGuarantee - opensSince;
+                    if (remaining < 0) remaining = 0;
+                    if (remaining < bestRemaining) bestRemaining = remaining;
+                }
+
+                if (!anyRule) return -1;
+                return bestRemaining == int.MaxValue ? 0 : bestRemaining;
+            }
+        }
+
+        /// <summary>
         /// Returns all registered definition IDs.
         /// </summary>
         public IEnumerable<string> GetDefinitionIds()

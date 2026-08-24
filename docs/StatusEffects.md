@@ -28,12 +28,43 @@ public interface IStatusEffect
     EnumStackMode StackMode { get; }
     int MaxStacks { get; }
     bool PersistThroughDeath { get; }
+    EffectCategory Category { get; }   // Buff, Debuff, or None
+    IReadOnlyCollection<string> Tags { get; }  // "fire", "slow", "poison", ...
 
     void OnApply(Entity entity, IStatusEffectInstance instance);
     void OnRemove(Entity entity, IStatusEffectInstance instance);
     void OnTick(Entity entity, IStatusEffectInstance instance, float dt);
 }
 ```
+
+## Categories
+
+Effects can be classified as `Buff`, `Debuff`, or `None`. This enables dispel-by-category:
+
+```csharp
+StatusEffectManager.RemoveByCategory(entity, EffectCategory.Debuff);
+```
+
+## Immunities and resistances
+
+Effects can be tagged (e.g. `"fire"`, `"slow"`). Entities can be made immune to or resistant to specific tags:
+
+```csharp
+// Full immunity — effects with "fire" tag are rejected entirely
+StatusEffectManager.AddImmunity(entity, "fire");
+
+// 50% resistance — effects with "slow" tag last half as long
+StatusEffectManager.AddResistance(entity, "slow", 0.5f);
+
+// Check
+bool isImmune = StatusEffectManager.IsImmune(entity, "fire");
+
+// Remove
+StatusEffectManager.RemoveImmunity(entity, "fire");
+StatusEffectManager.RemoveResistance(entity, "slow");
+```
+
+Resistance reduces the effective duration: `actualDuration = baseDuration * (1 - resistance)`. A resistance of 1.0 is equivalent to full immunity.
 
 ## Stack modes
 

@@ -1,3 +1,5 @@
+using System;
+using System.Collections.Generic;
 using Vintagestory.API.Common;
 using Vintagestory.API.Common.Entities;
 
@@ -27,6 +29,20 @@ namespace ArcanumLib.Effects
         /// Whether the effect should remain on the entity after death.
         /// </summary>
         bool PersistThroughDeath { get; }
+
+        /// <summary>
+        /// Effect category for dispel and resistance checks.
+        /// Defaults to <see cref="EffectCategory.None"/>.
+        /// </summary>
+        EffectCategory Category => EffectCategory.None;
+
+        /// <summary>
+        /// Tags used for immunity and resistance matching.
+        /// e.g. "fire", "slow", "poison". An entity immune to "fire" will
+        /// reject any effect whose <see cref="Tags"/> contains "fire".
+        /// Defaults to an empty collection.
+        /// </summary>
+        IReadOnlyCollection<string> Tags => Array.Empty<string>();
 
         /// <summary>
         /// Whether <see cref="OnTick"/> does meaningful work. When false, the manager

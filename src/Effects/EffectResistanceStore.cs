@@ -1,0 +1,134 @@
+using System;
+using System.Collections.Concurrent;
+using System.Collections.Generic;
+using Vintagestory.API.Common;
+using Vintagestory.API.Common.Entities;
+
+namespace ArcanumLib.Effects;
+
+/// <summary>
+/// Stores per-entity immunities and resistances for status effects.
+/// Immunities completely block effects whose tags match.
+/// Resistances reduce the effective duration of matching effects.
+/// </summary>
+public static class EffectResistanceStore
+{
+    private sealed class EntityModifiers
+    {
+        public HashSet<string> Immunities = new(StringComparer.OrdinalIgnoreCase);
+        public Dictionary<string, float> Resistances = new(StringComparer.OrdinalIgnoreCase);
+    }
+
+    private static readonly ConcurrentDictionary<long, EntityModifiers> _store = new();
+
+    /// <summary>
+    /// Adds a full immunity to effects with the given tag.
+    /// </summary>
+    public static void AddImmunity(Entity entity, string tag)
+    {
+        if (entity == null || string.IsNullOrWhiteSpace(tag)) return;
+        var mods = _store.GetOrAdd(entity.EntityId, _ => new EntityModifiers());
+        lock (mods) { mods.Immunities.Add(tag); }
+    }
+
+    /// <summary>
+    /// Removes an immunity by tag.
+    /// </summary>
+    public static void RemoveImmunity(Entity entity, string tag)
+    {
+        if (entity == null || string.IsNullOrWhiteSpace(tag)) return;
+        if (!_store.TryGetValue(entity.EntityId, out var mods)) return;
+        lock (mods) { mods.Immunities.Remove(tag); }
+    }
+
+    /// <summary>
+    /// Adds a resistance (0..1) to effects with the given tag.
+    /// 0 = no resistance, 0.5 = 50% duration reduction, 1 = full immunity equivalent.
+    /// </summary>
+    public static void AddResistance(Entity entity, string tag, float amount)
+    {
+        if (entity == null || string.IsNullOrWhiteSpace(tag)) return;
+        amount = Math.Clamp(amount, 0f, 1f);
+        var mods = _store.GetOrAdd(entity.EntityId, _ => new EntityModifiers());
+        lock (mods) { mods.Resistances[tag] = amount; }
+    }
+
+    /// <summary>
+    /// Removes a resistance by tag.
+    /// </summary>
+    public static void RemoveResistance(Entity entity, string tag)
+    {
+        if (entity == null || string.IsNullOrWhiteSpace(tag)) return;
+        if (!_store.TryGetValue(entity.EntityId, out var mods)) return;
+        lock (mods) { mods.Resistances.Remove(tag); }
+    }
+
+    /// <summary>
+    /// Returns true if the entity is fully immune to the given tag.
+    /// </summary>
+    public static bool IsImmune(Entity entity, string tag)
+    {
+        if (entity == null || string.IsNullOrWhiteSpace(tag)) return false;
+        if (!_store.TryGetValue(entity.EntityId, out var mods)) return false;
+        lock (mods) { return mods.Immunities.Contains(tag); }
+    }
+
+    /// <summary>
+    /// Returns true if the entity is immune to any of the effect's tags.
+    /// </summary>
+    public static bool IsImmuneToEffect(Entity entity, IStatusEffect effect)
+    {
+        if (entity == null || effect == null) return false;
+        if (!_store.TryGetValue(entity.EntityId, out var mods)) return false;
+        lock (mods)
+        {
+            foreach (var tag in effect.Tags)
+            {
+                if (mods.Immunities.Contains(tag)) return true;
+            }
+            return false;
+        }
+    }
+
+    /// <summary>
+    /// Returns the effective duration multiplier for an effect (0..1).
+    /// 1.0 = full duration, 0.5 = half duration, 0 = blocked.
+    /// </summary>
+    public static float GetDurationMultiplier(Entity entity, IStatusEffect effect)
+    {
+        if (entity == null || effect == null) return 1f;
+        if (!_store.TryGetValue(entity.EntityId, out var mods)) return 1f;
+
+        float minMultiplier = 1f;
+        lock (mods)
+        {
+            foreach (var tag in effect.Tags)
+            {
+                if (mods.Immunities.Contains(tag)) return 0f;
+                if (mods.Resistances.TryGetValue(tag, out var resist))
+                {
+                    float mult = 1f - resist;
+                    if (mult < minMultiplier) minMultiplier = mult;
+                }
+            }
+        }
+        return minMultiplier;
+    }
+
+    /// <summary>
+    /// Clears all immunities and resistances for the entity.
+    /// </summary>
+    public static void Clear(Entity entity)
+    {
+        if (entity == null) return;
+        _store.TryRemove(entity.EntityId, out _);
+    }
+
+    /// <summary>
+    /// Clears all stored modifiers. Intended for world shutdown.
+    /// </summary>
+    public static void ClearAll()
+    {
+        _store.Clear();
+    }
+}

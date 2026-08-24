@@ -53,6 +53,12 @@ public class StatusEffectService
     {
         if (entity == null) return null;
 
+        // Check immunities and resistances
+        if (EffectResistanceStore.IsImmuneToEffect(entity, effect)) return null;
+        float durationMult = EffectResistanceStore.GetDurationMultiplier(entity, effect);
+        if (durationMult <= 0f) return null;
+        float adjustedDuration = durationMs * durationMult;
+
         var container = _containers.GetOrAdd(entity.EntityId, _ => new StatusEffectContainer(entity, GetNextInstanceId));
         StatusEffectInstance? instance;
         StatusEffectInstance? oldInstance;
@@ -60,7 +66,7 @@ public class StatusEffectService
 
         lock (container)
         {
-            (instance, result, oldInstance) = container.Apply(effect, durationMs, data);
+            (instance, result, oldInstance) = container.Apply(effect, adjustedDuration, data);
         }
 
         if (instance == null) return null;
@@ -179,6 +185,37 @@ public class StatusEffectService
         }
 
         _containers.TryRemove(entity.EntityId, out _);
+        return removed.Count > 0;
+    }
+
+    /// <summary>
+    /// Removes all effects matching the given category from the entity.
+    /// </summary>
+    /// <param name="entity">The target entity.</param>
+    /// <param name="category">The category to remove (Buff, Debuff, or None).</param>
+    /// <returns>True if any effect was removed.</returns>
+    public bool RemoveByCategory(Entity? entity, EffectCategory category)
+    {
+        if (entity == null || category == EffectCategory.None) return false;
+
+        if (!_containers.TryGetValue(entity.EntityId, out var container)) return false;
+
+        IReadOnlyList<StatusEffectInstance> removed;
+        lock (container)
+        {
+            removed = container.RemoveByCategory(category);
+        }
+
+        foreach (var instance in removed)
+        {
+            SafeRemove(entity, instance, expired: false);
+        }
+
+        if (container.IsEmpty)
+        {
+            _containers.TryRemove(entity.EntityId, out _);
+        }
+
         return removed.Count > 0;
     }
 
