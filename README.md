@@ -4,7 +4,7 @@
 
 [![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 [![Game Version](https://img.shields.io/badge/Vintage%20Story-1.22.1+-green.svg)](https://www.vintagestory.at/)
-[![Version](https://img.shields.io/badge/Version-1.0.0-orange.svg)](resources/modinfo.json)
+[![Version](https://img.shields.io/badge/Version-1.0.0--rc1-orange.svg)](resources/modinfo.json)
 [![C#](https://img.shields.io/badge/C%23-.NET%2010-purple.svg)]()
 [![Alegacy Quest Framework](https://img.shields.io/badge/Used%20by-Alegacy%20Quest%20Framework-2563eb?style=for-the-badge&logo=gitlab)](https://gitlab.com/DreadMob/Alegacy-Quest-Framework)
 
