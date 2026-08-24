@@ -34,7 +34,6 @@ Everything you need for custom in-game UI without fighting the low-level API.
 | [Custom Icons]({{ site.baseurl }}{% link CustomIcons.md %}) | Registry and interface for custom Cairo-drawn GUI icons keyed by string. |
 | [BlockEntityConfigDialog]({{ site.baseurl }}{% link BlockEntityConfigDialog.md %}) | Generic base dialog for editing block entity configuration with typed config and save/cancel. |
 | [ImageIconCache]({{ site.baseurl }}{% link ImageIconCache.md %}) | Load and draw `.png`/`.jpg`/`.webp` icons with clipping and tinting. |
-| [RGBA]({{ site.baseurl }}{% link RGBA.md %}) | Cairo-friendly color struct with parsing, conversion, and lerping. |
 
 ## Items & Equipment
 
@@ -100,29 +99,17 @@ Categorized file logging for any mod.
 
 ## Common & Utility
 
-Small helpers that remove boilerplate. Some are thin syntactic sugar over existing Vintage Story APIs.
+Helpers that remove boilerplate for common Vintage Story patterns.
 
 | Page | Purpose |
 |------|---------|
-| [ApiExtensions]({{ site.baseurl }}{% link ApiExtensions.md %}) | `IsClient` / `IsServer` checks for `ICoreAPI` and `IWorldAccessor` (sugar for `api.Side`). |
 | [ChatFormatUtil]({{ site.baseurl }}{% link ChatFormatUtil.md %}) | Colorize chat and HUD text with `<font>` tags; alert-prefixed messages. |
-| [CollectibleNameResolver]({{ site.baseurl }}{% link CollectibleNameResolver.md %}) | Resolve item/block/entity codes to localized display names with wildcard support. |
 | [CooldownTracker]({{ site.baseurl }}{% link CooldownTracker.md %}) | Per-entity cooldowns in `WatchedAttributes`. |
 | [DamageHelper]({{ site.baseurl }}{% link DamageHelper.md %}) | Factory for `DamageSource` with common field combinations (Entity/Player/Weather/Internal). |
-| [EntityHealthExtensions]({{ site.baseurl }}{% link EntityHealthExtensions.md %}) | Read and scale entity health. |
 | [EventScope]({{ site.baseurl }}{% link EventScope.md %}) | Disposable event subscription scope. |
 | [PlaytimeTracker]({{ site.baseurl }}{% link PlaytimeTracker.md %}) | Per-player online time tracking, login streaks, real-time cooldowns, and combat-state checks. |
-| [PlayerExtensions]({{ site.baseurl }}{% link PlayerExtensions.md %}) | Player entity iteration and position checks. |
 | [WatchedAttributes]({{ site.baseurl }}{% link WatchedAttributes.md %}) | Get-or-create and set helpers for `ITreeAttribute`. |
-
-## Text & Matching
-
-Small helpers for formatting and pattern matching.
-
-| Page | Purpose |
-|------|---------|
-| [Pretty]({{ site.baseurl }}{% link Pretty.md %}) | Convert raw asset codes into human-readable, title-cased strings. |
-| [Wildcard]({{ site.baseurl }}{% link Wildcard.md %}) | Case-insensitive `*` / `?` wildcard matching for asset codes. |
+| [Misc Helpers]({{ site.baseurl }}{% link MiscHelpers.md %}) | Thin sugar: `IsClient`/`IsServer`, `RGBA`, `Pretty`, `Wildcard`, `CollectibleNameResolver`, `EntityHealthExtensions`, `PlayerExtensions`, `ShapeCloner`. |
 
 ## Randomization & Geometry
 
@@ -130,7 +117,6 @@ Small helpers for formatting and pattern matching.
 |------|---------|
 | [WeightedRandom]({{ site.baseurl }}{% link WeightedRandom.md %}) | Weighted random picks and reusable weighted tables. |
 | [LootTable]({{ site.baseurl }}{% link LootTable.md %}) | JSON-friendly loot tables with tiers, weighted entries, and luck multipliers. |
-| [ShapeCloner]({{ site.baseurl }}{% link ShapeCloner.md %}) | Deep-clone `Shape` objects. |
 | [PositionUtils]({{ site.baseurl }}{% link PositionUtils.md %}) | Random horizontal offsets and ground-level position finding around entities. |
 | [BlockEntitySearchUtils]({{ site.baseurl }}{% link BlockEntitySearchUtils.md %}) | Chunk-based block entity counting within a region. |
 
