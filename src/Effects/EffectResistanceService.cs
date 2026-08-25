@@ -7,11 +7,12 @@ using Vintagestory.API.Common.Entities;
 namespace ArcanumLib.Effects;
 
 /// <summary>
-/// Stores per-entity immunities and resistances for status effects.
+/// Instance-based store for per-entity immunities and resistances to status effects.
 /// Immunities completely block effects whose tags match.
 /// Resistances reduce the effective duration of matching effects.
+/// Registered in <see cref="Core.ArcanumServices" /> and disposed with the <see cref="Core.ArcanumRuntime" />.
 /// </summary>
-public static class EffectResistanceStore
+public sealed class EffectResistanceService : IDisposable
 {
     private sealed class EntityModifiers
     {
@@ -19,14 +20,15 @@ public static class EffectResistanceStore
         public Dictionary<string, float> Resistances = new(StringComparer.OrdinalIgnoreCase);
     }
 
-    private static readonly ConcurrentDictionary<long, EntityModifiers> _store = new();
+    private readonly ConcurrentDictionary<long, EntityModifiers> _store = new();
+    private bool _disposed;
 
     /// <summary>
     /// Adds a full immunity to effects with the given tag.
     /// </summary>
     /// <param name="entity">The entity.</param>
     /// <param name="tag">The tag value.</param>
-    public static void AddImmunity(Entity entity, string tag)
+    public void AddImmunity(Entity entity, string tag)
     {
         if (entity == null || string.IsNullOrWhiteSpace(tag)) return;
         var mods = _store.GetOrAdd(entity.EntityId, _ => new EntityModifiers());
@@ -38,7 +40,7 @@ public static class EffectResistanceStore
     /// </summary>
     /// <param name="entity">The entity.</param>
     /// <param name="tag">The tag value.</param>
-    public static void RemoveImmunity(Entity entity, string tag)
+    public void RemoveImmunity(Entity entity, string tag)
     {
         if (entity == null || string.IsNullOrWhiteSpace(tag)) return;
         if (!_store.TryGetValue(entity.EntityId, out var mods)) return;
@@ -52,7 +54,7 @@ public static class EffectResistanceStore
     /// <param name="entity">The entity.</param>
     /// <param name="tag">The tag value.</param>
     /// <param name="amount">The amount value.</param>
-    public static void AddResistance(Entity entity, string tag, float amount)
+    public void AddResistance(Entity entity, string tag, float amount)
     {
         if (entity == null || string.IsNullOrWhiteSpace(tag)) return;
         amount = Math.Clamp(amount, 0f, 1f);
@@ -65,7 +67,7 @@ public static class EffectResistanceStore
     /// </summary>
     /// <param name="entity">The entity.</param>
     /// <param name="tag">The tag value.</param>
-    public static void RemoveResistance(Entity entity, string tag)
+    public void RemoveResistance(Entity entity, string tag)
     {
         if (entity == null || string.IsNullOrWhiteSpace(tag)) return;
         if (!_store.TryGetValue(entity.EntityId, out var mods)) return;
@@ -78,7 +80,7 @@ public static class EffectResistanceStore
     /// <param name="entity">The entity.</param>
     /// <param name="tag">The tag value.</param>
     /// <returns>true if immune; otherwise, false.</returns>
-    public static bool IsImmune(Entity entity, string tag)
+    public bool IsImmune(Entity entity, string tag)
     {
         if (entity == null || string.IsNullOrWhiteSpace(tag)) return false;
         if (!_store.TryGetValue(entity.EntityId, out var mods)) return false;
@@ -91,7 +93,7 @@ public static class EffectResistanceStore
     /// <param name="entity">The entity.</param>
     /// <param name="effect">The effect value.</param>
     /// <returns>true if immune to effect; otherwise, false.</returns>
-    public static bool IsImmuneToEffect(Entity entity, IStatusEffect effect)
+    public bool IsImmuneToEffect(Entity entity, IStatusEffect effect)
     {
         if (entity == null || effect == null) return false;
         if (!_store.TryGetValue(entity.EntityId, out var mods)) return false;
@@ -112,7 +114,7 @@ public static class EffectResistanceStore
     /// <param name="entity">The entity.</param>
     /// <param name="effect">The effect value.</param>
     /// <returns>The duration multiplier.</returns>
-    public static float GetDurationMultiplier(Entity entity, IStatusEffect effect)
+    public float GetDurationMultiplier(Entity entity, IStatusEffect effect)
     {
         if (entity == null || effect == null) return 1f;
         if (!_store.TryGetValue(entity.EntityId, out var mods)) return 1f;
@@ -137,7 +139,7 @@ public static class EffectResistanceStore
     /// Clears all immunities and resistances for the entity.
     /// </summary>
     /// <param name="entity">The entity.</param>
-    public static void Clear(Entity entity)
+    public void Clear(Entity entity)
     {
         if (entity == null) return;
         _store.TryRemove(entity.EntityId, out _);
@@ -146,8 +148,18 @@ public static class EffectResistanceStore
     /// <summary>
     /// Clears all stored modifiers. Intended for world shutdown.
     /// </summary>
-    public static void ClearAll()
+    public void ClearAll()
     {
         _store.Clear();
+    }
+
+    /// <summary>
+    /// Disposes the service and clears all stored modifiers.
+    /// </summary>
+    public void Dispose()
+    {
+        if (_disposed) return;
+        _disposed = true;
+        ClearAll();
     }
 }

@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using ArcanumLib.Core;
 using ArcanumLib.Performance;
 using Vintagestory.API.Common;
 
@@ -106,7 +107,7 @@ namespace ArcanumLib.Common
             {
                 try
                 {
-                    DeferredWork.Cancel(_deferredKeys[i]);
+                    ArcanumServices.Get<DeferredWorkService>()?.Cancel(_deferredKeys[i]);
                 }
                 catch (Exception ex)
                 {

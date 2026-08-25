@@ -2,6 +2,7 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Threading;
+using ArcanumLib.Core;
 using Vintagestory.API.Common;
 using Vintagestory.API.Common.Entities;
 
@@ -9,7 +10,7 @@ namespace ArcanumLib.Effects;
 
 /// <summary>
 /// Instance-based manager for applying, ticking, and removing status effects on entities.
-/// Register with <see cref="ArcanumLib.Core.ArcanumServices" /> or use <see cref="StatusEffectManager" /> static facade.
+/// Register with <see cref="ArcanumServices" />; resolve via <see cref="ArcanumRuntime.Current" />.<see cref="ArcanumRuntime.Services" />.
 /// </summary>
 public class StatusEffectService
 {
@@ -57,13 +58,17 @@ public class StatusEffectService
         lock (_sync)
         {
             // Check immunities and resistances
-            if (EffectResistanceStore.IsImmuneToEffect(entity, effect)) return null;
-            float durationMult = EffectResistanceStore.GetDurationMultiplier(entity, effect);
-            if (durationMult <= 0f) return null;
-            float adjustedDuration = durationMs * durationMult;
+            var resistance = ArcanumServices.Get<EffectResistanceService>();
+            if (resistance != null)
+            {
+                if (resistance.IsImmuneToEffect(entity, effect)) return null;
+                float durationMult = resistance.GetDurationMultiplier(entity, effect);
+                if (durationMult <= 0f) return null;
+                durationMs *= durationMult;
+            }
 
             var container = _containers.GetOrAdd(entity.EntityId, _ => new StatusEffectContainer(entity, GetNextInstanceId));
-            var (instance, result, oldInstance) = container.Apply(effect, adjustedDuration, data);
+            var (instance, result, oldInstance) = container.Apply(effect, durationMs, data);
 
             if (instance == null) return null;
 

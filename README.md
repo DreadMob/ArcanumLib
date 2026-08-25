@@ -19,7 +19,7 @@ The library is built around a few headline features that have no vanilla equival
 - **HUDs & Overlays** — generic `HudPanel`, `HudDialog`, and `HudClientSystem`, plus `TransientOverlay` for toasts, `PacketIconHud` for packet-driven icon bars, and `IHudElementRenderer` for reusable panel elements. No vanilla equivalent.
 - **Holograms** — floating text labels above blocks with `SingleHologramRenderer` and `AreaHologramRenderer`, versioned texture caching, and 3D projection. No vanilla equivalent.
 - **Action Registry** — JSON-declared actions with typed handlers, cooldowns, and permissions. Lets content packs add behaviour without recompiling.
-- **EventBus** — typed publish/subscribe event bus for cross-mod communication. Mods publish events without knowing who subscribes.
+- **EventBusService** — typed publish/subscribe event bus for cross-mod communication. Mods publish events without knowing who subscribes.
 - **CommandBuilder** — fluent command framework with typed arguments, permissions, and autocomplete. Replaces manual `CmdArgs` parsing.
 - **Particle Effect Builder** — fluent builder with named presets (explosions, auras, impacts, shockwaves, ambient). Replaces 20-field `SimpleParticleProperties` setup with one line.
 - **Radial Menu** — Cairo-styled pie menu with pluggable `IRadialMenuStyle` themes. No vanilla equivalent.
@@ -98,7 +98,7 @@ See [`docs/GettingStarted.md`](docs/GettingStarted.md) for a hands-on introducti
 |--------|-------------|
 | **ArcanumServices** | World-scoped service registry (`Register<T>` / `Get<T>` / `Shutdown`) for cross-mod instances. |
 | **ArcanumLibModSystem** | Central `ModSystem` that registers the client/server API and clears caches on unload. |
-| **ActionRegistry / ActionExecutor** | Typed action registry with JSON-declared actions, cooldowns, and permissions. |
+| **ActionRegistryService / ActionExecutorService** | Typed action registry with JSON-declared actions, cooldowns, and permissions. |
 | **CategorizedLogger** | File and console logger with per-category files and throttled debug output. |
 
 ### Events & Commands
@@ -119,7 +119,7 @@ See [`docs/GettingStarted.md`](docs/GettingStarted.md) for a hands-on introducti
 
 | Module | Description |
 |--------|-------------|
-| **StatusEffectManager / StatusEffectService** | Apply, tick, and remove timed status effects with refresh, stack, override, and independent modes. |
+| **StatusEffectService** | Apply, tick, and remove timed status effects with refresh, stack, override, and independent modes. |
 | **StatModifierEffect** | Reusable effect that adds or removes values from an `EntityStats` category. |
 
 ### Assets & Data
@@ -190,19 +190,19 @@ ArcanumLib/
 │   ├── Geometry/              — PositionUtils, BlockEntitySearchUtils
 │   ├── Caching/               — TimedCache and SimpleLRUCache
 │   ├── Common/                — EventScope, CleanupScope, PlaytimeTracker, PlaytimeCooldownManager
-│   ├── Events/                — EventBus, IEvent
+│   ├── Events/                — EventBusService, IEvent
 │   ├── Commands/              — CommandBuilder
 │   ├── Data/                  — TagSet, WatchedAttributes, and CooldownTracker
 │   ├── Validation/            — ValidationResult
 │   ├── Assets/                — ModAssetLoader, ModAssetRegistry
-│   ├── Performance/           — DeferredWork, GameTimeScheduler, StatCoalescingEngine
+│   ├── Performance/           — DeferredWorkService, GameTimeScheduler, StatCoalescingEngine
 │   ├── Random/                — WeightedRandom, WeightedTable, LootTable
 │   ├── Text/                  — Pretty, Wildcard
 │   ├── Network/               — TypedNetworkChannel, ServerBroadcaster
 │   ├── Helpers/               — CollectibleNameResolver
 │   ├── Persistence/           — ModDataStore
-│   ├── Actions/               — ActionRegistry, ActionExecutor, ActionRegistryService, ActionExecutorService
-│   ├── Effects/               — StatusEffectManager, StatusEffectService
+│   ├── Actions/               — ActionRegistryService, ActionExecutorService
+│   ├── Effects/               — StatusEffectService
 │   ├── Progression/           — PityTracker
 │   ├── Inventory/             — InventoryChangeTracker, InventoryFingerprint, InventoryHelpers
 │   ├── Logging/               — CategorizedLogger

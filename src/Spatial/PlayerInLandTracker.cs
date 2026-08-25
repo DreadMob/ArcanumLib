@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using ArcanumLib.Common;
+using ArcanumLib.Core;
 using Vintagestory.API.Common;
 using Vintagestory.API.Server;
 
@@ -118,8 +119,9 @@ public class PlayerInLandTracker : ModSystem
     {
         if (_sapi == null) return;
 
-        IEnumerable<IPlayer> players = OnlinePlayerCache.IsLoaded
-            ? (IEnumerable<IPlayer>)OnlinePlayerCache.All
+        var cache = ArcanumServices.Get<OnlinePlayerCache>();
+        IEnumerable<IPlayer> players = cache?.IsLoaded == true
+            ? (IEnumerable<IPlayer>)cache.All
             : _sapi.World.AllOnlinePlayers;
 
         foreach (var p in players)

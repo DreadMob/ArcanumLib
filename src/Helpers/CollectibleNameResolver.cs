@@ -14,6 +14,8 @@ namespace ArcanumLib.Helpers;
 /// </summary>
 public static class CollectibleNameResolver
 {
+    private static readonly object _cacheLock = new();
+
     private static string? _nameCacheLanguage;
     private static readonly Dictionary<string, string> _nameCache = new(StringComparer.OrdinalIgnoreCase);
 
@@ -146,7 +148,12 @@ public static class CollectibleNameResolver
         string code = obj.Code.ToString();
         EnsureNameCacheLanguage();
 
-        if (_nameCache.TryGetValue(code, out string? cached) && cached != null)
+        string? cached;
+        lock (_cacheLock)
+        {
+            _nameCache.TryGetValue(code, out cached);
+        }
+        if (cached != null)
             return cached;
 
         string? result = null;
@@ -194,7 +201,10 @@ public static class CollectibleNameResolver
             result = fallback;
 
         if (tryItemStackName || !string.Equals(result, fallback, StringComparison.OrdinalIgnoreCase))
-            _nameCache[code] = result;
+        {
+            lock (_cacheLock)
+                _nameCache[code] = result;
+        }
 
         return result;
     }
@@ -295,49 +305,64 @@ public static class CollectibleNameResolver
         if (string.IsNullOrWhiteSpace(code)) return null;
 
         EnsureIconCacheLanguage();
-        if (_iconCodeCache.TryGetValue(code, out string? cached) && cached != null)
-            return cached;
+        string? cachedIcon;
+        lock (_cacheLock)
+        {
+            _iconCodeCache.TryGetValue(code, out cachedIcon);
+        }
+        if (cachedIcon != null)
+            return cachedIcon;
 
         if (!code.EndsWith("*"))
         {
             var loc = AssetLocation.CreateOrNull(code);
             if (loc != null && (api.World.GetItem(loc) != null || api.World.GetBlock(loc) != null))
             {
-                _iconCodeCache[code] = code;
+                lock (_cacheLock)
+                    _iconCodeCache[code] = code;
                 return code;
             }
 
-            _iconCodeCache[code] = null;
+            lock (_cacheLock)
+                _iconCodeCache[code] = null;
             return null;
         }
 
         foreach (var c in GetPrefixCandidates(api, code))
         {
-            _iconCodeCache[code] = c;
+            lock (_cacheLock)
+                _iconCodeCache[code] = c;
             return c;
         }
 
-        _iconCodeCache[code] = null;
+        lock (_cacheLock)
+            _iconCodeCache[code] = null;
         return null;
     }
 
     private static void EnsureNameCacheLanguage()
     {
         string lang = Lang.CurrentLocale ?? "en";
-        if (!string.Equals(_nameCacheLanguage, lang, StringComparison.OrdinalIgnoreCase))
+        lock (_cacheLock)
         {
-            _nameCacheLanguage = lang;
-            _nameCache.Clear();
+            if (!string.Equals(_nameCacheLanguage, lang, StringComparison.OrdinalIgnoreCase))
+            {
+                _nameCacheLanguage = lang;
+                _nameCache.Clear();
+            }
         }
     }
 
     private static void EnsureIconCacheLanguage()
     {
         string lang = Lang.CurrentLocale ?? "en";
-        if (!string.Equals(_iconCacheLanguage, lang, StringComparison.OrdinalIgnoreCase))
+        lock (_cacheLock)
         {
-            _iconCacheLanguage = lang;
-            _iconCodeCache.Clear();
+            if (!string.Equals(_iconCacheLanguage, lang, StringComparison.OrdinalIgnoreCase))
+            {
+                _iconCacheLanguage = lang;
+                _iconCodeCache.Clear();
+            }
         }
     }
 
@@ -355,12 +380,15 @@ public static class CollectibleNameResolver
         {
             string prefix = pattern.Substring(0, pattern.Length - 1);
             EnsurePrefixIndex(api);
-            if (_prefixIndex != null)
+            Dictionary<string, List<string>>? index;
+            lock (_cacheLock)
+                index = _prefixIndex;
+            if (index != null)
             {
                 // Try exact prefix first, then progressively shorter prefixes.
                 // The index stores codes grouped by their full code prefix up to
                 // the last dash, so we try the exact prefix and then trim.
-                if (_prefixIndex.TryGetValue(prefix, out var exact))
+                if (index.TryGetValue(prefix, out var exact))
                     return exact;
 
                 // Try progressively shorter dash-separated prefixes.
@@ -369,7 +397,7 @@ public static class CollectibleNameResolver
                 while ((dashIdx = trimmed.LastIndexOf('-')) > 0)
                 {
                     trimmed = trimmed.Substring(0, dashIdx);
-                    if (_prefixIndex.TryGetValue(trimmed, out var shorter))
+                    if (index.TryGetValue(trimmed, out var shorter))
                     {
                         // Filter to only those that actually start with the full prefix.
                         return shorter.Where(c => c.StartsWith(prefix, StringComparison.OrdinalIgnoreCase));
@@ -407,14 +435,17 @@ public static class CollectibleNameResolver
     private static void EnsurePrefixIndex(ICoreAPI api)
     {
         string lang = Lang.CurrentLocale ?? "en";
-        if (_prefixIndex != null && ReferenceEquals(_indexApi, api) &&
-            string.Equals(_prefixIndexLanguage, lang, StringComparison.OrdinalIgnoreCase))
-            return;
+        lock (_cacheLock)
+        {
+            if (_prefixIndex != null && ReferenceEquals(_indexApi, api) &&
+                string.Equals(_prefixIndexLanguage, lang, StringComparison.OrdinalIgnoreCase))
+                return;
 
-        _indexApi = api;
-        _prefixIndexLanguage = lang;
-        var index = new Dictionary<string, List<string>>(StringComparer.OrdinalIgnoreCase);
-        _prefixIndex = index;
+            _indexApi = api;
+            _prefixIndexLanguage = lang;
+            var index = new Dictionary<string, List<string>>(StringComparer.OrdinalIgnoreCase);
+            _prefixIndex = index;
+        }
 
         void IndexCode(string code)
         {
@@ -425,12 +456,15 @@ public static class CollectibleNameResolver
                 int dash = code.LastIndexOf('-', idx - 1, idx);
                 if (dash <= 0) break;
                 string prefix = code.Substring(0, dash);
-                if (!index.TryGetValue(prefix, out var list))
+                lock (_cacheLock)
                 {
-                    list = new List<string>();
-                    index[prefix] = list;
+                    if (!_prefixIndex!.TryGetValue(prefix, out var list))
+                    {
+                        list = new List<string>();
+                        _prefixIndex[prefix] = list;
+                    }
+                    list.Add(code);
                 }
-                list.Add(code);
                 idx = dash;
             }
         }
@@ -454,12 +488,15 @@ public static class CollectibleNameResolver
     /// </summary>
     public static void Clear()
     {
-        _nameCacheLanguage = null;
-        _nameCache.Clear();
-        _iconCacheLanguage = null;
-        _iconCodeCache.Clear();
-        _indexApi = null;
-        _prefixIndex = null;
-        _prefixIndexLanguage = null;
+        lock (_cacheLock)
+        {
+            _nameCacheLanguage = null;
+            _nameCache.Clear();
+            _iconCacheLanguage = null;
+            _iconCodeCache.Clear();
+            _indexApi = null;
+            _prefixIndex = null;
+            _prefixIndexLanguage = null;
+        }
     }
 }

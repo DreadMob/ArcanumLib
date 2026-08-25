@@ -13,12 +13,12 @@ public class ArcanumServicesTests : IDisposable
 {
     public ArcanumServicesTests()
     {
-        ArcanumServices.Shutdown();
+        ArcanumRuntime.Activate();
     }
 
     public void Dispose()
     {
-        ArcanumServices.Shutdown();
+        ArcanumRuntime.Current?.Dispose();
     }
 
     [Fact]

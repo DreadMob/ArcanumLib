@@ -14,33 +14,36 @@ namespace ArcanumLib.Performance;
 /// Uses the world's <c>Calendar</c> for time queries and a game
 /// tick listener to check for due schedules. This is server-side only because
 /// in-game time is authoritative on the server.
+/// Register an instance in <see cref="Core.ArcanumServices" /> during server startup
+/// and dispose it on world unload.
 /// </remarks>
-public static class GameTimeScheduler
+public class GameTimeScheduler : IDisposable
 {
-    private static ICoreServerAPI? _sapi;
-    private static long _tickListenerId;
-    private static double _lastTotalHours;
-    private static readonly List<GameSchedule> _schedules = new();
-    private static readonly object _syncLock = new();
-    private static bool _started;
+    private ICoreServerAPI? _sapi;
+    private long _tickListenerId;
+    private double _lastTotalHours;
+    private readonly List<GameSchedule> _schedules = new();
+    private readonly object _syncLock = new();
+    private bool _started;
+    private int _nextId;
 
     /// <summary>
     /// Enables or disables the scheduler at runtime. When disabled, schedules
     /// are not checked but are not removed.
     /// </summary>
-    public static bool IsEnabled { get; set; } = true;
+    public bool IsEnabled { get; set; } = true;
 
     /// <summary>
     /// How often (in ms) the scheduler checks for due schedules.
     /// </summary>
-    public static int CheckIntervalMs { get; set; } = 2000;
+    public int CheckIntervalMs { get; set; } = 2000;
 
     /// <summary>
     /// Starts the in-game time scheduler on the server.
     /// </summary>
     /// <param name="api">The server API instance.</param>
     /// <exception cref="ArgumentNullException">Thrown when <paramref name="api" /> is <see langword="null" />.</exception>
-    public static void Start(ICoreServerAPI api)
+    public void Start(ICoreServerAPI api)
     {
         if (api == null) throw new ArgumentNullException(nameof(api));
 
@@ -64,7 +67,7 @@ public static class GameTimeScheduler
     /// <summary>
     /// Stops the in-game time scheduler and clears all pending schedules.
     /// </summary>
-    public static void Stop()
+    public void Stop()
     {
         lock (_syncLock)
         {
@@ -89,7 +92,7 @@ public static class GameTimeScheduler
     /// <exception cref="ArgumentNullException">Thrown when <paramref name="action" /> is <see langword="null" />.</exception>
     /// <exception cref="ArgumentOutOfRangeException">Thrown when a argument out of range occurs.</exception>
     /// <exception cref="InvalidOperationException">Thrown when the operation is invalid for the current state.</exception>
-    public static int ScheduleDaily(int hour, Action<double> action)
+    public int ScheduleDaily(int hour, Action<double> action)
     {
         if (action == null) throw new ArgumentNullException(nameof(action));
         if (hour < 0 || hour > 23) throw new ArgumentOutOfRangeException(nameof(hour), "Hour must be 0-23.");
@@ -121,7 +124,7 @@ public static class GameTimeScheduler
     /// <exception cref="ArgumentNullException">Thrown when <paramref name="action" /> is <see langword="null" />.</exception>
     /// <exception cref="ArgumentOutOfRangeException">Thrown when a argument out of range occurs.</exception>
     /// <exception cref="InvalidOperationException">Thrown when the operation is invalid for the current state.</exception>
-    public static int ScheduleHourly(int minute, Action<double> action)
+    public int ScheduleHourly(int minute, Action<double> action)
     {
         if (action == null) throw new ArgumentNullException(nameof(action));
         if (minute < 0 || minute > 59) throw new ArgumentOutOfRangeException(nameof(minute), "Minute must be 0-59.");
@@ -154,7 +157,7 @@ public static class GameTimeScheduler
     /// <exception cref="ArgumentNullException">Thrown when <paramref name="action" /> is <see langword="null" />.</exception>
     /// <exception cref="ArgumentOutOfRangeException">Thrown when a argument out of range occurs.</exception>
     /// <exception cref="InvalidOperationException">Thrown when the operation is invalid for the current state.</exception>
-    public static int ScheduleAfterHours(double hours, Action<double> action)
+    public int ScheduleAfterHours(double hours, Action<double> action)
     {
         if (action == null) throw new ArgumentNullException(nameof(action));
         if (hours <= 0) throw new ArgumentOutOfRangeException(nameof(hours), "Hours must be positive.");
@@ -181,7 +184,7 @@ public static class GameTimeScheduler
     /// Cancels a scheduled action by ID.
     /// </summary>
     /// <param name="scheduleId">The schedule id value.</param>
-    public static void Cancel(int scheduleId)
+    public void Cancel(int scheduleId)
     {
         lock (_syncLock)
         {
@@ -193,7 +196,7 @@ public static class GameTimeScheduler
     /// <summary>
     /// Cancels all scheduled actions.
     /// </summary>
-    public static void CancelAll()
+    public void CancelAll()
     {
         lock (_syncLock)
         {
@@ -205,7 +208,7 @@ public static class GameTimeScheduler
     /// Returns the number of active schedules.
     /// </summary>
     /// <returns>The schedule count.</returns>
-    public static int GetScheduleCount()
+    public int GetScheduleCount()
     {
         lock (_syncLock)
         {
@@ -213,11 +216,17 @@ public static class GameTimeScheduler
         }
     }
 
-    private static int _nextId;
+    /// <summary>
+    /// Disposes the scheduler, stopping it and clearing all schedules.
+    /// </summary>
+    public void Dispose()
+    {
+        Stop();
+    }
 
-    private static int NextId() => System.Threading.Interlocked.Increment(ref _nextId);
+    private int NextId() => System.Threading.Interlocked.Increment(ref _nextId);
 
-    private static void OnTick(float dt)
+    private void OnTick(float dt)
     {
         if (!IsEnabled || _sapi?.World?.Calendar == null) return;
 

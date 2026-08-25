@@ -1,4 +1,6 @@
+using System;
 using System.Collections.Generic;
+using ArcanumLib.Core;
 using ArcanumLib.Performance;
 using NSubstitute;
 using Vintagestory.API.Common;
@@ -7,31 +9,30 @@ using Xunit;
 
 namespace ArcanumLib.Tests.Unit;
 
-public class DeferredWorkTests
+public class DeferredWorkServiceTests
 {
+    private readonly DeferredWorkService _service = new();
+
     [Fact]
     public void Schedule_EmptyKey_Throws()
     {
-        UseImmediateScheduler();
         Assert.Throws<ArgumentException>(() =>
-            DeferredWork.Schedule("", () => { }, 100));
+            _service.Schedule("", () => { }, 100));
     }
 
     [Fact]
     public void Schedule_NullAction_Throws()
     {
-        UseImmediateScheduler();
         Assert.Throws<ArgumentNullException>(() =>
-            DeferredWork.Schedule("key", null!, 100));
+            _service.Schedule("key", null!, 100));
     }
 
     [Fact]
     public void Schedule_WithoutApi_RunsImmediately()
     {
-        UseImmediateScheduler();
         var fired = false;
 
-        DeferredWork.Schedule("test1", () => fired = true, 100);
+        _service.Schedule("test1", () => fired = true, 100);
 
         Assert.True(fired);
     }
@@ -39,10 +40,9 @@ public class DeferredWorkTests
     [Fact]
     public void ScheduleCallback_WithoutApi_RunsImmediately()
     {
-        UseImmediateScheduler();
         var fired = false;
 
-        DeferredWork.ScheduleCallback("test2", () => fired = true, 100);
+        _service.ScheduleCallback("test2", () => fired = true, 100);
 
         Assert.True(fired);
     }
@@ -50,18 +50,16 @@ public class DeferredWorkTests
     [Fact]
     public void ScheduleCallback_EmptyKey_Throws()
     {
-        UseImmediateScheduler();
         Assert.Throws<ArgumentException>(() =>
-            DeferredWork.ScheduleCallback("", () => { }, 100));
+            _service.ScheduleCallback("", () => { }, 100));
     }
 
     [Fact]
     public void Coalesce_WithoutApi_RunsImmediately()
     {
-        UseImmediateScheduler();
         var fired = false;
 
-        DeferredWork.Coalesce("test3", () => fired = true, 100);
+        _service.Coalesce("test3", () => fired = true, 100);
 
         Assert.True(fired);
     }
@@ -69,75 +67,68 @@ public class DeferredWorkTests
     [Fact]
     public void Coalesce_EmptyKey_Throws()
     {
-        UseImmediateScheduler();
         Assert.Throws<ArgumentException>(() =>
-            DeferredWork.Coalesce("", () => { }, 100));
+            _service.Coalesce("", () => { }, 100));
     }
 
     [Fact]
     public void AtEndOfTick_NullAction_Throws()
     {
-        UseImmediateScheduler();
         Assert.Throws<ArgumentNullException>(() =>
-            DeferredWork.AtEndOfTick(null!));
+            _service.AtEndOfTick(null!));
     }
 
     [Fact]
     public void Cancel_EmptyKey_DoesNothing()
     {
-        UseImmediateScheduler();
-        DeferredWork.Cancel("");
+        _service.Cancel("");
     }
 
     [Fact]
     public void IsPending_EmptyKey_ReturnsFalse()
     {
-        UseImmediateScheduler();
-        Assert.False(DeferredWork.IsPending(""));
+        Assert.False(_service.IsPending(""));
     }
 
     [Fact]
     public void CancelCallback_EmptyKey_DoesNothing()
     {
-        UseImmediateScheduler();
-        DeferredWork.CancelCallback("");
+        _service.CancelCallback("");
     }
 
     [Fact]
     public void IsCallbackPending_EmptyKey_ReturnsFalse()
     {
-        UseImmediateScheduler();
-        Assert.False(DeferredWork.IsCallbackPending(""));
+        Assert.False(_service.IsCallbackPending(""));
     }
 
     [Fact]
     public void CancelCallbacksByPrefix_EmptyPrefix_DoesNothing()
     {
-        UseImmediateScheduler();
-        DeferredWork.CancelCallbacksByPrefix("");
+        _service.CancelCallbacksByPrefix("");
     }
 
     [Fact]
     public void Schedule_WithApi_DeferredExecution()
     {
         var (api, helper) = CreateApi();
-        DeferredWork.Start(api);
+        _service.Start(api);
         try
         {
             var fired = false;
-            DeferredWork.Schedule("tick-test", () => fired = true, 100);
+            _service.Schedule("tick-test", () => fired = true, 100);
 
-            Assert.True(DeferredWork.IsPending("tick-test"));
+            Assert.True(_service.IsPending("tick-test"));
 
             helper.ElapsedMs = 200;
             helper.InvokeTick();
 
             Assert.True(fired);
-            Assert.False(DeferredWork.IsPending("tick-test"));
+            Assert.False(_service.IsPending("tick-test"));
         }
         finally
         {
-            DeferredWork.Stop();
+            _service.Stop();
         }
     }
 
@@ -145,19 +136,19 @@ public class DeferredWorkTests
     public void Cancel_RemovesPendingTask()
     {
         var (api, _) = CreateApi();
-        DeferredWork.Start(api);
+        _service.Start(api);
         try
         {
-            DeferredWork.Schedule("cancel-test", () => { }, 1000);
-            Assert.True(DeferredWork.IsPending("cancel-test"));
+            _service.Schedule("cancel-test", () => { }, 1000);
+            Assert.True(_service.IsPending("cancel-test"));
 
-            DeferredWork.Cancel("cancel-test");
+            _service.Cancel("cancel-test");
 
-            Assert.False(DeferredWork.IsPending("cancel-test"));
+            Assert.False(_service.IsPending("cancel-test"));
         }
         finally
         {
-            DeferredWork.Stop();
+            _service.Stop();
         }
     }
 
@@ -165,22 +156,22 @@ public class DeferredWorkTests
     public void ScheduleCallback_WithApi_RegistersAndFires()
     {
         var (api, helper) = CreateApi();
-        DeferredWork.Start(api);
+        _service.Start(api);
         try
         {
             var fired = false;
-            DeferredWork.ScheduleCallback("cb-test", () => fired = true, 100);
+            _service.ScheduleCallback("cb-test", () => fired = true, 100);
 
-            Assert.True(DeferredWork.IsCallbackPending("cb-test"));
+            Assert.True(_service.IsCallbackPending("cb-test"));
 
             helper.InvokePendingCallbacks();
 
             Assert.True(fired);
-            Assert.False(DeferredWork.IsCallbackPending("cb-test"));
+            Assert.False(_service.IsCallbackPending("cb-test"));
         }
         finally
         {
-            DeferredWork.Stop();
+            _service.Stop();
         }
     }
 
@@ -188,19 +179,19 @@ public class DeferredWorkTests
     public void CancelCallback_RemovesPendingCallback()
     {
         var (api, _) = CreateApi();
-        DeferredWork.Start(api);
+        _service.Start(api);
         try
         {
-            DeferredWork.ScheduleCallback("cb-cancel", () => { }, 1000);
-            Assert.True(DeferredWork.IsCallbackPending("cb-cancel"));
+            _service.ScheduleCallback("cb-cancel", () => { }, 1000);
+            Assert.True(_service.IsCallbackPending("cb-cancel"));
 
-            DeferredWork.CancelCallback("cb-cancel");
+            _service.CancelCallback("cb-cancel");
 
-            Assert.False(DeferredWork.IsCallbackPending("cb-cancel"));
+            Assert.False(_service.IsCallbackPending("cb-cancel"));
         }
         finally
         {
-            DeferredWork.Stop();
+            _service.Stop();
         }
     }
 
@@ -208,22 +199,22 @@ public class DeferredWorkTests
     public void CancelCallbacksByPrefix_RemovesMatchingCallbacks()
     {
         var (api, _) = CreateApi();
-        DeferredWork.Start(api);
+        _service.Start(api);
         try
         {
-            DeferredWork.ScheduleCallback("player:1:effect", () => { }, 1000);
-            DeferredWork.ScheduleCallback("player:1:buff", () => { }, 1000);
-            DeferredWork.ScheduleCallback("player:2:effect", () => { }, 1000);
+            _service.ScheduleCallback("player:1:effect", () => { }, 1000);
+            _service.ScheduleCallback("player:1:buff", () => { }, 1000);
+            _service.ScheduleCallback("player:2:effect", () => { }, 1000);
 
-            DeferredWork.CancelCallbacksByPrefix("player:1:");
+            _service.CancelCallbacksByPrefix("player:1:");
 
-            Assert.False(DeferredWork.IsCallbackPending("player:1:effect"));
-            Assert.False(DeferredWork.IsCallbackPending("player:1:buff"));
-            Assert.True(DeferredWork.IsCallbackPending("player:2:effect"));
+            Assert.False(_service.IsCallbackPending("player:1:effect"));
+            Assert.False(_service.IsCallbackPending("player:1:buff"));
+            Assert.True(_service.IsCallbackPending("player:2:effect"));
         }
         finally
         {
-            DeferredWork.Stop();
+            _service.Stop();
         }
     }
 
@@ -231,12 +222,12 @@ public class DeferredWorkTests
     public void Coalesce_WithApi_DeferredExecution()
     {
         var (api, helper) = CreateApi();
-        DeferredWork.Start(api);
+        _service.Start(api);
         try
         {
             var fireCount = 0;
-            DeferredWork.Coalesce("coal-test", () => fireCount++, 100);
-            DeferredWork.Coalesce("coal-test", () => fireCount++, 100);
+            _service.Coalesce("coal-test", () => fireCount++, 100);
+            _service.Coalesce("coal-test", () => fireCount++, 100);
 
             helper.ElapsedMs = 200;
             helper.InvokeTick();
@@ -245,7 +236,7 @@ public class DeferredWorkTests
         }
         finally
         {
-            DeferredWork.Stop();
+            _service.Stop();
         }
     }
 
@@ -253,11 +244,11 @@ public class DeferredWorkTests
     public void AtEndOfTick_WithApi_ExecutesAtEndOfTick()
     {
         var (api, helper) = CreateApi();
-        DeferredWork.Start(api);
+        _service.Start(api);
         try
         {
             var fired = false;
-            DeferredWork.AtEndOfTick(() => fired = true);
+            _service.AtEndOfTick(() => fired = true);
 
             helper.InvokeTick();
 
@@ -265,7 +256,7 @@ public class DeferredWorkTests
         }
         finally
         {
-            DeferredWork.Stop();
+            _service.Stop();
         }
     }
 
@@ -273,33 +264,33 @@ public class DeferredWorkTests
     public void Stop_ClearsAllPending()
     {
         var (api, _) = CreateApi();
-        DeferredWork.Start(api);
-        DeferredWork.Schedule("stop-test", () => { }, 10000);
-        DeferredWork.ScheduleCallback("stop-cb", () => { }, 10000);
+        _service.Start(api);
+        _service.Schedule("stop-test", () => { }, 10000);
+        _service.ScheduleCallback("stop-cb", () => { }, 10000);
 
-        DeferredWork.Stop();
+        _service.Stop();
 
-        Assert.False(DeferredWork.IsPending("stop-test"));
-        Assert.False(DeferredWork.IsCallbackPending("stop-cb"));
+        Assert.False(_service.IsPending("stop-test"));
+        Assert.False(_service.IsCallbackPending("stop-cb"));
     }
 
     [Fact]
     public void IsEnabled_False_RunsImmediately()
     {
         var (api, _) = CreateApi();
-        DeferredWork.Start(api);
-        DeferredWork.IsEnabled = false;
+        _service.Start(api);
+        _service.IsEnabled = false;
         try
         {
             var fired = false;
-            DeferredWork.Schedule("immediate-test", () => fired = true, 10000);
+            _service.Schedule("immediate-test", () => fired = true, 10000);
 
             Assert.True(fired);
         }
         finally
         {
-            DeferredWork.IsEnabled = true;
-            DeferredWork.Stop();
+            _service.IsEnabled = true;
+            _service.Stop();
         }
     }
 
@@ -307,14 +298,14 @@ public class DeferredWorkTests
     public void Schedule_SameKey_ReplacesTask()
     {
         var (api, helper) = CreateApi();
-        DeferredWork.Start(api);
+        _service.Start(api);
         try
         {
             var firstFired = false;
             var secondFired = false;
 
-            DeferredWork.Schedule("replace-test", () => firstFired = true, 100);
-            DeferredWork.Schedule("replace-test", () => secondFired = true, 100);
+            _service.Schedule("replace-test", () => firstFired = true, 100);
+            _service.Schedule("replace-test", () => secondFired = true, 100);
 
             helper.ElapsedMs = 200;
             helper.InvokeTick();
@@ -324,13 +315,8 @@ public class DeferredWorkTests
         }
         finally
         {
-            DeferredWork.Stop();
+            _service.Stop();
         }
-    }
-
-    private static void UseImmediateScheduler()
-    {
-        DeferredWork.Stop();
     }
 
     private static (ICoreServerAPI api, EventApiHelper helper) CreateApi()

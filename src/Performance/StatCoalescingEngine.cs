@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using ArcanumLib.Core;
 using Vintagestory.API.Common;
 using Vintagestory.API.Common.Entities;
 using Vintagestory.API.Server;
@@ -12,36 +13,41 @@ namespace ArcanumLib.Performance;
 /// single network sync. Useful for reducing packet spam when stats change rapidly
 /// (equipment swaps, buffs, debuffs).
 /// </summary>
-public static class StatCoalescingEngine
+/// <remarks>
+/// Register an instance in <see cref="ArcanumServices" /> during server startup and
+/// dispose it on world unload. The static members delegate to the registered instance
+/// for backward compatibility.
+/// </remarks>
+public class StatCoalescingEngine : IDisposable
 {
-    private static ICoreServerAPI? _sapi;
+    private ICoreServerAPI? _sapi;
 
     /// <summary>
     /// Enables or disables coalescing at runtime. When disabled, queued stats are applied
     /// immediately.
     /// </summary>
-    public static bool IsEnabled { get; set; } = true;
+    public bool IsEnabled { get; set; } = true;
 
     /// <summary>
     /// Default category used when none is supplied to <see cref="QueueStatUpdate" />.
     /// </summary>
-    public static string DefaultCategory { get; set; } = "game";
+    public string DefaultCategory { get; set; } = "game";
 
     /// <summary>
     /// Optional watched attribute path to mark dirty after all coalesced stats are applied.
     /// Set this if the consuming mod uses a watched attribute to trigger stat syncing.
     /// </summary>
-    public static string? MarkDirtyAttributePath { get; set; }
+    public string? MarkDirtyAttributePath { get; set; }
 
     /// <summary>
     /// Time window in milliseconds during which stat updates are coalesced.
     /// </summary>
-    public static int CoalesceWindowMs { get; set; } = 200;
+    public int CoalesceWindowMs { get; set; } = 200;
 
     /// <summary>
     /// Maximum delay in milliseconds before a forced flush.
     /// </summary>
-    public static int MaxDelayMs { get; set; } = 1000;
+    public int MaxDelayMs { get; set; } = 1000;
 
     private class CoalescedUpdate
     {
@@ -49,15 +55,16 @@ public static class StatCoalescingEngine
         public bool IsFlushing;
     }
 
-    private static readonly Dictionary<long, CoalescedUpdate> PendingUpdates = new();
-    private static readonly object _syncLock = new();
+    private readonly Dictionary<long, CoalescedUpdate> _pendingUpdates = new();
+    private readonly object _syncLock = new();
 
     /// <summary>
     /// Starts the coalescing engine on the server and hooks player disconnect cleanup.
     /// </summary>
     /// <param name="api">The server API instance.</param>
-    public static void Start(ICoreServerAPI api)
+    public void Start(ICoreServerAPI api)
     {
+        if (api == null) throw new ArgumentNullException(nameof(api));
         _sapi = api;
         api.Event.PlayerDisconnect += OnPlayerDisconnect;
         api.Logger.Notification("[ArcanumLib] StatCoalescingEngine started.");
@@ -66,7 +73,7 @@ public static class StatCoalescingEngine
     /// <summary>
     /// Stops the coalescing engine, cancels pending deferred work and clears the queue.
     /// </summary>
-    public static void Stop()
+    public void Stop()
     {
         if (_sapi != null)
         {
@@ -75,15 +82,15 @@ public static class StatCoalescingEngine
             List<long> keys;
             lock (_syncLock)
             {
-                keys = PendingUpdates.Keys.ToList();
+                keys = _pendingUpdates.Keys.ToList();
             }
             foreach (var key in keys)
             {
-                DeferredWork.Cancel(StatKey(key));
+                ArcanumServices.Get<DeferredWorkService>()?.Cancel(StatKey(key));
             }
             lock (_syncLock)
             {
-                PendingUpdates.Clear();
+                _pendingUpdates.Clear();
             }
         }
         _sapi = null;
@@ -97,7 +104,7 @@ public static class StatCoalescingEngine
     /// <param name="stat">The stat value.</param>
     /// <param name="value">The value to set or compare.</param>
     /// <param name="category">The category value.</param>
-    public static void QueueStatUpdate(
+    public void QueueStatUpdate(
         ICoreServerAPI api,
         EntityPlayer player,
         string stat,
@@ -120,10 +127,10 @@ public static class StatCoalescingEngine
         bool needsSchedule;
         lock (_syncLock)
         {
-            if (!PendingUpdates.TryGetValue(entityId, out var update))
+            if (!_pendingUpdates.TryGetValue(entityId, out var update))
             {
                 update = new CoalescedUpdate();
-                PendingUpdates[entityId] = update;
+                _pendingUpdates[entityId] = update;
             }
 
             update.Stats[statKey] = value;
@@ -132,7 +139,7 @@ public static class StatCoalescingEngine
 
         if (needsSchedule)
         {
-            DeferredWork.Coalesce(
+            ArcanumServices.Get<DeferredWorkService>()?.Coalesce(
                 StatKey(entityId),
                 () => FlushUpdates(api, entityId),
                 CoalesceWindowMs,
@@ -147,7 +154,7 @@ public static class StatCoalescingEngine
     /// <param name="player">The player.</param>
     /// <param name="stats">The stats value.</param>
     /// <param name="category">The category value.</param>
-    public static void QueueStatUpdates(
+    public void QueueStatUpdates(
         ICoreServerAPI api,
         EntityPlayer player,
         Dictionary<string, float> stats,
@@ -163,10 +170,10 @@ public static class StatCoalescingEngine
         bool needsSchedule;
         lock (_syncLock)
         {
-            if (!PendingUpdates.TryGetValue(entityId, out var update))
+            if (!_pendingUpdates.TryGetValue(entityId, out var update))
             {
                 update = new CoalescedUpdate();
-                PendingUpdates[entityId] = update;
+                _pendingUpdates[entityId] = update;
             }
 
             if (stats != null)
@@ -183,7 +190,7 @@ public static class StatCoalescingEngine
 
         if (needsSchedule)
         {
-            DeferredWork.Coalesce(
+            ArcanumServices.Get<DeferredWorkService>()?.Coalesce(
                 StatKey(entityId),
                 () => FlushUpdates(api, entityId),
                 CoalesceWindowMs,
@@ -196,17 +203,17 @@ public static class StatCoalescingEngine
     /// </summary>
     /// <param name="api">The server API instance.</param>
     /// <param name="entityId">The entity id value.</param>
-    public static void ForceFlush(ICoreServerAPI api, long entityId)
+    public void ForceFlush(ICoreServerAPI api, long entityId)
     {
         if (!IsEnabled) return;
 
         lock (_syncLock)
         {
-            if (!PendingUpdates.TryGetValue(entityId, out var update)) return;
+            if (!_pendingUpdates.TryGetValue(entityId, out var update)) return;
             if (update.IsFlushing) return;
         }
 
-        DeferredWork.Cancel(StatKey(entityId));
+        ArcanumServices.Get<DeferredWorkService>()?.Cancel(StatKey(entityId));
         FlushUpdates(api, entityId);
     }
 
@@ -217,7 +224,7 @@ public static class StatCoalescingEngine
     /// <param name="stat">The stat value.</param>
     /// <param name="value">The value to set or compare.</param>
     /// <param name="category">The category value.</param>
-    public static void ApplyStatImmediate(
+    public void ApplyStatImmediate(
         EntityPlayer player,
         string stat,
         float value,
@@ -232,11 +239,11 @@ public static class StatCoalescingEngine
     /// </summary>
     /// <param name="entityId">The entity id value.</param>
     /// <returns>true if the operation has pending updates; otherwise, false.</returns>
-    public static bool HasPendingUpdates(long entityId)
+    public bool HasPendingUpdates(long entityId)
     {
         lock (_syncLock)
         {
-            return PendingUpdates.TryGetValue(entityId, out var update) && update.Stats.Count > 0;
+            return _pendingUpdates.TryGetValue(entityId, out var update) && update.Stats.Count > 0;
         }
     }
 
@@ -244,11 +251,11 @@ public static class StatCoalescingEngine
     /// Total number of pending stat updates across all players.
     /// </summary>
     /// <returns>The pending update count.</returns>
-    public static int GetPendingUpdateCount()
+    public int GetPendingUpdateCount()
     {
         lock (_syncLock)
         {
-            return PendingUpdates.Values.Sum(u => u.Stats.Count);
+            return _pendingUpdates.Values.Sum(u => u.Stats.Count);
         }
     }
 
@@ -256,31 +263,39 @@ public static class StatCoalescingEngine
     /// Clears all pending updates and cancels scheduled flushes.
     /// </summary>
     /// <param name="api">The server API instance.</param>
-    public static void ClearAllPending(ICoreServerAPI api)
+    public void ClearAllPending(ICoreServerAPI api)
     {
         List<long> keys;
         lock (_syncLock)
         {
-            keys = PendingUpdates.Keys.ToList();
+            keys = _pendingUpdates.Keys.ToList();
         }
         foreach (var key in keys)
         {
-            DeferredWork.Cancel(StatKey(key));
+            ArcanumServices.Get<DeferredWorkService>()?.Cancel(StatKey(key));
         }
         lock (_syncLock)
         {
-            PendingUpdates.Clear();
+            _pendingUpdates.Clear();
         }
     }
 
-    private static string StatKey(long entityId) => $"stat-coalesce-{entityId}";
+    /// <summary>
+    /// Disposes the engine, stopping it and clearing all pending updates.
+    /// </summary>
+    public void Dispose()
+    {
+        Stop();
+    }
 
-    private static void FlushUpdates(ICoreServerAPI api, long entityId)
+    private string StatKey(long entityId) => $"stat-coalesce-{entityId}";
+
+    private void FlushUpdates(ICoreServerAPI api, long entityId)
     {
         CoalescedUpdate? update;
         lock (_syncLock)
         {
-            if (!PendingUpdates.TryGetValue(entityId, out update)) return;
+            if (!_pendingUpdates.TryGetValue(entityId, out update)) return;
             if (update.IsFlushing) return;
             update.IsFlushing = true;
         }
@@ -290,7 +305,7 @@ public static class StatCoalescingEngine
         {
             lock (_syncLock)
             {
-                PendingUpdates.Remove(entityId);
+                _pendingUpdates.Remove(entityId);
             }
             return;
         }
@@ -316,11 +331,11 @@ public static class StatCoalescingEngine
 
         lock (_syncLock)
         {
-            PendingUpdates.Remove(entityId);
+            _pendingUpdates.Remove(entityId);
         }
     }
 
-    private static (string category, string statName) ParseStatKey(string statKey)
+    private (string category, string statName) ParseStatKey(string statKey)
     {
         int colonIndex = statKey.IndexOf(':');
         if (colonIndex > 0)
@@ -331,14 +346,28 @@ public static class StatCoalescingEngine
         return (DefaultCategory, statKey);
     }
 
-    private static void OnPlayerDisconnect(IServerPlayer player)
+    private void OnPlayerDisconnect(IServerPlayer player)
     {
         long entityId = player.Entity.EntityId;
 
-        DeferredWork.Cancel(StatKey(entityId));
+        ArcanumServices.Get<DeferredWorkService>()?.Cancel(StatKey(entityId));
         lock (_syncLock)
         {
-            PendingUpdates.Remove(entityId);
+            _pendingUpdates.Remove(entityId);
         }
     }
+
+    // ── Static convenience facade ────────────────────────────────────────
+
+    private static StatCoalescingEngine? Instance => ArcanumServices.Get<StatCoalescingEngine>();
+
+    /// <summary>
+    /// Starts the registered engine instance. Delegates to the instance in <see cref="ArcanumServices"/>.
+    /// </summary>
+    public static void StartStatic(ICoreServerAPI api) => Instance?.Start(api);
+
+    /// <summary>
+    /// Stops the registered engine instance. Delegates to the instance in <see cref="ArcanumServices"/>.
+    /// </summary>
+    public static void StopStatic() => Instance?.Stop();
 }

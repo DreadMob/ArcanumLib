@@ -3,7 +3,9 @@
     "modid": "arcanumlib",
     "name": "Arcanum Lib",
     "authors": [
-        "Alegacy"
+        "Alegacy",
+        "DreadMob",
+        "Flajakay"
     ],
     "description": "Shared client/server utility library for Vintage Story mods. Provides icon rendering, color helpers, GUI toolkit, persistence, scheduling, and other reusable helpers.",
     "version": "1.0.0-rc1",

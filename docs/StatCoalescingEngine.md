@@ -68,6 +68,6 @@ StatCoalescingEngine.QueueStatUpdates(
 
 ## Notes
 
-- Uses `DeferredWork.Coalesce` internally for scheduling.
+- Uses `DeferredWorkService.Coalesce` internally for scheduling.
 - Automatically cleans up when a player disconnects.
 - `StatCoalescingEngine` is a `ModSystem`; it starts and stops automatically.

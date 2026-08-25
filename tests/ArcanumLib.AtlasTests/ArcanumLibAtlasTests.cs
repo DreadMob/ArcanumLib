@@ -32,10 +32,12 @@ public class ArcanumLibAtlasTests : AtlasScenarioBase
         var player = await World.JoinPlayer("testcache");
         await World.Ticks(5);
 
-        Assert.True(OnlinePlayerCache.IsLoaded);
-        Assert.Equal(1, OnlinePlayerCache.Count);
-        Assert.NotNull(OnlinePlayerCache.GetByUid(player.Player.PlayerUID));
-        Assert.Same(player.Player, OnlinePlayerCache.GetByUid(player.Player.PlayerUID));
+        var cache = ArcanumServices.Get<OnlinePlayerCache>();
+        Assert.NotNull(cache);
+        Assert.True(cache!.IsLoaded);
+        Assert.Equal(1, cache.Count);
+        Assert.NotNull(cache.GetByUid(player.Player.PlayerUID));
+        Assert.Same(player.Player, cache.GetByUid(player.Player.PlayerUID));
     }
 
     [AtlasScenario]
@@ -44,12 +46,15 @@ public class ArcanumLibAtlasTests : AtlasScenarioBase
         var player = await World.JoinPlayer("testcache2");
         await World.Ticks(5);
 
-        Assert.Contains(OnlinePlayerCache.All, p => p.PlayerUID == player.Player.PlayerUID);
+        var cache = ArcanumServices.Get<OnlinePlayerCache>();
+        Assert.NotNull(cache);
+
+        Assert.Contains(cache!.All, p => p.PlayerUID == player.Player.PlayerUID);
 
         player.Player.Disconnect("test");
         await World.Until(() => !player.IsConnected, timeoutTicks: 120);
 
-        Assert.DoesNotContain(OnlinePlayerCache.All, p => p.PlayerUID == player.Player.PlayerUID);
+        Assert.DoesNotContain(cache.All, p => p.PlayerUID == player.Player.PlayerUID);
     }
 
     [AtlasScenario]

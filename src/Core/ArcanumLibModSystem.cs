@@ -1,8 +1,10 @@
 using ArcanumLib.Effects;
 using ArcanumLib.Events;
 using ArcanumLib.Gui.Icons;
+using ArcanumLib.Gui.RadialMenu;
 using ArcanumLib.Helpers;
 using ArcanumLib.Persistence;
+using ArcanumLib.Performance;
 using Vintagestory.API.Client;
 using Vintagestory.API.Common;
 using Vintagestory.API.Server;
@@ -10,20 +12,12 @@ using Vintagestory.API.Server;
 namespace ArcanumLib.Core;
 
 /// <summary>
-/// Central lifecycle ModSystem that registers the current API with <see cref="ArcanumServices" />
-/// so other ArcanumLib modules can resolve the active client or server API without static coupling.
+/// Central lifecycle ModSystem that activates the <see cref="ArcanumRuntime" />,
+/// registers the current API with the service registry, and coordinates disposal on world unload.
 /// </summary>
 public class ArcanumLibModSystem : ModSystem
 {
-    static ArcanumLibModSystem()
-    {
-        // Client-only init for ImageIconCache is done in StartClientSide because it needs ICoreClientAPI.
-        ArcanumLifecycle.Register("ImageIconCache", () => { }, ImageIconCache.Dispose);
-        ArcanumLifecycle.Register("CollectibleNameResolver", () => { }, CollectibleNameResolver.Clear);
-        ArcanumLifecycle.Register("EventBus", () => { }, EventBus.ClearAll);
-        ArcanumLifecycle.Register("EffectResistanceStore", () => { }, EffectResistanceStore.ClearAll);
-        ArcanumLifecycle.Register("ModDataStore", () => { }, ModDataStore.Clear);
-    }
+    private ArcanumRuntime? _runtime;
 
     /// <summary>
     /// Returns the execution order relative to other systems.
@@ -39,34 +33,65 @@ public class ArcanumLibModSystem : ModSystem
     public override bool ShouldLoad(EnumAppSide forSide) => true;
 
     /// <summary>
-    /// Registers the client API and common API, and initializes client-side caches.
+    /// Activates the runtime, registers the client API and common API, and initializes client-side caches.
     /// </summary>
     /// <param name="capi">The client API.</param>
     public override void StartClientSide(ICoreClientAPI capi)
     {
-        ArcanumServices.Register<ICoreAPI>(capi, ArcanumServiceScope.Client);
-        ArcanumServices.Register<ICoreClientAPI>(capi, ArcanumServiceScope.Client);
+        _runtime = ArcanumRuntime.Activate();
+        _runtime.Side = EnumAppSide.Client;
+        _runtime.Api = capi;
+
+        RegisterLifecycleHandlers();
+        RegisterCommonServices();
+
+        _runtime.Services.Register<ICoreAPI>(capi, ArcanumServiceScope.Client);
+        _runtime.Services.Register<ICoreClientAPI>(capi, ArcanumServiceScope.Client);
         ImageIconCache.Init(capi);
         CustomTabIconRenderer.RegisterGenericIcons();
+        _runtime.Initialize();
     }
 
     /// <summary>
-    /// Registers the server API and common API.
+    /// Activates the runtime, registers the server API and common API.
     /// </summary>
     /// <param name="sapi">The server API.</param>
     public override void StartServerSide(ICoreServerAPI sapi)
     {
-        ArcanumServices.Register<ICoreAPI>(sapi, ArcanumServiceScope.Server);
-        ArcanumServices.Register<ICoreServerAPI>(sapi, ArcanumServiceScope.Server);
+        _runtime = ArcanumRuntime.Activate();
+        _runtime.Side = EnumAppSide.Server;
+        _runtime.Api = sapi;
+
+        RegisterLifecycleHandlers();
+        RegisterCommonServices();
+
+        _runtime.Services.Register<ICoreAPI>(sapi, ArcanumServiceScope.Server);
+        _runtime.Services.Register<ICoreServerAPI>(sapi, ArcanumServiceScope.Server);
+        _runtime.Initialize();
+    }
+
+    private void RegisterLifecycleHandlers()
+    {
+        ArcanumLifecycle.Register("ImageIconCache", () => { }, ImageIconCache.Dispose);
+        ArcanumLifecycle.Register("CollectibleNameResolver", () => { }, CollectibleNameResolver.Clear);
+        ArcanumLifecycle.Register("ModDataStore", () => { }, ModDataStore.Clear);
+        ArcanumLifecycle.Register("CustomIconRegistry", () => { }, CustomIconRegistry.Clear);
+    }
+
+    private void RegisterCommonServices()
+    {
+        _runtime!.Services.Register(new EffectResistanceService());
+        _runtime!.Services.Register(new EventBusService());
+        _runtime!.Services.Register(new DeferredWorkService());
     }
 
     /// <summary>
-    /// Disposes icon surfaces, clears name caches and the service registry on world unload.
+    /// Disposes the runtime, which runs lifecycle disposal and shuts down all services.
     /// </summary>
     public override void Dispose()
     {
-        ArcanumLifecycle.DisposeAll();
-        ArcanumServices.Shutdown();
+        _runtime?.Dispose();
+        _runtime = null;
         base.Dispose();
     }
 }

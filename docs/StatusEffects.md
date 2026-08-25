@@ -4,13 +4,13 @@ title: Status Effects
 nav_order: 30
 ---
 
-# Status Effects
+# StatusEffectService
 
 Apply, tick, and remove timed status effects on entities.
 
 ## What is it for?
 
-Use `StatusEffectManager` when your mod has temporary buffs, debuffs, or states:
+Use `StatusEffectService` when your mod has temporary buffs, debuffs, or states:
 
 - A speed potion that lasts 30 seconds.
 - A poison effect that ticks damage over time.
@@ -42,7 +42,11 @@ public interface IStatusEffect
 Effects can be classified as `Buff`, `Debuff`, or `None`. This enables dispel-by-category:
 
 ```csharp
-StatusEffectManager.RemoveByCategory(entity, EffectCategory.Debuff);
+using ArcanumLib.Core;
+using ArcanumLib.Effects;
+
+var svc = ArcanumServices.Get<StatusEffectService>()!;
+svc.RemoveByCategory(entity, EffectCategory.Debuff);
 ```
 
 ## Immunities and resistances
@@ -51,17 +55,17 @@ Effects can be tagged (e.g. `"fire"`, `"slow"`). Entities can be made immune to 
 
 ```csharp
 // Full immunity — effects with "fire" tag are rejected entirely
-StatusEffectManager.AddImmunity(entity, "fire");
+svc.AddImmunity(entity, "fire");
 
 // 50% resistance — effects with "slow" tag last half as long
-StatusEffectManager.AddResistance(entity, "slow", 0.5f);
+svc.AddResistance(entity, "slow", 0.5f);
 
 // Check
-bool isImmune = StatusEffectManager.IsImmune(entity, "fire");
+bool isImmune = svc.IsImmune(entity, "fire");
 
 // Remove
-StatusEffectManager.RemoveImmunity(entity, "fire");
-StatusEffectManager.RemoveResistance(entity, "slow");
+svc.RemoveImmunity(entity, "fire");
+svc.RemoveResistance(entity, "slow");
 ```
 
 Resistance reduces the effective duration: `actualDuration = baseDuration * (1 - resistance)`. A resistance of 1.0 is equivalent to full immunity.
@@ -78,9 +82,11 @@ Resistance reduces the effective duration: `actualDuration = baseDuration * (1 -
 ## Quick example
 
 ```csharp
+using ArcanumLib.Core;
 using ArcanumLib.Effects;
 
-var instance = StatusEffectManager.Apply(entity, new SlowEffect(), durationMs: 10000);
+var svc = ArcanumServices.Get<StatusEffectService>()!;
+var instance = svc.Apply(entity, new SlowEffect(), durationMs: 10000);
 ```
 
 ## Usage
@@ -88,7 +94,7 @@ var instance = StatusEffectManager.Apply(entity, new SlowEffect(), durationMs: 1
 ### Apply
 
 ```csharp
-var instance = StatusEffectManager.Apply(entity, myEffect, durationMs: 10000, data: null);
+var instance = svc.Apply(entity, myEffect, durationMs: 10000, data: null);
 ```
 
 ### Tick
@@ -96,13 +102,13 @@ var instance = StatusEffectManager.Apply(entity, myEffect, durationMs: 10000, da
 Call this from a client/server tick handler:
 
 ```csharp
-StatusEffectManager.Tick(dt); // dt in seconds
+svc.Tick(dt); // dt in seconds
 ```
 
 ### Remove
 
 ```csharp
-StatusEffectManager.RemoveAll(entity);
+svc.RemoveAll(entity);
 ```
 
 ### Example effect
@@ -147,15 +153,14 @@ var speedBuff = new StatModifierEffect(
 ### Events
 
 ```csharp
-StatusEffectManager.OnEffectApplied += (entity, instance) => { /* ... */ };
-StatusEffectManager.OnEffectExpired += (entity, instance) => { /* ... */ };
+svc.OnEffectApplied += (entity, instance) => { /* ... */ };
+svc.OnEffectExpired += (entity, instance) => { /* ... */ };
 ```
 
 Use events to drive UI, logging, or side effects without touching effect classes.
 
 ## Lifecycle
 
-- The static `StatusEffectManager` is a facade that delegates to a `StatusEffectService` registered in `ArcanumServices`.
-- `StatusEffectModSystem` creates and registers the service during `StartClientSide` / `StartServerSide`.
-- `StatusEffectManager.Clear()` clears the service on world unload.
-- `StatusEffectManager` methods are safe to call before the service is ready; they will return no-ops / empty results.
+- `StatusEffectService` is registered in `ArcanumServices` by `StatusEffectModSystem` during `StartClientSide` / `StartServerSide`.
+- `StatusEffectModSystem.Dispose()` unregisters the service and clears state on world unload.
+- Methods are safe to call before the service is ready; they will return no-ops / empty results when the service is not registered.

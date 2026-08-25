@@ -8,24 +8,21 @@ using Vintagestory.API.Server;
 namespace ArcanumLib.Performance;
 
 /// <summary>
-/// Runs scheduled and coalesced work on the game tick loop.
+/// Instance-based scheduler for deferred and coalesced work on the game tick loop.
 /// Use this to debounce repeated events, batch mark-dirty calls, or delay
 /// expensive work without storing callback IDs in every caller.
+/// Registered in <see cref="Core.ArcanumServices" /> and disposed with the <see cref="Core.ArcanumRuntime" />.
 /// </summary>
-public static class DeferredWork
+public sealed class DeferredWorkService : IDisposable
 {
     private sealed class Scheduler
     {
         public ICoreAPI? Api;
         public long TickListenerId;
-        /// <summary>Pending scheduled tasks keyed by unique key.</summary>
         public readonly Dictionary<string, ScheduledTask> Tasks = new(StringComparer.Ordinal);
-        /// <summary>Registered one-shot callbacks keyed by unique key.</summary>
         public readonly Dictionary<string, long> Callbacks = new(StringComparer.Ordinal);
-        /// <summary>Actions deferred to the end of the current tick.</summary>
         public readonly Queue<Action> EndOfTickQueue = new();
         public Thread? OwnerThread;
-        /// <summary>True when a game API is bound and the scheduler is ticking.</summary>
         public bool IsRunning => Api != null;
     }
 
@@ -37,9 +34,6 @@ public static class DeferredWork
         public long DueTimeMs;
         public long? MaxDelayMs;
 
-        /// <summary>Creates a scheduled task entry.</summary>
-        /// <param name="key">Unique key identifying this task.</param>
-        /// <param name="action">The action to run when due.</param>
         public ScheduledTask(string key, Action action)
         {
             Key = key;
@@ -47,45 +41,90 @@ public static class DeferredWork
         }
     }
 
-    private static readonly Scheduler _client = new();
-    private static readonly Scheduler _server = new();
-    private static readonly object _syncLock = new();
+    private sealed class DeferredWorkFacade : IDeferredWork
+    {
+        private readonly Scheduler _scheduler;
+        private readonly DeferredWorkService _owner;
+
+        public DeferredWorkFacade(DeferredWorkService owner, Scheduler scheduler)
+        {
+            _owner = owner;
+            _scheduler = scheduler;
+        }
+
+        public void Schedule(string key, Action action, int delayMs)
+            => _owner.ScheduleCore(_scheduler, key, action, delayMs);
+
+        public void ScheduleCallback(string key, Action action, int delayMs)
+            => _owner.ScheduleCallbackCore(_scheduler, key, action, delayMs);
+
+        public void CancelCallback(string key)
+            => _owner.CancelCallbackCore(_scheduler, key);
+
+        public bool IsCallbackPending(string key)
+            => _owner.IsCallbackPendingCore(_scheduler, key);
+
+        public void CancelCallbacksByPrefix(string prefix)
+            => _owner.CancelCallbacksByPrefixCore(_scheduler, prefix);
+
+        public void Coalesce(string key, Action action, int windowMs, int maxDelayMs = -1)
+            => _owner.CoalesceCore(_scheduler, key, action, windowMs, maxDelayMs);
+
+        public void AtEndOfTick(Action action)
+            => _owner.AtEndOfTickCore(_scheduler, action);
+
+        public void Cancel(string key)
+            => _owner.CancelCore(_scheduler, key);
+
+        public bool IsPending(string key)
+            => _owner.IsPendingCore(_scheduler, key);
+    }
+
+    private readonly Scheduler _client = new();
+    private readonly Scheduler _server = new();
+    private readonly object _syncLock = new();
+    private bool _disposed;
 
     /// <summary>
     /// Enables or disables the scheduler. When disabled, pending work is executed immediately.
     /// </summary>
-    public static bool IsEnabled { get; set; } = true;
+    public bool IsEnabled { get; set; } = true;
 
     /// <summary>
     /// Client-side scheduler. Use this from client-side code or for client-only effects.
     /// </summary>
-    public static IDeferredWork Client { get; } = new DeferredWorkFacade(_client);
+    public IDeferredWork Client { get; }
 
     /// <summary>
     /// Server-side scheduler. Use this from server-side code or for server-authoritative work.
     /// </summary>
-    public static IDeferredWork Server { get; } = new DeferredWorkFacade(_server);
+    public IDeferredWork Server { get; }
+
+    /// <summary>
+    /// Creates a new deferred work service.
+    /// </summary>
+    public DeferredWorkService()
+    {
+        Client = new DeferredWorkFacade(this, _client);
+        Server = new DeferredWorkFacade(this, _server);
+    }
 
     /// <summary>
     /// Starts the deferred work scheduler for the given API side.
     /// </summary>
     /// <param name="api">The core API instance.</param>
-    public static void Start(ICoreAPI api)
+    public void Start(ICoreAPI api)
     {
         if (api is ICoreServerAPI sapi)
-        {
             StartScheduler(_server, sapi);
-        }
         else if (api is ICoreClientAPI capi)
-        {
             StartScheduler(_client, capi);
-        }
     }
 
     /// <summary>
     /// Stops the deferred work scheduler, cancels pending callbacks and clears the task queue.
     /// </summary>
-    public static void Stop()
+    public void Stop()
     {
         StopScheduler(_client);
         StopScheduler(_server);
@@ -96,83 +135,58 @@ public static class DeferredWork
     /// Calling <see cref="Schedule" /> again with the same <paramref name="key" />
     /// reschedules and replaces the action, so the work runs only once.
     /// </summary>
-    /// <param name="key">The key to look up.</param>
-    /// <param name="action">The action value.</param>
-    /// <param name="delayMs">The delay ms value.</param>
-    public static void Schedule(string key, Action action, int delayMs)
+    public void Schedule(string key, Action action, int delayMs)
         => Active.Schedule(key, action, delayMs);
 
     /// <summary>
-    /// Schedules a one-shot callback via the API's <c>RegisterCallback</c> mechanism,
-    /// which is truly zero-poll: no tick listener runs while the callback is pending.
-    /// Calling again with the same <paramref name="key" /> cancels the previous callback.
-    /// Use this for timed effects where no polling should occur during the wait.
+    /// Schedules a one-shot callback via the API's <c>RegisterCallback</c> mechanism.
     /// </summary>
-    /// <param name="key">The key to look up.</param>
-    /// <param name="action">The action value.</param>
-    /// <param name="delayMs">The delay ms value.</param>
-    public static void ScheduleCallback(string key, Action action, int delayMs)
+    public void ScheduleCallback(string key, Action action, int delayMs)
         => Active.ScheduleCallback(key, action, delayMs);
 
     /// <summary>
     /// Cancels a pending <see cref="ScheduleCallback" /> by key.
     /// </summary>
-    /// <param name="key">The key to look up.</param>
-    public static void CancelCallback(string key)
+    public void CancelCallback(string key)
         => Active.CancelCallback(key);
 
     /// <summary>
     /// Returns true when a callback with the given key is pending.
     /// </summary>
-    /// <param name="key">The key to look up.</param>
-    /// <returns>true if callback pending; otherwise, false.</returns>
-    public static bool IsCallbackPending(string key)
+    public bool IsCallbackPending(string key)
         => Active.IsCallbackPending(key);
 
     /// <summary>
     /// Cancels all callbacks whose key starts with <paramref name="prefix" />.
-    /// Use this to clean up all effects for a player or entity on disconnect.
     /// </summary>
-    /// <param name="prefix">The prefix value.</param>
-    public static void CancelCallbacksByPrefix(string prefix)
+    public void CancelCallbacksByPrefix(string prefix)
         => Active.CancelCallbacksByPrefix(prefix);
 
     /// <summary>
-    /// Coalesces repeated calls for the same <paramref name="key" /> into a single
-    /// execution. The window is extended by <paramref name="windowMs" /> each call,
-    /// but the task is forced after <paramref name="maxDelayMs" /> even if calls keep coming.
+    /// Coalesces repeated calls for the same <paramref name="key" /> into a single execution.
     /// </summary>
-    /// <param name="key">The key to look up.</param>
-    /// <param name="action">The action value.</param>
-    /// <param name="windowMs">The window ms value.</param>
-    /// <param name="maxDelayMs">The max delay ms value.</param>
-    public static void Coalesce(string key, Action action, int windowMs, int maxDelayMs = -1)
+    public void Coalesce(string key, Action action, int windowMs, int maxDelayMs = -1)
         => Active.Coalesce(key, action, windowMs, maxDelayMs);
 
     /// <summary>
     /// Queues an action to run at the end of the current game tick.
-    /// Actions that throw are logged; queued actions are not coalesced.
     /// </summary>
-    /// <param name="action">The action value.</param>
-    public static void AtEndOfTick(Action action)
+    public void AtEndOfTick(Action action)
         => Active.AtEndOfTick(action);
 
     /// <summary>
     /// Cancels a pending task.
     /// </summary>
-    /// <param name="key">The key to look up.</param>
-    public static void Cancel(string key)
+    public void Cancel(string key)
         => Active.Cancel(key);
 
     /// <summary>
     /// Returns true when a task with the given key is pending.
     /// </summary>
-    /// <param name="key">The key to look up.</param>
-    /// <returns>true if pending; otherwise, false.</returns>
-    public static bool IsPending(string key)
+    public bool IsPending(string key)
         => Active.IsPending(key);
 
-    private static IDeferredWork Active
+    private IDeferredWork Active
     {
         get
         {
@@ -184,24 +198,20 @@ public static class DeferredWork
                 if (_server.OwnerThread == current && _server.IsRunning)
                     return Server;
 
-                // Fallback: prefer whichever side is running.
                 if (_server.IsRunning) return Server;
                 if (_client.IsRunning) return Client;
 
-                // No scheduler running: create an immediate no-op to avoid null.
                 return Server;
             }
         }
     }
 
-    private static void StartScheduler(Scheduler scheduler, ICoreAPI api)
+    private void StartScheduler(Scheduler scheduler, ICoreAPI api)
     {
         lock (_syncLock)
         {
             if (scheduler.IsRunning)
-            {
                 StopScheduler(scheduler);
-            }
 
             scheduler.Api = api;
             scheduler.OwnerThread = Thread.CurrentThread;
@@ -209,7 +219,7 @@ public static class DeferredWork
         }
     }
 
-    private static void StopScheduler(Scheduler scheduler)
+    private void StopScheduler(Scheduler scheduler)
     {
         lock (_syncLock)
         {
@@ -237,7 +247,7 @@ public static class DeferredWork
         }
     }
 
-    private static void OnGameTick(Scheduler scheduler, float dt)
+    private void OnGameTick(Scheduler scheduler, float dt)
     {
         var api = scheduler.Api;
         if (api?.World is null) return;
@@ -265,14 +275,8 @@ public static class DeferredWork
 
         foreach (var task in toRun)
         {
-            try
-            {
-                task.Action();
-            }
-            catch (Exception ex)
-            {
-                api.Logger?.Warning("[ArcanumLib] Deferred task '{0}' failed: {1}", task.Key, ex.Message);
-            }
+            try { task.Action(); }
+            catch (Exception ex) { api.Logger?.Warning("[ArcanumLib] Deferred task '{0}' failed: {1}", task.Key, ex.Message); }
         }
 
         var endOfTickBatch = new List<Action>();
@@ -288,84 +292,12 @@ public static class DeferredWork
 
         foreach (var current in endOfTickBatch)
         {
-            try
-            {
-                current();
-            }
-            catch (Exception ex)
-            {
-                api.Logger?.Warning("[ArcanumLib] End-of-tick task failed: {0}", ex.Message);
-            }
+            try { current(); }
+            catch (Exception ex) { api.Logger?.Warning("[ArcanumLib] End-of-tick task failed: {0}", ex.Message); }
         }
     }
 
-    private sealed class DeferredWorkFacade : IDeferredWork
-    {
-        private readonly Scheduler _scheduler;
-
-        /// <summary>Creates a facade bound to a specific scheduler.</summary>
-        /// <param name="scheduler">The scheduler to delegate calls to.</param>
-        public DeferredWorkFacade(Scheduler scheduler)
-        {
-            _scheduler = scheduler;
-        }
-
-        /// <summary>Schedules <paramref name="action" /> to run after <paramref name="delayMs" /> milliseconds, replacing any prior task with the same key.</summary>
-        /// <param name="key">Unique key identifying this task.</param>
-        /// <param name="action">The action to run when due.</param>
-        /// <param name="delayMs">Delay in milliseconds before the action runs.</param>
-        public void Schedule(string key, Action action, int delayMs)
-            => ScheduleCore(_scheduler, key, action, delayMs);
-
-        /// <summary>Schedules a one-shot callback that can be cancelled independently of scheduled tasks.</summary>
-        /// <param name="key">Unique key identifying this callback.</param>
-        /// <param name="action">The action to run when due.</param>
-        /// <param name="delayMs">Delay in milliseconds before the action runs.</param>
-        public void ScheduleCallback(string key, Action action, int delayMs)
-            => ScheduleCallbackCore(_scheduler, key, action, delayMs);
-
-        /// <summary>Cancels a pending one-shot callback by key.</summary>
-        /// <param name="key">Unique key of the callback to cancel.</param>
-        public void CancelCallback(string key)
-            => CancelCallbackCore(_scheduler, key);
-
-        /// <summary>Returns whether a one-shot callback with the given key is still pending.</summary>
-        /// <param name="key">Unique key to check.</param>
-        /// <returns><c>true</c> if the callback is pending; otherwise <c>false</c>.</returns>
-        public bool IsCallbackPending(string key)
-            => IsCallbackPendingCore(_scheduler, key);
-
-        /// <summary>Cancels all pending callbacks whose key starts with <paramref name="prefix" />.</summary>
-        /// <param name="prefix">Key prefix to match.</param>
-        public void CancelCallbacksByPrefix(string prefix)
-            => CancelCallbacksByPrefixCore(_scheduler, prefix);
-
-        /// <summary>Coalesces repeated calls so <paramref name="action" /> runs at most once per <paramref name="windowMs" /> window.</summary>
-        /// <param name="key">Unique key identifying this coalesced task.</param>
-        /// <param name="action">The action to run when the window elapses.</param>
-        /// <param name="windowMs">Coalescing window in milliseconds.</param>
-        /// <param name="maxDelayMs">Optional hard cap after which the action runs regardless of further calls.</param>
-        public void Coalesce(string key, Action action, int windowMs, int maxDelayMs = -1)
-            => CoalesceCore(_scheduler, key, action, windowMs, maxDelayMs);
-
-        /// <summary>Queues <paramref name="action" /> to run at the end of the current tick.</summary>
-        /// <param name="action">The action to run.</param>
-        public void AtEndOfTick(Action action)
-            => AtEndOfTickCore(_scheduler, action);
-
-        /// <summary>Cancels a pending scheduled task by key.</summary>
-        /// <param name="key">Unique key of the task to cancel.</param>
-        public void Cancel(string key)
-            => CancelCore(_scheduler, key);
-
-        /// <summary>Returns whether a scheduled task with the given key is still pending.</summary>
-        /// <param name="key">Unique key to check.</param>
-        /// <returns><c>true</c> if the task is pending; otherwise <c>false</c>.</returns>
-        public bool IsPending(string key)
-            => IsPendingCore(_scheduler, key);
-    }
-
-    private static void ScheduleCore(Scheduler scheduler, string key, Action action, int delayMs)
+    private void ScheduleCore(Scheduler scheduler, string key, Action action, int delayMs)
     {
         if (string.IsNullOrWhiteSpace(key)) throw new ArgumentException("Key cannot be empty.", nameof(key));
         if (action is null) throw new ArgumentNullException(nameof(action));
@@ -389,7 +321,7 @@ public static class DeferredWork
         }
     }
 
-    private static void ScheduleCallbackCore(Scheduler scheduler, string key, Action action, int delayMs)
+    private void ScheduleCallbackCore(Scheduler scheduler, string key, Action action, int delayMs)
     {
         if (string.IsNullOrWhiteSpace(key)) throw new ArgumentException("Key cannot be empty.", nameof(key));
         if (action is null) throw new ArgumentNullException(nameof(action));
@@ -416,21 +348,15 @@ public static class DeferredWork
                 {
                     scheduler.Callbacks.Remove(key);
                 }
-                try
-                {
-                    action();
-                }
-                catch (Exception ex)
-                {
-                    api.Logger?.Warning("[ArcanumLib] Deferred callback '{0}' failed: {1}", key, ex.Message);
-                }
+                try { action(); }
+                catch (Exception ex) { api.Logger?.Warning("[ArcanumLib] Deferred callback '{0}' failed: {1}", key, ex.Message); }
             }, delayMs);
 
             scheduler.Callbacks[key] = callbackId;
         }
     }
 
-    private static void CancelCallbackCore(Scheduler scheduler, string key)
+    private void CancelCallbackCore(Scheduler scheduler, string key)
     {
         if (string.IsNullOrWhiteSpace(key)) return;
         lock (_syncLock)
@@ -444,7 +370,7 @@ public static class DeferredWork
         }
     }
 
-    private static bool IsCallbackPendingCore(Scheduler scheduler, string key)
+    private bool IsCallbackPendingCore(Scheduler scheduler, string key)
     {
         if (string.IsNullOrWhiteSpace(key)) return false;
         lock (_syncLock)
@@ -453,7 +379,7 @@ public static class DeferredWork
         }
     }
 
-    private static void CancelCallbacksByPrefixCore(Scheduler scheduler, string prefix)
+    private void CancelCallbacksByPrefixCore(Scheduler scheduler, string prefix)
     {
         if (string.IsNullOrEmpty(prefix)) return;
         lock (_syncLock)
@@ -473,7 +399,7 @@ public static class DeferredWork
         }
     }
 
-    private static void CoalesceCore(Scheduler scheduler, string key, Action action, int windowMs, int maxDelayMs = -1)
+    private void CoalesceCore(Scheduler scheduler, string key, Action action, int windowMs, int maxDelayMs = -1)
     {
         if (string.IsNullOrWhiteSpace(key)) throw new ArgumentException("Key cannot be empty.", nameof(key));
         if (action is null) throw new ArgumentNullException(nameof(action));
@@ -505,7 +431,7 @@ public static class DeferredWork
         }
     }
 
-    private static void AtEndOfTickCore(Scheduler scheduler, Action action)
+    private void AtEndOfTickCore(Scheduler scheduler, Action action)
     {
         if (action is null) throw new ArgumentNullException(nameof(action));
         lock (_syncLock)
@@ -514,7 +440,7 @@ public static class DeferredWork
         }
     }
 
-    private static void CancelCore(Scheduler scheduler, string key)
+    private void CancelCore(Scheduler scheduler, string key)
     {
         if (string.IsNullOrWhiteSpace(key)) return;
         lock (_syncLock)
@@ -523,12 +449,22 @@ public static class DeferredWork
         }
     }
 
-    private static bool IsPendingCore(Scheduler scheduler, string key)
+    private bool IsPendingCore(Scheduler scheduler, string key)
     {
         if (string.IsNullOrWhiteSpace(key)) return false;
         lock (_syncLock)
         {
             return scheduler.Tasks.ContainsKey(key);
         }
+    }
+
+    /// <summary>
+    /// Disposes the service, stops all schedulers, and clears pending work.
+    /// </summary>
+    public void Dispose()
+    {
+        if (_disposed) return;
+        _disposed = true;
+        Stop();
     }
 }

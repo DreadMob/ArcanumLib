@@ -1,4 +1,6 @@
+using System.Reflection;
 using ArcanumLib.Common;
+using ArcanumLib.Core;
 using NSubstitute;
 using Vintagestory.API.Common;
 using Vintagestory.API.Server;
@@ -11,12 +13,12 @@ public class OnlinePlayerCacheTests : IDisposable
 {
     public OnlinePlayerCacheTests()
     {
-        new OnlinePlayerCache().Dispose();
+        ArcanumRuntime.Activate();
     }
 
     public void Dispose()
     {
-        new OnlinePlayerCache().Dispose();
+        ArcanumRuntime.Current?.Dispose();
     }
 
     [Fact]
@@ -28,9 +30,9 @@ public class OnlinePlayerCacheTests : IDisposable
         var cache = new OnlinePlayerCache();
         cache.StartServerSide(sapi);
 
-        Assert.Equal(1, OnlinePlayerCache.Count);
-        Assert.Same(player, OnlinePlayerCache.GetByUid("uid1"));
-        Assert.True(OnlinePlayerCache.IsLoaded);
+        Assert.Equal(1, cache.Count);
+        Assert.Same(player, cache.GetByUid("uid1"));
+        Assert.True(cache.IsLoaded);
 
         cache.Dispose();
     }
@@ -44,15 +46,15 @@ public class OnlinePlayerCacheTests : IDisposable
         var cache = new OnlinePlayerCache();
         cache.StartServerSide(sapi);
 
-        Assert.Single(OnlinePlayerCache.All);
+        Assert.Single(cache.All);
 
         var player2 = CreatePlayer("uid2");
         sapi.World.AllOnlinePlayers.Returns(new IPlayer[] { player1, player2 });
 
-        cache.GetType().GetMethod("Rebuild", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static)!.Invoke(null, null);
+        cache.GetType().GetMethod("Rebuild", BindingFlags.NonPublic | BindingFlags.Instance)!.Invoke(cache, null);
 
-        Assert.Equal(2, OnlinePlayerCache.Count);
-        Assert.NotNull(OnlinePlayerCache.GetByUid("uid2"));
+        Assert.Equal(2, cache.Count);
+        Assert.NotNull(cache.GetByUid("uid2"));
 
         cache.Dispose();
     }
@@ -64,20 +66,32 @@ public class OnlinePlayerCacheTests : IDisposable
 
         var cache = new OnlinePlayerCache();
         cache.StartServerSide(sapi);
-        Assert.Equal(1, OnlinePlayerCache.Count);
+        Assert.Equal(1, cache.Count);
 
         cache.Dispose();
 
-        Assert.Equal(0, OnlinePlayerCache.Count);
-        Assert.False(OnlinePlayerCache.IsLoaded);
-        Assert.Null(OnlinePlayerCache.GetByUid("uid1"));
+        Assert.Equal(0, cache.Count);
+        Assert.False(cache.IsLoaded);
+        Assert.Null(cache.GetByUid("uid1"));
     }
 
     [Fact]
     public void GetByUid_EmptyUid_ReturnsNull()
     {
-        Assert.Null(OnlinePlayerCache.GetByUid(""));
-        Assert.Null(OnlinePlayerCache.GetByUid("   "));
+        var cache = new OnlinePlayerCache();
+        Assert.Null(cache.GetByUid(""));
+        Assert.Null(cache.GetByUid("   "));
+    }
+
+    [Fact]
+    public void FreshCache_HasEmptyState()
+    {
+        var cache = new OnlinePlayerCache();
+        Assert.Equal(0, cache.Count);
+        Assert.Empty(cache.All);
+        Assert.Empty(cache.ByUid);
+        Assert.False(cache.IsLoaded);
+        Assert.Null(cache.GetByUid("anyone"));
     }
 
     private static IServerPlayer CreatePlayer(string uid)

@@ -5,11 +5,11 @@ nav_order: 60
 has_children: true
 ---
 
-# DeferredWork
+# DeferredWorkService
 
 ## What is it for?
 
-`ArcanumLib.Performance.DeferredWork` is a game-tick scheduler for one-shot, coalesced, callback, and end-of-tick work. It helps avoid multiple immediate callbacks when several systems react to the same event by collecting work and executing it in a controlled order on the main game thread.
+`ArcanumLib.Performance.DeferredWorkService` is a game-tick scheduler for one-shot, coalesced, callback, and end-of-tick work. It helps avoid multiple immediate callbacks when several systems react to the same event by collecting work and executing it in a controlled order on the main game thread.
 
 ## When to use it
 
@@ -23,18 +23,22 @@ has_children: true
 ## Quick example
 
 ```csharp
-DeferredWork.Schedule("spawn-particles", () => SpawnParticles(pos), 250);
+using ArcanumLib.Core;
+using ArcanumLib.Performance;
+
+var dw = ArcanumServices.Get<DeferredWorkService>()!;
+dw.Schedule("spawn-particles", () => SpawnParticles(pos), 250);
 ```
 
 ## Usage
 
-`DeferredWork` is managed by `ArcanumPerformanceModSystem`, which starts client and server schedulers automatically.
+`DeferredWorkService` is registered in `ArcanumServices` by `ArcanumLibModSystem`, which starts client and server schedulers automatically.
 
-The static methods (`Schedule`, `Coalesce`, etc.) pick the right side automatically based on the calling thread. For code that runs on a known side, you can use the explicit scopes:
+The instance methods (`Schedule`, `Coalesce`, etc.) pick the right side automatically based on the calling thread. For code that runs on a known side, you can use the explicit scopes:
 
 ```csharp
-DeferredWork.Server.Schedule("save-all", () => Save(), 1000);
-DeferredWork.Client.Schedule("spawn-fx", () => SpawnFx(pos), 100);
+dw.Server.Schedule("save-all", () => Save(), 1000);
+dw.Client.Schedule("spawn-fx", () => SpawnFx(pos), 100);
 ```
 
 | Method | Description |
@@ -52,40 +56,40 @@ DeferredWork.Client.Schedule("spawn-fx", () => SpawnFx(pos), 100);
 ### Schedule a one-shot task
 
 ```csharp
-DeferredWork.Schedule("spawn-particles", () => SpawnParticles(pos), 250);
+dw.Schedule("spawn-particles", () => SpawnParticles(pos), 250);
 ```
 
 ### Coalesce repeated events
 
 ```csharp
-DeferredWork.Coalesce("rebuild-mesh", () => meshManager.MarkDirty(pos), 100, 500);
+dw.Coalesce("rebuild-mesh", () => meshManager.MarkDirty(pos), 100, 500);
 ```
 
 ### Schedule a one-shot callback
 
 ```csharp
-DeferredWork.ScheduleCallback("player-123-fx", () => SpawnFx(pos), 250);
+dw.ScheduleCallback("player-123-fx", () => SpawnFx(pos), 250);
 ```
 
 ### Cancel callbacks by prefix
 
 ```csharp
 // Cancel all callbacks for a player when they disconnect.
-DeferredWork.CancelCallbacksByPrefix("player-123-");
+dw.CancelCallbacksByPrefix("player-123-");
 ```
 
 ### Run work at the end of the tick
 
 ```csharp
-DeferredWork.AtEndOfTick(() => FlushBuffers());
+dw.AtEndOfTick(() => FlushBuffers());
 ```
 
 ### Cancel or check pending work
 
 ```csharp
-DeferredWork.Cancel("spawn-particles");
+dw.Cancel("spawn-particles");
 
-if (DeferredWork.IsPending("rebuild-mesh"))
+if (dw.IsPending("rebuild-mesh"))
 {
     // still waiting
 }
@@ -97,3 +101,4 @@ if (DeferredWork.IsPending("rebuild-mesh"))
 - Exceptions in deferred and end-of-tick tasks are logged and do not stop the tick loop.
 - `AtEndOfTick` actions are capped at 100 per tick to avoid infinite cascading.
 - Client and server schedulers are independent. In singleplayer, each side gets its own task queue.
+- The service is registered in `ArcanumServices` by `ArcanumLibModSystem` during startup and disposed on world unload.

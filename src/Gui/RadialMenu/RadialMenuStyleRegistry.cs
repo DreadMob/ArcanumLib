@@ -1,5 +1,5 @@
 using System;
-using System.Collections.Generic;
+using System.Collections.Concurrent;
 
 namespace ArcanumLib.Gui.RadialMenu;
 
@@ -7,10 +7,12 @@ namespace ArcanumLib.Gui.RadialMenu;
 /// Static registry for <see cref="IRadialMenuStyle" /> implementations.
 /// Consumers register custom styles by string key; the radial menu looks them
 /// up at draw time. A built-in <c>"default"</c> style is always available.
+/// The registry is thread-safe and safe to query from render threads while
+/// mods register styles on startup.
 /// </summary>
 public static class RadialMenuStyleRegistry
 {
-    private static readonly Dictionary<string, IRadialMenuStyle> _styles =
+    private static readonly ConcurrentDictionary<string, IRadialMenuStyle> _styles =
         new(StringComparer.OrdinalIgnoreCase);
 
     private static readonly DefaultRadialMenuStyle _fallback = new();
@@ -35,7 +37,7 @@ public static class RadialMenuStyleRegistry
     {
         if (string.IsNullOrEmpty(key) || key.Equals("default", StringComparison.OrdinalIgnoreCase))
             return false;
-        return _styles.Remove(key);
+        return _styles.TryRemove(key, out _);
     }
 
     /// <summary>

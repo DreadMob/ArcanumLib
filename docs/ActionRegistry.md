@@ -4,7 +4,7 @@ title: ActionRegistry
 nav_order: 30
 ---
 
-# ActionRegistry
+# ActionRegistryService
 
 Register typed handlers and execute JSON action descriptors with validation, cooldowns, and permissions.
 
@@ -27,6 +27,7 @@ This replaces the older `ItemAction` data-only descriptor with a full execution 
 
 ```csharp
 using ArcanumLib.Actions;
+using ArcanumLib.Core;
 
 public class TeleportAction : IActionHandler
 {
@@ -47,7 +48,8 @@ public class TeleportAction : IActionHandler
 }
 
 // In StartServerSide:
-ActionRegistry.Register(new TeleportAction());
+var registry = ArcanumServices.Get<ActionRegistryService>(ArcanumServiceScope.Server)!;
+registry.Register(new TeleportAction());
 ```
 
 ### Declare in JSON
@@ -64,9 +66,10 @@ ActionRegistry.Register(new TeleportAction());
 ### Execute
 
 ```csharp
+var executor = ArcanumServices.Get<ActionExecutorService>(ArcanumServiceScope.Server)!;
 var descriptor = ActionDescriptor.FromJson(jsonString);
 var context = new ActionContext(sapi, player, itemSlot, targetPos);
-ActionResult result = ActionExecutor.Execute(descriptor, context);
+ActionResult result = executor.Execute(descriptor, context);
 
 if (result.IsSuccess)
     sapi.Logger.Notification("Action succeeded.");
@@ -76,7 +79,7 @@ else
 
 ## API overview
 
-### ActionRegistry
+### ActionRegistryService
 
 | Method | Description |
 |--------|-------------|
@@ -90,7 +93,7 @@ else
 | `ExecuteAll(descriptors, context, continueOnError)` | Executes a sequence. |
 | `Clear()` | Clears all handlers. |
 
-### ActionExecutor
+### ActionExecutorService
 
 | Method | Description |
 |--------|---------|
@@ -132,7 +135,7 @@ The context's `Extra` dictionary is checked. Set values before executing:
 ```csharp
 var context = new ActionContext(sapi, player, itemSlot, targetPos);
 context.Extra["reputation"] = 150;
-ActionResult result = ActionExecutor.Execute(descriptor, context);
+ActionResult result = executor.Execute(descriptor, context);
 ```
 
 #### Condition types
@@ -159,8 +162,8 @@ ActionResult result = ActionExecutor.Execute(descriptor, context);
 
 ## Notes
 
-- The static `ActionRegistry` and `ActionExecutor` are facades that delegate to `ActionRegistryService` and `ActionExecutorService` registered in `ArcanumServices`.
+- `ActionRegistryService` and `ActionExecutorService` are registered in `ArcanumServices` (Server scope) by `ArcanumDataModSystem` during `StartServerSide`.
 - The registry is thread-safe (locked).
 - Cooldowns are per-player per-action-id, tracked server-side, and use `World.ElapsedMilliseconds`.
-- `ActionRegistryModSystem` creates, registers, and clears the services on world unload and player disconnect.
+- `ArcanumDataModSystem.Dispose()` unregisters the services on world unload.
 - Handlers should not throw; exceptions are caught and returned as `Failed`.

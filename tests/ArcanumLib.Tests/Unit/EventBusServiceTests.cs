@@ -8,21 +8,18 @@ public record TestEvent : IEvent
     public int Value { get; init; }
 }
 
-public class EventBusTests
+public class EventBusServiceTests
 {
-    public EventBusTests()
-    {
-        EventBus.ClearAll();
-    }
+    private readonly EventBusService _bus = new();
 
     [Fact]
     public void Subscribe_And_Publish_DeliversPayload()
     {
         TestEvent? received = null;
 
-        EventBus.Subscribe<TestEvent>(e => received = e);
+        _bus.Subscribe<TestEvent>(e => received = e);
         var evt = new TestEvent { Value = 42 };
-        EventBus.Publish(evt);
+        _bus.Publish(evt);
 
         Assert.NotNull(received);
         Assert.Equal(42, received!.Value);
@@ -32,9 +29,9 @@ public class EventBusTests
     public void Publish_OnlyHitsSameTypeSubscribers()
     {
         int count = 0;
-        EventBus.Subscribe<TestEvent>(_ => count++);
+        _bus.Subscribe<TestEvent>(_ => count++);
 
-        EventBus.Publish(new TestEvent { Value = 1 });
+        _bus.Publish(new TestEvent { Value = 1 });
 
         Assert.Equal(1, count);
     }
@@ -43,10 +40,10 @@ public class EventBusTests
     public void Unsubscribe_StopsDelivery()
     {
         int count = 0;
-        using var sub = EventBus.Subscribe<TestEvent>(_ => count++);
+        using var sub = _bus.Subscribe<TestEvent>(_ => count++);
 
         sub.Dispose();
-        EventBus.Publish(new TestEvent { Value = 1 });
+        _bus.Publish(new TestEvent { Value = 1 });
 
         Assert.Equal(0, count);
     }
@@ -55,10 +52,10 @@ public class EventBusTests
     public void Tagged_Subscribe_DoesNotReceiveUntaggedEvents()
     {
         int count = 0;
-        EventBus.Subscribe<TestEvent>("tag", _ => count++);
+        _bus.Subscribe<TestEvent>("tag", _ => count++);
 
-        EventBus.Publish(new TestEvent { Value = 1 });
-        EventBus.Publish("tag", new TestEvent { Value = 2 });
+        _bus.Publish(new TestEvent { Value = 1 });
+        _bus.Publish("tag", new TestEvent { Value = 2 });
 
         Assert.Equal(1, count);
     }
@@ -67,10 +64,10 @@ public class EventBusTests
     public void Clear_RemovesSubscribers()
     {
         int count = 0;
-        EventBus.Subscribe<TestEvent>(_ => count++);
-        EventBus.Clear<TestEvent>();
+        _bus.Subscribe<TestEvent>(_ => count++);
+        _bus.Clear<TestEvent>();
 
-        EventBus.Publish(new TestEvent { Value = 1 });
+        _bus.Publish(new TestEvent { Value = 1 });
 
         Assert.Equal(0, count);
     }
@@ -78,15 +75,15 @@ public class EventBusTests
     [Fact]
     public void SubscriberCount_IsCorrect()
     {
-        Assert.Equal(0, EventBus.SubscriberCount<TestEvent>());
+        Assert.Equal(0, _bus.SubscriberCount<TestEvent>());
 
-        var sub1 = EventBus.Subscribe<TestEvent>(_ => { });
-        var sub2 = EventBus.Subscribe<TestEvent>(_ => { });
+        var sub1 = _bus.Subscribe<TestEvent>(_ => { });
+        var sub2 = _bus.Subscribe<TestEvent>(_ => { });
 
-        Assert.Equal(2, EventBus.SubscriberCount<TestEvent>());
+        Assert.Equal(2, _bus.SubscriberCount<TestEvent>());
 
         sub1.Dispose();
-        Assert.Equal(1, EventBus.SubscriberCount<TestEvent>());
+        Assert.Equal(1, _bus.SubscriberCount<TestEvent>());
 
         sub2.Dispose();
     }
@@ -95,9 +92,9 @@ public class EventBusTests
     public void Publish_UntypedTag_DeliversToUntypedSubscribers()
     {
         object? received = null;
-        EventBus.Subscribe("mytag", payload => received = payload);
+        _bus.Subscribe("mytag", payload => received = payload);
 
-        EventBus.Publish("mytag", 123);
+        _bus.Publish("mytag", 123);
 
         Assert.Equal(123, received);
     }
@@ -105,6 +102,6 @@ public class EventBusTests
     [Fact]
     public void Publish_Untyped_DoesNotThrow_OnEmptyTag()
     {
-        Assert.Equal(0, EventBus.Publish("", 123));
+        Assert.Equal(0, _bus.Publish("", 123));
     }
 }

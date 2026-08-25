@@ -85,7 +85,7 @@ Keep the server/client responsive.
 
 | Page | Purpose |
 |------|---------|
-| [DeferredWork]({{ site.baseurl }}{% link DeferredWork.md %}) | Game-tick scheduler for one-shot, callback, and coalesced work. |
+| [DeferredWorkService]({{ site.baseurl }}{% link DeferredWork.md %}) | Game-tick scheduler for one-shot, callback, and coalesced work. |
 | [StatCoalescingEngine]({{ site.baseurl }}{% link StatCoalescingEngine.md %}) | Batch `EntityStats.Set` calls into a single network sync. |
 | [GameTimeScheduler]({{ site.baseurl }}{% link GameTimeScheduler.md %}) | Schedule recurring actions by in-game time (daily, hourly, after N hours). |
 | [TimedCache]({{ site.baseurl }}{% link TimedCache.md %}) | Thread-safe cache with TTL eviction. |
@@ -95,7 +95,7 @@ Keep the server/client responsive.
 
 | Page | Purpose |
 |------|---------|
-| [EventBus]({{ site.baseurl }}{% link EventBus.md %}) | Typed publish/subscribe event bus for cross-mod communication. |
+| [EventBusService]({{ site.baseurl }}{% link EventBus.md %}) | Typed publish/subscribe event bus for cross-mod communication. |
 | [CommandBuilder]({{ site.baseurl }}{% link CommandBuilder.md %}) | Fluent command framework with typed arguments, permissions, and autocomplete. |
 
 ## Diagnostics

@@ -9,11 +9,12 @@ namespace ArcanumLib.Actions;
 /// <summary>
 /// Instance-based executor for <see cref="ActionDescriptor" /> instances.
 /// Tracks per-player, per-action cooldowns and delegates execution to
-/// <see cref="ActionRegistry" />.
+/// <see cref="ActionRegistryService" />.
 /// </summary>
-internal sealed class ActionExecutorService
+public sealed class ActionExecutorService
 {
     private readonly ICoreServerAPI? _sapi;
+    private readonly ActionRegistryService _registry;
     private readonly Dictionary<long, Dictionary<string, long>> _cooldowns = new();
     private readonly object _syncLock = new();
 
@@ -22,9 +23,13 @@ internal sealed class ActionExecutorService
     /// If no API is supplied, the service will resolve one from <see cref="ArcanumServices" />.
     /// </summary>
     /// <param name="sapi">The server API instance.</param>
-    public ActionExecutorService(ICoreServerAPI? sapi = null)
+    /// <param name="registry">The action registry used to execute actions. If null, resolves from <see cref="ArcanumServices" />.</param>
+    public ActionExecutorService(ICoreServerAPI? sapi = null, ActionRegistryService? registry = null)
     {
         _sapi = sapi;
+        _registry = registry ?? ArcanumServices.Get<ActionRegistryService>()
+            ?? throw new InvalidOperationException(
+                "ActionRegistryService is not registered. Ensure ActionRegistryModSystem has started.");
     }
 
     /// <summary>
@@ -81,7 +86,7 @@ internal sealed class ActionExecutorService
             context.TargetPos,
             descriptor.Args);
 
-        var result = ActionRegistry.Execute(descriptor, effectiveContext);
+        var result = _registry.Execute(descriptor, effectiveContext);
 
         // Record cooldown on success.
         if (result.IsSuccess && descriptor.CooldownMs > 0 && context.PlayerEntity != null)

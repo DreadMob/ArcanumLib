@@ -4,13 +4,13 @@ title: EventBus
 nav_order: 50
 ---
 
-# EventBus
+# EventBusService
 
 Typed publish/subscribe event bus for cross-mod communication.
 
 ## What is it for?
 
-Vintage Story mods communicate through direct `ModSystem` references or watched attributes. `EventBus` provides a typed pub/sub channel: mods can publish events without knowing who subscribes, and subscribe to event types without a hard reference to the publisher.
+Vintage Story mods communicate through direct `ModSystem` references or watched attributes. `EventBusService` provides a typed pub/sub channel: mods can publish events without knowing who subscribes, and subscribe to event types without a hard reference to the publisher.
 
 ## When to use it
 
@@ -36,11 +36,13 @@ public record PlayerKilledEvent : IEvent
 ### Subscribe
 
 ```csharp
+using ArcanumLib.Core;
 using ArcanumLib.Events;
 
-var sub = EventBus.Subscribe<PlayerKilledEvent>(e =>
+var bus = ArcanumServices.Get<EventBusService>();
+var sub = bus!.Subscribe<PlayerKilledEvent>(e =>
 {
-    Logger.Notification("Player {0} was killed by {1}", e.VictimUid, e.KillerUid);
+    ArcanumServices.Get<ICoreAPI>()?.Logger.Notification("Player {0} was killed by {1}", e.VictimUid, e.KillerUid);
 });
 
 // Later: sub.Dispose() unsubscribes.
@@ -50,7 +52,7 @@ var sub = EventBus.Subscribe<PlayerKilledEvent>(e =>
 ### Publish
 
 ```csharp
-EventBus.Publish(new PlayerKilledEvent
+bus!.Publish(new PlayerKilledEvent
 {
     VictimUid = victim.PlayerUID,
     KillerUid = killer?.PlayerUID ?? "environment",
@@ -60,7 +62,7 @@ EventBus.Publish(new PlayerKilledEvent
 
 ## API overview
 
-### `EventBus.Subscribe<T>(Action<T> handler, EventBusPriority priority)`
+### `Subscribe<T>(Action<T> handler, EventBusPriority priority)`
 
 Subscribes a handler to events of type `T`. Returns an `EventBusSubscription` that unsubscribes on dispose.
 
@@ -69,39 +71,39 @@ Subscribes a handler to events of type `T`. Returns an `EventBusSubscription` th
 | `handler` | `Action<T>` | Called when an event of type `T` is published. |
 | `priority` | `EventBusPriority` | Higher priority handlers run first. Default is `Normal`. |
 
-### `EventBus.Publish<T>(T evt)`
+### `Publish<T>(T evt)`
 
 Publishes an event to all subscribers of type `T`. Handlers run synchronously in priority order. Exceptions in one handler do not block subsequent handlers.
 
 Returns the number of handlers invoked.
 
-### `EventBus.PublishAsync<T>(T evt)`
+### `PublishAsync<T>(T evt)`
 
 Publishes an event on the next game tick, marshalled to the main thread. Use this when handlers may touch entities or world state that must be accessed on the main thread. If no API/world is available, falls back to synchronous publish.
 
 Returns the number of handlers that will be invoked.
 
-### `EventBus.Clear<T>()`
+### `Clear<T>()`
 
 Removes all subscriptions for event type `T`.
 
-### `EventBus.ClearAll()`
+### `ClearAll()`
 
 Removes all subscriptions for all event types. Intended for world shutdown.
 
-### `EventBus.SubscriberCount<T>()`
+### `SubscriberCount<T>()`
 
 Returns the number of active subscriptions for event type `T`.
 
-### `EventBus.GetDiagnostics()`
+### `GetDiagnostics()`
 
 Returns a list of `EventBusSubscriptionInfo` records for every tracked subscription, including invocation count, average time, and last error. See [Diagnostics]({{ site.baseurl }}{% link Diagnostics.md %}) for details.
 
-### `EventBus.GetDanglingSubscriptions()`
+### `GetDanglingSubscriptions()`
 
 Returns a list of subscription keys (`EventType[Tag]`) that have active subscribers but were never published. Useful for detecting typo'd event names.
 
-### `EventBus.ActiveSubscriptionCount()`
+### `ActiveSubscriptionCount()`
 
 Returns the total number of active (non-disposed) subscriptions across all event types and tags.
 
@@ -120,3 +122,4 @@ Returns the total number of active (non-disposed) subscriptions across all event
 - `EventBusSubscription` implements `IDisposable` — add it to a `CleanupScope` for automatic cleanup.
 - Exceptions in handlers are logged and swallowed so one bad handler doesn't break the bus.
 - Events are plain classes or records implementing `IEvent` (a marker interface).
+- The service is registered in `ArcanumServices` by `ArcanumLibModSystem` during startup and disposed on world unload.

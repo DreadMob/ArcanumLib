@@ -1,5 +1,7 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
+using ArcanumLib.Core;
 using ArcanumLib.Effects;
 using NSubstitute;
 using Vintagestory.API.Common;
@@ -8,12 +10,18 @@ using Xunit;
 
 namespace ArcanumLib.Tests.Unit;
 
-[Collection("EffectState")]
-public class StatusEffectServiceTests
+[Collection("ArcanumServices")]
+public class StatusEffectServiceTests : IDisposable
 {
     public StatusEffectServiceTests()
     {
-        EffectResistanceStore.ClearAll();
+        ArcanumRuntime.Activate();
+        ArcanumServices.Register(new EffectResistanceService());
+    }
+
+    public void Dispose()
+    {
+        ArcanumRuntime.Current?.Dispose();
     }
 
     [Fact]
@@ -109,7 +117,7 @@ public class StatusEffectServiceTests
         var entity = new DummyEntity(6);
         var effect = CreateEffect("cold", EnumStackMode.Refresh, tags: new[] { "ice" });
 
-        EffectResistanceStore.AddImmunity(entity, "ice");
+        ArcanumServices.Get<EffectResistanceService>()!.AddImmunity(entity, "ice");
 
         Assert.Null(service.Apply(entity, effect, 1000f));
     }
@@ -121,7 +129,7 @@ public class StatusEffectServiceTests
         var entity = new DummyEntity(7);
         var effect = CreateEffect("shock", EnumStackMode.Refresh, tags: new[] { "lightning" });
 
-        EffectResistanceStore.AddResistance(entity, "lightning", 0.5f);
+        ArcanumServices.Get<EffectResistanceService>()!.AddResistance(entity, "lightning", 0.5f);
 
         var instance = service.Apply(entity, effect, 1000f);
 

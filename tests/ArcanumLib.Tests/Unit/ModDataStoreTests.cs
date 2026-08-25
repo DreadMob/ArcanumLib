@@ -12,13 +12,13 @@ public class ModDataStoreTests : IDisposable
 {
     public ModDataStoreTests()
     {
-        ArcanumServices.Shutdown();
+        ArcanumRuntime.Activate();
         ModDataStore.Clear();
     }
 
     public void Dispose()
     {
-        ArcanumServices.Shutdown();
+        ArcanumRuntime.Current?.Dispose();
         ModDataStore.Clear();
     }
 

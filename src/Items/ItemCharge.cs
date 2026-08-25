@@ -17,6 +17,9 @@ namespace ArcanumLib.Items
     {
         /// <summary>
         /// Default configuration with <c>arcanumlib:</c> keys and no legacy prefixes.
+        /// This instance is shared across all callers and must not be mutated.
+        /// To customize charge behavior, create a new <see cref="ItemChargeConfig" />
+        /// instance and pass it to the relevant method's <c>config</c> parameter.
         /// </summary>
         public static ItemChargeConfig DefaultConfig { get; } = new();
 
@@ -37,6 +40,33 @@ namespace ArcanumLib.Items
             {
                 if (stack.Attributes.HasAttribute(key))
                     return key;
+            }
+
+            // Fallback: scan for any attribute ending with a known charge suffix.
+            // This handles dynamically-named charge keys (e.g. "furcoatchargehours")
+            // that are not pre-listed in the config's prefix/suffix combinations.
+            if (stack.Attributes is TreeAttribute tree)
+            {
+                string? firstMatch = null;
+                foreach (var kvp in tree)
+                {
+                    if (!string.IsNullOrEmpty(config.TimeChargeSuffix) && kvp.Key.EndsWith(config.TimeChargeSuffix))
+                    {
+                        firstMatch ??= kvp.Key;
+                        continue;
+                    }
+                    if (!string.IsNullOrEmpty(config.UseChargeSuffix) && kvp.Key.EndsWith(config.UseChargeSuffix))
+                    {
+                        firstMatch ??= kvp.Key;
+                        continue;
+                    }
+                    if (!string.IsNullOrEmpty(config.PercentChargeSuffix) && kvp.Key.EndsWith(config.PercentChargeSuffix))
+                    {
+                        firstMatch ??= kvp.Key;
+                        continue;
+                    }
+                }
+                if (firstMatch != null) return firstMatch;
             }
 
             return null;

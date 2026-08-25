@@ -9,7 +9,7 @@ nav_order: 4
 
 ## What is it for?
 
-`ArcanumLib.Common.CleanupScope` groups disposable resources, `DeferredWork` keys, and game tick listener IDs so they can all be cancelled or released with a single `Dispose()` call.
+`ArcanumLib.Common.CleanupScope` groups disposable resources, `DeferredWorkService` keys, and game tick listener IDs so they can all be cancelled or released with a single `Dispose()` call.
 
 ## When to use it
 
@@ -61,7 +61,7 @@ public static class CleanupScopeExtensions
 
 | Method | Description |
 | --- | --- |
-| `AddDeferred` | Cancels a `DeferredWork` key on dispose. |
+| `AddDeferred` | Cancels a `DeferredWorkService` key on dispose. |
 | `AddListener` | Unregisters a game tick listener on dispose. |
 | `Add` / `Use` | Adds a nested `IDisposable` to dispose on cleanup. |
 | `CreateCleanupScope` | Extension on `ICoreAPI` that creates a new scope tied to the API. |

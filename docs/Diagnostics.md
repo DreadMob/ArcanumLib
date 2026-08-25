@@ -6,11 +6,11 @@ nav_order: 95
 
 # Diagnostics
 
-Runtime validation and monitoring for ArcanumLib modules, services, EventBus health, dependency chains, and server performance.
+Runtime validation and monitoring for ArcanumLib modules, services, EventBusService health, dependency chains, and server performance.
 
 ## What is it for?
 
-When a mod depends on `arcanumlib`, it relies on several services and ModSystems being registered at startup. If something is missing — a service not registered, a dependency version mismatch, an EventBus subscription leaking — the failure is often silent and hard to trace. `DiagnosticsModSystem` runs automatically at server start and exposes commands for on-demand checks.
+When a mod depends on `arcanumlib`, it relies on several services and ModSystems being registered at startup. If something is missing — a service not registered, a dependency version mismatch, an EventBusService subscription leaking — the failure is often silent and hard to trace. `DiagnosticsModSystem` runs automatically at server start and exposes commands for on-demand checks.
 
 ## When to use it
 
@@ -55,7 +55,7 @@ Verifies that expected ModSystems are loaded:
 
 Checks `PityTracker.Current` is initialized.
 
-### EventBus health
+### EventBusService health
 
 | Check | Description |
 |-------|-------------|
@@ -125,10 +125,10 @@ Peak memory: 3180 MB
 
 ### `/arcanum eventbus`
 
-Lists all tracked EventBus subscriptions with status, invocation count, average time, and last error. Also shows dangling subscriptions (tags with subscribers but no publishes).
+Lists all tracked EventBusService Subscriptions with status, invocation count, average time, and last error. Also shows dangling subscriptions (tags with subscribers but no publishes).
 
 ```
-=== EventBus Subscriptions ===
+=== EventBusService Subscriptions ===
 Total tracked: 24
 Active: 22
 
@@ -140,7 +140,7 @@ Active: 22
 Dangling (never published): 2
   - MyModEvent[custom.abandond]
   - PlayerDeathEvent[player.deaht]
-=== End EventBus ===
+=== End EventBusService ===
 ```
 
 ## Log file
@@ -153,11 +153,11 @@ Each diagnostics pass is appended to:
 
 The file is UTF-8 encoded and accumulates across server restarts. Each entry is timestamped and includes the full report with all sections.
 
-## EventBus diagnostic API
+## EventBusService diagnostic API
 
-The following static methods on `EventBus` are available for programmatic access:
+The following methods on `EventBusService` are available for programmatic access. Resolve the service via `ArcanumServices.Get<EventBusService>()`:
 
-### `EventBus.GetDiagnostics()`
+### `GetDiagnostics()`
 
 Returns `List<EventBusSubscriptionInfo>` with details about every tracked subscription:
 
@@ -172,11 +172,11 @@ Returns `List<EventBusSubscriptionInfo>` with details about every tracked subscr
 | `AverageInvocationMs` | `TotalInvocationMs / InvocationCount`, or 0 if never invoked. |
 | `LastError` | Last exception message thrown by the handler, if any. |
 
-### `EventBus.GetDanglingSubscriptions()`
+### `GetDanglingSubscriptions()`
 
 Returns `List<string>` of subscription keys (`EventType[Tag]`) that have active subscribers but were never published. Useful for detecting typo'd event names.
 
-### `EventBus.ActiveSubscriptionCount()`
+### `ActiveSubscriptionCount()`
 
 Returns the number of currently active (non-disposed) subscriptions across all event types and tags.
 

@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using ArcanumLib.Core;
 using Vintagestory.API.Common;
 using Vintagestory.API.Server;
 
@@ -11,39 +12,44 @@ namespace ArcanumLib.Common;
 /// Useful for consumers that would otherwise call sapi.World.AllOnlinePlayers repeatedly
 /// and cast every entry to IServerPlayer.
 /// </summary>
+/// <remarks>
+/// The active instance is registered in <see cref="ArcanumServices" /> during
+/// <see cref="StartServerSide" />. Resolve via
+/// <c>ArcanumRuntime.Current.Services.Get&lt;OnlinePlayerCache&gt;()</c>.
+/// </remarks>
 public class OnlinePlayerCache : ModSystem
 {
-    private static readonly object _syncLock = new();
-    private static readonly List<IServerPlayer> _all = new();
-    private static readonly Dictionary<string, IServerPlayer> _byUid = new(StringComparer.Ordinal);
+    private readonly object _syncLock = new();
+    private readonly List<IServerPlayer> _all = new();
+    private readonly Dictionary<string, IServerPlayer> _byUid = new(StringComparer.Ordinal);
 
     // Immutable snapshot references. Replaced, never modified, so reads are lock-free.
-    private static IServerPlayer[] _allSnapshot = Array.Empty<IServerPlayer>();
-    private static Dictionary<string, IServerPlayer> _byUidSnapshot = new(StringComparer.Ordinal);
+    private IServerPlayer[] _allSnapshot = Array.Empty<IServerPlayer>();
+    private Dictionary<string, IServerPlayer> _byUidSnapshot = new(StringComparer.Ordinal);
 
-    private static ICoreServerAPI? _sapi;
-    private static long _tickId;
+    private ICoreServerAPI? _sapi;
+    private long _tickId;
 
     /// <summary>Returns true once the cache has been initialized server-side.</summary>
-    public static bool IsLoaded { get; private set; }
+    public bool IsLoaded { get; private set; }
 
     /// <summary>All currently online server players.</summary>
-    public static IReadOnlyList<IServerPlayer> All => _allSnapshot;
+    public IReadOnlyList<IServerPlayer> All => _allSnapshot;
 
     /// <summary>Online server players indexed by UID.</summary>
-    public static IReadOnlyDictionary<string, IServerPlayer> ByUid => _byUidSnapshot;
+    public IReadOnlyDictionary<string, IServerPlayer> ByUid => _byUidSnapshot;
 
     /// <summary>Returns the online server player for the given UID, or null.</summary>
     /// <param name="playerUid">The unique player identifier.</param>
-    /// <returns>The by uid, or null if none is found.</returns>
-    public static IServerPlayer? GetByUid(string playerUid)
+    /// <returns>The player, or null if none is found.</returns>
+    public IServerPlayer? GetByUid(string playerUid)
     {
         if (string.IsNullOrWhiteSpace(playerUid)) return null;
         return _byUidSnapshot.TryGetValue(playerUid, out var player) ? player : null;
     }
 
     /// <summary>Current number of online server players.</summary>
-    public static int Count => _allSnapshot.Length;
+    public int Count => _allSnapshot.Length;
 
     /// <summary>Loads only on the server side, where online players are authoritative.</summary>
     /// <param name="forSide">The application side being tested.</param>
@@ -58,6 +64,8 @@ public class OnlinePlayerCache : ModSystem
     {
         _sapi = api;
         IsLoaded = true;
+
+        ArcanumServices.Register(this, ArcanumServiceScope.Server);
 
         Rebuild();
 
@@ -96,6 +104,8 @@ public class OnlinePlayerCache : ModSystem
             _byUidSnapshot = new Dictionary<string, IServerPlayer>(StringComparer.Ordinal);
         }
 
+        ArcanumServices.Unregister<OnlinePlayerCache>(ArcanumServiceScope.Server);
+
         base.Dispose();
     }
 
@@ -119,7 +129,7 @@ public class OnlinePlayerCache : ModSystem
         Remove(player);
     }
 
-    private static void Add(IServerPlayer? player)
+    private void Add(IServerPlayer? player)
     {
         if (player == null || string.IsNullOrWhiteSpace(player.PlayerUID)) return;
 
@@ -130,7 +140,7 @@ public class OnlinePlayerCache : ModSystem
         }
     }
 
-    private static void AddCore(IServerPlayer player)
+    private void AddCore(IServerPlayer player)
     {
         if (_byUid.ContainsKey(player.PlayerUID))
         {
@@ -142,7 +152,7 @@ public class OnlinePlayerCache : ModSystem
         _byUid[player.PlayerUID] = player;
     }
 
-    private static void Remove(IServerPlayer? player)
+    private void Remove(IServerPlayer? player)
     {
         if (player == null) return;
 
@@ -153,7 +163,7 @@ public class OnlinePlayerCache : ModSystem
         }
     }
 
-    private static void RemoveCore(IServerPlayer player)
+    private void RemoveCore(IServerPlayer player)
     {
         if (!_byUid.Remove(player.PlayerUID)) return;
 
@@ -167,7 +177,7 @@ public class OnlinePlayerCache : ModSystem
         }
     }
 
-    private static void Rebuild()
+    private void Rebuild()
     {
         lock (_syncLock)
         {
@@ -185,7 +195,7 @@ public class OnlinePlayerCache : ModSystem
         }
     }
 
-    private static void PublishSnapshot()
+    private void PublishSnapshot()
     {
         _allSnapshot = _all.ToArray();
         _byUidSnapshot = new Dictionary<string, IServerPlayer>(_byUid, StringComparer.Ordinal);

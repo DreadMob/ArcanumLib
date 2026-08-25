@@ -87,13 +87,16 @@ public override void StartClientSide(ICoreClientAPI capi)
 Run code on the game tick loop without a manual tick listener:
 
 ```csharp
+using ArcanumLib.Core;
 using ArcanumLib.Performance;
 
+var dw = ArcanumServices.Get<DeferredWorkService>()!;
+
 // On the server
-DeferredWork.Server.Schedule("mymod.cleanup", () => Cleanup(), 5000);
+dw.Server.Schedule("mymod.cleanup", () => Cleanup(), 5000);
 
 // On the client
-DeferredWork.Client.Schedule("mymod.fx", () => SpawnFx(), 250);
+dw.Client.Schedule("mymod.fx", () => SpawnFx(), 250);
 ```
 
 ## Status effects
@@ -101,14 +104,16 @@ DeferredWork.Client.Schedule("mymod.fx", () => SpawnFx(), 250);
 Apply timed buffs and debuffs to entities:
 
 ```csharp
+using ArcanumLib.Core;
 using ArcanumLib.Effects;
 
+var svc = ArcanumServices.Get<StatusEffectService>()!;
 var effect = new StatModifierEffect("mymod:swiftness", EntityStats.Speed, 1.5f);
-StatusEffectManager.Apply(entity, effect, durationMs: 10000, data: null);
+svc.Apply(entity, effect, durationMs: 10000, data: null);
 
-if (StatusEffectManager.Has(entity, "mymod:swiftness"))
+if (svc.Has(entity, "mymod:swiftness"))
 {
-    StatusEffectManager.Remove(entity, "mymod:swiftness");
+    svc.Remove(entity, "mymod:swiftness");
 }
 ```
 
@@ -161,5 +166,5 @@ var playtime = ArcanumServices.Get<PlaytimeTracker>(ArcanumServiceScope.Server);
 - See [`ModDataStore`](ModDataStore.md) for persistence patterns and migrations.
 - See [`CommandBuilder`](CommandBuilder.md) for command parser details.
 - See [`TypedNetworkChannel`](TypedNetworkChannel.md) for targeted and broadcast networking.
-- See [`DeferredWork`](DeferredWork.md) for scheduler patterns.
+- See [`DeferredWorkService`](DeferredWork.md) for scheduler patterns.
 - See [`StatusEffects`](StatusEffects.md) for custom effect types.

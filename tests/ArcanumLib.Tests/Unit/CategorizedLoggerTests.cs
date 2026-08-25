@@ -14,14 +14,14 @@ public class CategorizedLoggerTests : IDisposable
 
     public CategorizedLoggerTests()
     {
-        ArcanumServices.Shutdown();
+        ArcanumRuntime.Activate();
         _tempRoot = Path.Combine(Path.GetTempPath(), "arcanum-logger-tests-" + Path.GetRandomFileName());
         Directory.CreateDirectory(_tempRoot);
     }
 
     public void Dispose()
     {
-        ArcanumServices.Shutdown();
+        ArcanumRuntime.Current?.Dispose();
         try { Directory.Delete(_tempRoot, recursive: true); } catch { }
     }
 

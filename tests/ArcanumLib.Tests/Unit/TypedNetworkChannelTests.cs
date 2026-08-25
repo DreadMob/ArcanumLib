@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using ArcanumLib.Common;
+using ArcanumLib.Core;
 using ArcanumLib.Network;
 using NSubstitute;
 using Vintagestory.API.Client;
@@ -16,6 +17,7 @@ public class TypedNetworkChannelTests : IDisposable
 {
     public TypedNetworkChannelTests()
     {
+        ArcanumRuntime.Activate();
         // OnlinePlayerCache is used by SendToAllExcept; reset it before each test.
         new OnlinePlayerCache().Dispose();
     }
@@ -23,6 +25,7 @@ public class TypedNetworkChannelTests : IDisposable
     public void Dispose()
     {
         new OnlinePlayerCache().Dispose();
+        ArcanumRuntime.Current?.Dispose();
     }
 
     // ─── Constructor ───────────────────────────────────────────────

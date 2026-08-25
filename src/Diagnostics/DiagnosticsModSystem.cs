@@ -37,6 +37,8 @@ public class DiagnosticsModSystem : ModSystem
     private readonly List<MonitorSnapshot> _monitorHistory = new();
     private const int MaxMonitorHistory = 60;
 
+    private static EventBusService? EventBusService => ArcanumServices.Get<EventBusService>();
+
     /// <summary>Runs after all other ArcanumLib systems so registrations are complete.</summary>
     /// <returns>The execute order.</returns>
     public override double ExecuteOrder() => 1000;
@@ -262,7 +264,7 @@ public class DiagnosticsModSystem : ModSystem
         report.AppendLine($"  Errors:   {errors}");
         report.AppendLine($"  Warnings: {warnings}");
         report.AppendLine($"  Dependent mods: {dependentMods.Count}");
-        report.AppendLine($"  EventBus subscriptions: {EventBus.ActiveSubscriptionCount()}");
+        report.AppendLine($"  EventBus subscriptions: {EventBusService?.ActiveSubscriptionCount() ?? 0}");
         report.AppendLine($"  Result: {(errors == 0 ? "PASS" : "FAIL")}");
         report.AppendLine("=== End Diagnostics ===");
 
@@ -298,10 +300,10 @@ public class DiagnosticsModSystem : ModSystem
         int warnings = 0;
         report.AppendLine("-- EventBus Health --");
 
-        int activeCount = EventBus.ActiveSubscriptionCount();
+        int activeCount = EventBusService?.ActiveSubscriptionCount() ?? 0;
         report.AppendLine($"  [INFO] Active subscriptions: {activeCount}");
 
-        var subs = EventBus.GetDiagnostics();
+        var subs = EventBusService?.GetDiagnostics() ?? new List<EventBusSubscriptionInfo>();
         int disposedButTracked = subs.Count(s => s.IsDisposed);
         if (disposedButTracked > 0)
         {
@@ -326,7 +328,7 @@ public class DiagnosticsModSystem : ModSystem
         }
 
         // Dangling subscriptions (subscribed but never published)
-        var dangling = EventBus.GetDanglingSubscriptions();
+        var dangling = EventBusService?.GetDanglingSubscriptions() ?? new List<string>();
         if (dangling.Count > 0)
         {
             report.AppendLine($"  [WARN] {dangling.Count} subscription(s) on never-published tags (possible typos):");
@@ -694,9 +696,9 @@ public class DiagnosticsModSystem : ModSystem
                 {
                     var sb = new StringBuilder();
                     sb.AppendLine("=== EventBus Subscriptions ===");
-                    var subs = EventBus.GetDiagnostics();
+                    var subs = EventBusService?.GetDiagnostics() ?? new List<EventBusSubscriptionInfo>();
                     sb.AppendLine($"Total tracked: {subs.Count}");
-                    sb.AppendLine($"Active: {EventBus.ActiveSubscriptionCount()}");
+                    sb.AppendLine($"Active: {EventBusService?.ActiveSubscriptionCount() ?? 0}");
                     sb.AppendLine();
                     foreach (var s in subs.Take(20))
                     {
@@ -708,7 +710,7 @@ public class DiagnosticsModSystem : ModSystem
                     if (subs.Count > 20)
                         sb.AppendLine($"  ... and {subs.Count - 20} more");
                     sb.AppendLine();
-                    var dangling = EventBus.GetDanglingSubscriptions();
+                    var dangling = EventBusService?.GetDanglingSubscriptions() ?? new List<string>();
                     if (dangling.Count > 0)
                     {
                         sb.AppendLine($"Dangling (never published): {dangling.Count}");

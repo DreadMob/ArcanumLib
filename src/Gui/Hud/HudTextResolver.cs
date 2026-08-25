@@ -18,10 +18,10 @@ public static class HudTextResolver
     /// <param name="text">The raw text, localization key, or mob-code marker.</param>
     /// <param name="mobNameResolver">Optional resolver for "mob:" markers.</param>
     /// <param name="customResolver">Optional resolver called before <see cref="Lang.Get" /> for keys containing a ':'.</param>
-    /// <returns>The localized or resolved string, or <paramref name="text" /> if no localization matched.</returns>
+    /// <returns>The localized or resolved string, or <paramref name="text" /> if no localization matched. Returns <see cref="string.Empty" /> when <paramref name="text" /> is null or whitespace.</returns>
     public static string Resolve(string text, Func<string, string?>? mobNameResolver = null, Func<string, string?>? customResolver = null)
     {
-        if (string.IsNullOrWhiteSpace(text)) return text;
+        if (string.IsNullOrWhiteSpace(text)) return text ?? string.Empty;
 
         if (text.StartsWith("mob:", StringComparison.OrdinalIgnoreCase))
         {
@@ -62,9 +62,10 @@ public static class HudTextResolver
                 if (!string.IsNullOrWhiteSpace(custom) && !string.Equals(custom, key, StringComparison.OrdinalIgnoreCase))
                     return custom;
             }
-            catch
+            catch (Exception ex)
             {
                 // Resolver failure — continue to vanilla fallback.
+                System.Diagnostics.Debug.WriteLine($"[ArcanumLib] HudTextResolver custom resolver failed for '{key}': {ex.Message}");
             }
         }
 

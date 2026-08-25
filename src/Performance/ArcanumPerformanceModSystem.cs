@@ -1,3 +1,4 @@
+using ArcanumLib.Core;
 using Vintagestory.API.Client;
 using Vintagestory.API.Common;
 using Vintagestory.API.Server;
@@ -6,11 +7,14 @@ namespace ArcanumLib.Performance;
 
 /// <summary>
 /// Consolidated lifecycle ModSystem for all performance/scheduling systems.
-/// Starts and disposes <see cref="DeferredWork" />, <see cref="GameTimeScheduler" /> and
+/// Starts and disposes <see cref="DeferredWorkService" />, <see cref="GameTimeScheduler" /> and
 /// <see cref="StatCoalescingEngine" /> on the appropriate side.
 /// </summary>
 public class ArcanumPerformanceModSystem : ModSystem
 {
+    private StatCoalescingEngine? _statCoalescing;
+    private GameTimeScheduler? _gameTimeScheduler;
+
     /// <summary>
     /// Returns the execution order relative to other systems.
     /// </summary>
@@ -30,7 +34,7 @@ public class ArcanumPerformanceModSystem : ModSystem
     /// <param name="capi">The client API.</param>
     public override void StartClientSide(ICoreClientAPI capi)
     {
-        DeferredWork.Start(capi);
+        ArcanumServices.Get<DeferredWorkService>()?.Start(capi);
     }
 
     /// <summary>
@@ -39,9 +43,15 @@ public class ArcanumPerformanceModSystem : ModSystem
     /// <param name="sapi">The server API.</param>
     public override void StartServerSide(ICoreServerAPI sapi)
     {
-        DeferredWork.Start(sapi);
-        GameTimeScheduler.Start(sapi);
-        StatCoalescingEngine.Start(sapi);
+        ArcanumServices.Get<DeferredWorkService>()?.Start(sapi);
+
+        _gameTimeScheduler = new GameTimeScheduler();
+        _gameTimeScheduler.Start(sapi);
+        ArcanumServices.Register(_gameTimeScheduler, ArcanumServiceScope.Server);
+
+        _statCoalescing = new StatCoalescingEngine();
+        _statCoalescing.Start(sapi);
+        ArcanumServices.Register(_statCoalescing, ArcanumServiceScope.Server);
     }
 
     /// <summary>
@@ -49,9 +59,13 @@ public class ArcanumPerformanceModSystem : ModSystem
     /// </summary>
     public override void Dispose()
     {
-        StatCoalescingEngine.Stop();
-        GameTimeScheduler.Stop();
-        DeferredWork.Stop();
+        _statCoalescing?.Dispose();
+        ArcanumServices.Unregister<StatCoalescingEngine>();
+
+        _gameTimeScheduler?.Dispose();
+        ArcanumServices.Unregister<GameTimeScheduler>();
+
+        ArcanumServices.Get<DeferredWorkService>()?.Stop();
         base.Dispose();
     }
 }

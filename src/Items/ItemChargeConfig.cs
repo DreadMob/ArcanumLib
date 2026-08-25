@@ -7,6 +7,8 @@ namespace ArcanumLib.Items
     /// Configuration for the generic <see cref="ItemCharge" /> helpers.
     /// Consumers can set their own attribute and metadata key namespaces, charge suffixes,
     /// and optional resolvers for display names, units, and material names.
+    /// Each consumer should create its own instance rather than mutating
+    /// <see cref="ItemCharge.DefaultConfig" />, which is shared and read-only by contract.
     /// </summary>
     public class ItemChargeConfig
     {

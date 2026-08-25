@@ -17,23 +17,8 @@ public class StatusEffectModSystem : ModSystem
     private ICoreClientAPI? _capi;
     private ICoreServerAPI? _sapi;
     private readonly List<IEventAPI> _despawnEvents = new();
-    private readonly EntityDespawnDelegate _despawnHandler;
-
-    /// <summary>
-    /// Initializes the entity despawn handler used to remove active status effects.
-    /// </summary>
-    public StatusEffectModSystem()
-    {
-        _despawnHandler = (entity, _) => StatusEffectManager.RemoveAll(entity);
-    }
-
-    private static void EnsureService()
-    {
-        if (ArcanumServices.Get<StatusEffectService>() == null)
-        {
-            ArcanumServices.Register(new StatusEffectService());
-        }
-    }
+    private EntityDespawnDelegate? _despawnHandler;
+    private StatusEffectService? _service;
 
     /// <summary>
     /// Registers the tick listener on the client.
@@ -42,8 +27,9 @@ public class StatusEffectModSystem : ModSystem
     public override void StartClientSide(ICoreClientAPI capi)
     {
         _capi = capi;
-        EnsureService();
-        _clientListenerId = capi.Event.RegisterGameTickListener(dt => StatusEffectManager.Tick(dt), 1000);
+        _service = EnsureService();
+        _despawnHandler = (entity, _) => _service?.RemoveAll(entity);
+        _clientListenerId = capi.Event.RegisterGameTickListener(dt => _service?.Tick(dt), 1000);
         capi.Event.OnEntityDespawn += _despawnHandler;
         _despawnEvents.Add(capi.Event);
     }
@@ -55,10 +41,22 @@ public class StatusEffectModSystem : ModSystem
     public override void StartServerSide(ICoreServerAPI sapi)
     {
         _sapi = sapi;
-        EnsureService();
-        _serverListenerId = sapi.Event.RegisterGameTickListener(dt => StatusEffectManager.Tick(dt), 1000);
+        _service = EnsureService();
+        _despawnHandler = (entity, _) => _service?.RemoveAll(entity);
+        _serverListenerId = sapi.Event.RegisterGameTickListener(dt => _service?.Tick(dt), 1000);
         sapi.Event.OnEntityDespawn += _despawnHandler;
         _despawnEvents.Add(sapi.Event);
+    }
+
+    private static StatusEffectService EnsureService()
+    {
+        var service = ArcanumServices.Get<StatusEffectService>();
+        if (service == null)
+        {
+            service = new StatusEffectService();
+            ArcanumServices.Register(service);
+        }
+        return service;
     }
 
     /// <summary>
@@ -83,12 +81,12 @@ public class StatusEffectModSystem : ModSystem
         ICoreAPI? api = (ICoreAPI?)_capi ?? _sapi;
         foreach (var events in _despawnEvents)
         {
-            try { events.OnEntityDespawn -= _despawnHandler; }
+            try { if (_despawnHandler != null) events.OnEntityDespawn -= _despawnHandler; }
             catch (Exception ex) { api?.Logger?.Warning("[ArcanumLib] Failed to unregister despawn handler: {0}", ex.Message); }
         }
         _despawnEvents.Clear();
 
-        // The listener is already tied to the API lifecycle, but we clear state for tests.
-        StatusEffectManager.Clear();
+        _service?.Clear();
+        ArcanumServices.Unregister<StatusEffectService>();
     }
 }

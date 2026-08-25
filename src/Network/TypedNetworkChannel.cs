@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using ArcanumLib.Common;
+using ArcanumLib.Core;
 using Vintagestory.API.Client;
 using Vintagestory.API.Common;
 using Vintagestory.API.Server;
@@ -148,7 +149,9 @@ namespace ArcanumLib.Network
             if (_api is not ICoreServerAPI) return;
 
             var exceptUid = exceptPlayer?.PlayerUID;
-            foreach (var player in OnlinePlayerCache.All)
+            var cache = ArcanumServices.Get<OnlinePlayerCache>();
+            var players = cache?.All ?? Array.Empty<IServerPlayer>();
+            foreach (var player in players)
             {
                 if (player.PlayerUID != null && player.PlayerUID != exceptUid)
                 {

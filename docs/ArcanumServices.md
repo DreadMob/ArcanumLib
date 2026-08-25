@@ -6,7 +6,15 @@ nav_order: 5
 
 # ArcanumServices
 
-World-scoped service registry for ArcanumLib. ModSystems register their services during `StartServerSide` / `StartClientSide`; `ArcanumLibModSystem` clears the registry on world unload, preventing static state from leaking between saves.
+World-scoped service registry for ArcanumLib. Each world load activates an `ArcanumRuntime` that owns an `ArcanumServiceRegistry` instance. ModSystems register their services during `StartServerSide` / `StartClientSide`; the runtime is disposed on world unload, preventing static state from leaking between saves.
+
+## Architecture
+
+`ArcanumRuntime` is the instance-based root. It owns:
+- `ArcanumServiceRegistry Services` — the per-world service registry.
+- Lifecycle coordination via `ArcanumLifecycle`.
+
+`ArcanumServices` (static) and `ArcanumLifecycle` (static) are thin facades that delegate to `ArcanumRuntime.Current`. This preserves backward compatibility while enabling instance-based access for new code and tests.
 
 ## What is it for?
 
@@ -14,6 +22,7 @@ World-scoped service registry for ArcanumLib. ModSystems register their services
 - Letting static public facades resolve an instance that was created for the current world.
 - Enabling cross-mod access to shared services (`PityTracker`, `CategorizedLogger`, `ActionExecutorService`, `StatusEffectService`) without hardcoded references.
 - Keeping client, server, and world-scoped services separate so singleplayer does not accidentally overwrite one side with the other.
+- Allowing tests to create and dispose runtime instances for isolation.
 
 ## Scopes
 
@@ -28,7 +37,16 @@ World-scoped service registry for ArcanumLib. ModSystems register their services
 
 ## Quick example
 
-### Register a service
+### Instance-based access (preferred for new code)
+
+```csharp
+using ArcanumLib.Core;
+
+var registry = ArcanumRuntime.Current?.Services;
+var sapi = registry?.Get<ICoreServerAPI>(ArcanumServiceScope.Server);
+```
+
+### Static facade (backward compatible)
 
 ```csharp
 using ArcanumLib.Core;
@@ -64,21 +82,36 @@ var tracker = ArcanumServices.EnsureInitialized(() => new PityTracker(sapi), Arc
 ### Shut down
 
 ```csharp
-// ArcanumLibModSystem.Dispose already calls this on world unload.
-ArcanumServices.Shutdown();
+// ArcanumLibModSystem.Dispose already disposes the runtime on world unload.
+// For manual cleanup:
+ArcanumRuntime.Current?.Dispose();
 ```
 
 ## API
 
+### ArcanumRuntime
+
+| Member | Description |
+|--------|-------------|
+| `Current` | The active runtime, or null if no world is loaded. |
+| `Activate()` | Creates a new runtime, sets it as `Current`, and returns it. Disposes any prior runtime. |
+| `Services` | The `ArcanumServiceRegistry` for this runtime. |
+| `Api` | The core API for the current side. |
+| `Side` | The application side (Client or Server). |
+| `Initialize()` | Marks the runtime as initialized and runs lifecycle init handlers. |
+| `Dispose()` | Runs lifecycle disposal, shuts down all services, clears `Current`. |
+
+### ArcanumServices (static facade)
+
 | Method | Description |
 |--------|-------------|
-| `Register<T>(T service, ArcanumServiceScope scope = Global)` | Registers or replaces a service of type `T` in the given scope. |
-| `Unregister<T>(ArcanumServiceScope scope = Global)` | Removes the registered `T` from the given scope. |
-| `Get<T>(ArcanumServiceScope? scope = null)` | Returns the registered `T` or null. If `scope` is null, searches all scopes. |
+| `Register<T>(T service, ArcanumServiceScope scope = Global)` | Registers or replaces a service of type `T` in the given scope. Throws if no runtime is active. |
+| `Unregister<T>(ArcanumServiceScope scope = Global)` | Removes the registered `T` from the given scope. No-op if no runtime is active. |
+| `Get<T>(ArcanumServiceScope? scope = null)` | Returns the registered `T` or null. Returns null if no runtime is active. |
 | `TryGet<T>(out T? service, ArcanumServiceScope? scope = null)` | Returns true and the service if one is registered. |
-| `EnsureInitialized<T>(Func<T> factory, ArcanumServiceScope scope = Global)` | Returns the existing `T` or creates and registers one. |
-| `Get(Type type, ArcanumServiceScope? scope = null)` | Non-generic get by `Type`. |
-| `Shutdown(ArcanumServiceScope? scope = null)` | Clears all registered services, or only the given scope. |
+| `EnsureInitialized<T>(Func<T> factory, ArcanumServiceScope scope = Global)` | Returns the existing `T` or creates and registers one. Throws if no runtime is active. |
+| `Get(Type type, ArcanumServiceScope? scope = null)` | Non-generic get by `Type`. Returns null if no runtime is active. |
+| `Shutdown(ArcanumServiceScope? scope = null)` | Clears all registered services, or only the given scope. No-op if no runtime is active. |
 
 ## Notes
 
@@ -86,3 +119,5 @@ ArcanumServices.Shutdown();
 - Use `T` as the service contract. For example, register `PityTracker` and resolve it via `ArcanumServices.Get<PityTracker>()`.
 - Services that implement `IDisposable` are disposed by `Shutdown` and `Unregister`.
 - Prefer explicit `Client` / `Server` scopes for side-specific services to avoid singleplayer conflicts.
+- `Get<T>` and `Get(Type)` return null when no runtime is active, making them safe for logging paths.
+- `Register` and `EnsureInitialized` throw when no runtime is active, since registration requires an active world.

@@ -9,7 +9,7 @@ namespace ArcanumLib.Actions;
 /// Mods register their handlers during startup; the registry is then used to
 /// execute <see cref="ActionDescriptor" /> instances loaded from JSON assets.
 /// </summary>
-internal sealed class ActionRegistryService
+public sealed class ActionRegistryService
 {
     private readonly Dictionary<string, IActionHandler> _handlers =
         new(StringComparer.OrdinalIgnoreCase);
