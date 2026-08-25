@@ -23,20 +23,11 @@ namespace ArcanumLib.Common
         private readonly string _legacyDataFileName;
 
         /// <summary>
-        /// Server-scoped instance registered with <see cref="ArcanumServices" />.
-        /// Consumers can use this instead of constructing their own tracker.
+        /// The current server-scoped tracker instance, if one has been registered in <see cref="ArcanumServices" />.
+        /// Use <see cref="ArcanumServices.Register{T}(T, ArcanumServiceScope)" /> to publish a tracker explicitly.
         /// </summary>
         public static PlaytimeTracker? Current
-        {
-            get => ArcanumServices.Get<PlaytimeTracker>(ArcanumServiceScope.Server);
-            set
-            {
-                if (value == null)
-                    ArcanumServices.Unregister<PlaytimeTracker>(ArcanumServiceScope.Server);
-                else
-                    ArcanumServices.Register(value, ArcanumServiceScope.Server);
-            }
-        }
+            => ArcanumServices.Get<PlaytimeTracker>(ArcanumServiceScope.Server);
 
         /// <summary>Fired when a session is saved: (playerUid, totalMs).</summary>
         public event Action<string, long>? OnSessionSaved;

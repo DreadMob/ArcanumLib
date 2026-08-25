@@ -119,7 +119,7 @@ public class MyPityModSystem : ModSystem
     {
         tracker = new PityTracker(sapi);
         // register definitions
-        PityTracker.Current = tracker;
+        ArcanumServices.Register(tracker, ArcanumServiceScope.Server);
     }
 
     public override void OnSaveGameData()
@@ -132,6 +132,6 @@ public class MyPityModSystem : ModSystem
 ## Thread-safety and lifecycle
 
 - All public methods on `PityTracker` are thread-safe (`_syncLock`).
-- `PityTracker.Current` is a facade backed by `ArcanumServices`. Setting it registers the instance; setting it to `null` unregisters it.
+- `PityTracker.Current` is a read-only facade backed by `ArcanumServices`. Register the instance with `ArcanumServices.Register(tracker, ArcanumServiceScope.Server)` and it will be returned here.
 - `PityTrackerModSystem` creates and saves the global tracker on the server.
 - `RecordOpen` automatically marks the `ModDataStore` as dirty so the next `Save` persists.

@@ -1,6 +1,6 @@
 # Arcanum Lib
 
-**A shared client/server utility library for Vintage Story**
+**A collection of reusable game mechanics and client/server utilities for Vintage Story mods**
 
 [![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 [![Game Version](https://img.shields.io/badge/Vintage%20Story-1.22.1+-green.svg)](https://www.vintagestory.at/)
@@ -11,7 +11,7 @@
 
 ## About
 
-Arcanum Lib is a shared library mod for [Vintage Story](https://www.vintagestory.at/). It provides reusable infrastructure that other mods would otherwise duplicate: a themed GUI toolkit, typed asset loading, status effects, action registry, particle builders, persistence, networking, and scheduling.
+Arcanum Lib is a shared library mod for [Vintage Story](https://www.vintagestory.at/). It bundles game mechanics and infrastructure that several mods may need: themed GUI, typed asset loading, status effects, action registry, particle builders, persistence, networking, and scheduling. It is not a generic "everything for everyone" toolkit, but rather a set of focused subsystems you can pick from if they fit your mod.
 
 The library is built around a few headline features that have no vanilla equivalent:
 
@@ -28,7 +28,11 @@ The library is built around a few headline features that have no vanilla equival
 
 Beyond those, the library ships thinner helpers (color structs, wildcard matching, watched-attributes helpers, damage source factories, etc.) collected under [Misc Helpers](docs/MiscHelpers.md) so they don't dilute the main feature pages.
 
-The library is designed to be reusable by any Vintage Story mod that wants the same infrastructure.
+The subsystems are designed so that several Vintage Story mods can reuse the same implementation instead of duplicating it. Pick what you need; not every mod needs every feature.
+
+## Growing with feedback
+
+Arcanum Lib is actively expanding. If you are interested in using it and have an idea, a missing helper, or a whole subsystem in mind, feel free to suggest it in the [Discord](https://discord.gg/uvybdcAdV8) &mdash; we will implement it.
 
 ---
 

@@ -15,20 +15,11 @@ namespace ArcanumLib.Progression
     public class PityTracker : IPityProvider
     {
         /// <summary>
-        /// The current global tracker instance, backed by <see cref="ArcanumServices" />.
-        /// Setting this registers or unregisters the tracker in the shared registry.
+        /// The current server-scoped tracker instance, if one has been registered in <see cref="ArcanumServices" />.
+        /// Use <see cref="ArcanumServices.Register{T}(T, ArcanumServiceScope)" /> to publish a tracker explicitly.
         /// </summary>
         public static PityTracker? Current
-        {
-            get => ArcanumServices.Get<PityTracker>(ArcanumServiceScope.Server);
-            set
-            {
-                if (value == null)
-                    ArcanumServices.Unregister<PityTracker>(ArcanumServiceScope.Server);
-                else
-                    ArcanumServices.Register(value, ArcanumServiceScope.Server);
-            }
-        }
+            => ArcanumServices.Get<PityTracker>(ArcanumServiceScope.Server);
 
         private readonly ICoreServerAPI? _sapi;
         private readonly IModDataStore<Dictionary<string, PityPlayerData>> _store;

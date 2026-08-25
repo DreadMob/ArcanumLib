@@ -39,8 +39,10 @@ public class ArcanumDataModSystem : ModSystem
         sapi.Event.SaveGameCreated += OnSaveGameCreated;
         sapi.Event.GameWorldSave += OnGameWorldSave;
 
-        PlaytimeTracker.Current ??= new PlaytimeTracker(sapi);
-        PityTracker.Current ??= new PityTracker(sapi);
+        if (ArcanumServices.Get<PlaytimeTracker>(ArcanumServiceScope.Server) == null)
+            ArcanumServices.Register(new PlaytimeTracker(sapi), ArcanumServiceScope.Server);
+        if (ArcanumServices.Get<PityTracker>(ArcanumServiceScope.Server) == null)
+            ArcanumServices.Register(new PityTracker(sapi), ArcanumServiceScope.Server);
 
         ArcanumServices.Register(new ActionRegistryService(), ArcanumServiceScope.Server);
         ArcanumServices.Register(new ActionExecutorService(sapi), ArcanumServiceScope.Server);
@@ -61,11 +63,13 @@ public class ArcanumDataModSystem : ModSystem
             _sapi.Event.GameWorldSave -= OnGameWorldSave;
         }
 
-        PlaytimeTracker.Current?.Dispose();
-        PlaytimeTracker.Current = null;
+        if (ArcanumServices.Get<PlaytimeTracker>(ArcanumServiceScope.Server) is { } playtime)
+            playtime.Dispose();
+        ArcanumServices.Unregister<PlaytimeTracker>(ArcanumServiceScope.Server);
 
-        PityTracker.Current?.Save();
-        PityTracker.Current = null;
+        if (ArcanumServices.Get<PityTracker>(ArcanumServiceScope.Server) is { } pity)
+            pity.Save();
+        ArcanumServices.Unregister<PityTracker>(ArcanumServiceScope.Server);
 
         if (ArcanumServices.Get<ActionExecutorService>() is { } executor)
             executor.ClearAllCooldowns();

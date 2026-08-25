@@ -30,7 +30,15 @@ public sealed class ArcanumServiceRegistry : IDisposable
 
         lock (_syncLock)
         {
-            _services[(typeof(T), scope)] = service;
+            var key = (typeof(T), scope);
+            if (_services.ContainsKey(key))
+            {
+                ArcanumRuntime.Current?.Api?.Logger?.Warning(
+                    "[ArcanumLib] Service {0} in scope {1} is being overwritten; previous instance will be disposed during shutdown.",
+                    typeof(T).FullName, scope);
+            }
+
+            _services[key] = service;
         }
     }
 
