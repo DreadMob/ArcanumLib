@@ -20,9 +20,9 @@ namespace ArcanumLib.Randomization
         /// </summary>
         public float Weight { get; }
 
-        /// <summary>Performs the weighted entry operation.</summary>
-        /// <param name="value">The value to set or compare.</param>
-        /// <param name="weight">The weight value.</param>
+        /// <summary>Creates a weighted entry.</summary>
+        /// <param name="value">The value that can be chosen.</param>
+        /// <param name="weight">Relative chance; negative values are treated as zero.</param>
         public WeightedEntry(T value, float weight)
         {
             Value = value;

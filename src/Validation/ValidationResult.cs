@@ -12,19 +12,19 @@ namespace ArcanumLib.Validation;
 /// </summary>
 public readonly struct ValidationResult
 {
-    /// <summary>Gets a value indicating whether is success.</summary>
+    /// <summary>True when there are no errors.</summary>
     public bool IsSuccess => Errors == null || Errors.Count == 0;
-    /// <summary>Gets a value indicating whether has warnings.</summary>
+    /// <summary>True when at least one warning was recorded.</summary>
     public bool HasWarnings => Warnings != null && Warnings.Count > 0;
-    /// <summary>Gets a value indicating whether has errors.</summary>
+    /// <summary>True when at least one error was recorded.</summary>
     public bool HasErrors => Errors != null && Errors.Count > 0;
 
-    /// <summary>Gets the errors.</summary>
+    /// <summary>Recorded error messages, if any.</summary>
     public IReadOnlyList<string> Errors { get; }
-    /// <summary>Gets the warnings.</summary>
+    /// <summary>Recorded warning messages, if any.</summary>
     public IReadOnlyList<string> Warnings { get; }
 
-    /// <summary>Performs the validation result operation.</summary>
+    /// <summary>Creates an empty successful result.</summary>
     public ValidationResult()
     {
         Errors = [];
@@ -37,31 +37,31 @@ public readonly struct ValidationResult
         Warnings = warnings ?? [];
     }
 
-    /// <summary>Performs the success operation.</summary>
-    /// <returns>The success.</returns>
+    /// <summary>Returns a successful result with no errors or warnings.</summary>
+    /// <returns>A successful <see cref="ValidationResult" />.</returns>
     public static ValidationResult Success() => new();
 
-    /// <summary>Performs the error operation.</summary>
-    /// <param name="message">The message.</param>
-    /// <returns>The error.</returns>
+    /// <summary>Returns a failed result with a single error message.</summary>
+    /// <param name="message">The error message.</param>
+    /// <returns>A failed <see cref="ValidationResult" />.</returns>
     public static ValidationResult Error(string message) =>
         new(new[] { message }, null);
 
-    /// <summary>Performs the warning operation.</summary>
-    /// <param name="message">The message.</param>
-    /// <returns>The warning.</returns>
+    /// <summary>Returns a successful result with a single warning message.</summary>
+    /// <param name="message">The warning message.</param>
+    /// <returns>A <see cref="ValidationResult" /> with one warning.</returns>
     public static ValidationResult Warning(string message) =>
         new(null, new[] { message });
 
-    /// <summary>Performs the from errors operation.</summary>
-    /// <param name="messages">The messages to process.</param>
-    /// <returns>The from errors.</returns>
+    /// <summary>Returns a failed result from a collection of error messages.</summary>
+    /// <param name="messages">The error messages.</param>
+    /// <returns>A failed <see cref="ValidationResult" />.</returns>
     public static ValidationResult FromErrors(IEnumerable<string> messages) =>
         new(messages.ToList(), null);
 
-    /// <summary>Performs the from warnings operation.</summary>
-    /// <param name="messages">The messages to process.</param>
-    /// <returns>The from warnings.</returns>
+    /// <summary>Returns a successful result from a collection of warning messages.</summary>
+    /// <param name="messages">The warning messages.</param>
+    /// <returns>A <see cref="ValidationResult" /> with warnings.</returns>
     public static ValidationResult FromWarnings(IEnumerable<string> messages) =>
         new(null, messages.ToList());
 
@@ -134,10 +134,10 @@ public readonly struct ValidationResult
         return "Success";
     }
 
-    /// <summary>Performs the + operation.</summary>
-    /// <param name="a">The first value.</param>
-    /// <param name="b">The second value.</param>
-    /// <returns>The +.</returns>
+    /// <summary>Combines two results, merging their errors and warnings.</summary>
+    /// <param name="a">The first result.</param>
+    /// <param name="b">The second result.</param>
+    /// <returns>A combined <see cref="ValidationResult" />.</returns>
     public static ValidationResult operator +(ValidationResult a, ValidationResult b) => a.Combine(b);
 
     private static IReadOnlyList<string>? Merge(IReadOnlyList<string> a, IReadOnlyList<string> b)

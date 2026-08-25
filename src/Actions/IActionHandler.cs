@@ -51,25 +51,25 @@ public readonly struct ActionResult
         Message = message;
     }
 
-    /// <summary>Performs the success operation.</summary>
-    /// <param name="msg">The msg value.</param>
-    /// <returns>The success.</returns>
+    /// <summary>Returns a successful result with an optional message.</summary>
+    /// <param name="msg">Optional human-readable message.</param>
+    /// <returns>A successful <see cref="ActionResult" />.</returns>
     public static ActionResult Success(string? msg = null) => new(ActionOutcome.Success, msg);
-    /// <summary>Performs the not available operation.</summary>
-    /// <param name="msg">The msg value.</param>
-    /// <returns>The not available.</returns>
+    /// <summary>Returns a result indicating the action is not currently available.</summary>
+    /// <param name="msg">Optional human-readable message explaining why.</param>
+    /// <returns>A <see cref="ActionResult" /> with <see cref="ActionOutcome.NotAvailable" />.</returns>
     public static ActionResult NotAvailable(string? msg = null) => new(ActionOutcome.NotAvailable, msg);
-    /// <summary>Performs the invalid operation.</summary>
-    /// <param name="msg">The msg value.</param>
-    /// <returns>The invalid.</returns>
+    /// <summary>Returns a result indicating the action was invoked with invalid arguments or state.</summary>
+    /// <param name="msg">Optional human-readable message explaining the validation failure.</param>
+    /// <returns>A <see cref="ActionResult" /> with <see cref="ActionOutcome.Invalid" />.</returns>
     public static ActionResult Invalid(string? msg = null) => new(ActionOutcome.Invalid, msg);
-    /// <summary>Performs the handler not found operation.</summary>
-    /// <param name="msg">The msg value.</param>
-    /// <returns>The handler not found.</returns>
+    /// <summary>Returns a result indicating no handler was registered for the requested action.</summary>
+    /// <param name="msg">Optional human-readable message.</param>
+    /// <returns>A <see cref="ActionResult" /> with <see cref="ActionOutcome.HandlerNotFound" />.</returns>
     public static ActionResult HandlerNotFound(string? msg = null) => new(ActionOutcome.HandlerNotFound, msg);
-    /// <summary>Performs the failed operation.</summary>
-    /// <param name="msg">The msg value.</param>
-    /// <returns>The failed.</returns>
+    /// <summary>Returns a result indicating the action ran but failed.</summary>
+    /// <param name="msg">Optional human-readable message explaining the failure.</param>
+    /// <returns>A <see cref="ActionResult" /> with <see cref="ActionOutcome.Failed" />.</returns>
     public static ActionResult Failed(string? msg = null) => new(ActionOutcome.Failed, msg);
 }
 

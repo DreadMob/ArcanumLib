@@ -106,14 +106,14 @@ public static class EventBus
 
     private readonly struct EventKey : IEquatable<EventKey>
     {
-        /// <summary>The event type value.</summary>
+        /// <summary>The event type used as the primary key.</summary>
         public readonly Type EventType;
-        /// <summary>The tag value.</summary>
+        /// <summary>Optional tag distinguishing subscriptions to the same event type.</summary>
         public readonly string Tag;
 
-        /// <summary>Performs the event key operation.</summary>
-        /// <param name="eventType">The event type value.</param>
-        /// <param name="tag">The tag value.</param>
+        /// <summary>Creates an event key from an event type and optional tag.</summary>
+        /// <param name="eventType">The event type.</param>
+        /// <param name="tag">Optional tag; treated as empty string when null.</param>
         public EventKey(Type eventType, string tag)
         {
             EventType = eventType;

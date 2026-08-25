@@ -49,13 +49,13 @@ namespace ArcanumLib.Gui.Controls
         /// </summary>
         public static Func<string, string>? Resolver { get; set; }
 
-        /// <summary>Gets the total content height.</summary>
+        /// <summary>Total height of all rendered tab content, used for scrolling.</summary>
         public double TotalContentHeight => totalContentHeight;
 
-        /// <summary>Performs the gui element custom tab content operation.</summary>
+        /// <summary>Creates a tab content element bound to the given tab data.</summary>
         /// <param name="capi">The client API instance.</param>
-        /// <param name="bounds">The bounds value.</param>
-        /// <param name="data">The associated data.</param>
+        /// <param name="bounds">The bounds of this element.</param>
+        /// <param name="data">Tab metadata and content description.</param>
         public GuiElementCustomTabContent(ICoreClientAPI capi, ElementBounds bounds, CustomTabData data)
             : base(capi, bounds)
         {
@@ -63,32 +63,32 @@ namespace ArcanumLib.Gui.Controls
             contentTexture = new LoadedTexture(capi);
         }
 
-        /// <summary>Performs the compose elements operation.</summary>
-        /// <param name="ctxStatic">The ctx static value.</param>
-        /// <param name="surfaceStatic">The surface static value.</param>
+        /// <summary>Composes the static tab background and triggers texture regeneration.</summary>
+        /// <param name="ctxStatic">The Cairo context for static composition.</param>
+        /// <param name="surfaceStatic">The image surface to draw onto.</param>
         public override void ComposeElements(Context ctxStatic, ImageSurface surfaceStatic)
         {
             RegenerateTexture();
         }
 
-        /// <summary>Sets scroll.</summary>
-        /// <param name="value">The value to set or compare.</param>
+        /// <summary>Sets the vertical scroll position, clamped to the valid range.</summary>
+        /// <param name="value">The target scroll offset in pixels.</param>
         public void SetScroll(double value)
         {
             scrollY = Math.Max(0, Math.Min(maxScrollY, value));
         }
 
-        /// <summary>Updates scrollbar.</summary>
-        /// <param name="sb">The sb value.</param>
+        /// <summary>Synchronizes the scrollbar heights with the current content and viewport.</summary>
+        /// <param name="sb">The scrollbar to update.</param>
         public void UpdateScrollbar(ArcanumScrollbar sb)
         {
             if (sb == null) return;
             sb.SetHeights((float)Bounds.InnerHeight, (float)totalContentHeight);
         }
 
-        /// <summary>Performs the on mouse wheel operation.</summary>
+        /// <summary>Handles mouse wheel scrolling within the tab content.</summary>
         /// <param name="api">The client API instance.</param>
-        /// <param name="args">The arguments.</param>
+        /// <param name="args">The mouse wheel event arguments.</param>
         public override void OnMouseWheel(ICoreClientAPI api, MouseWheelEventArgs args)
         {
             if (args.IsHandled) return;
@@ -406,8 +406,8 @@ namespace ArcanumLib.Gui.Controls
             return curY - y;
         }
 
-        /// <summary>Performs the render interactive elements operation.</summary>
-        /// <param name="deltaTime">The delta time value.</param>
+        /// <summary>Renders the cached tab content texture with the current scroll offset.</summary>
+        /// <param name="deltaTime">Seconds elapsed since the previous frame.</param>
         public override void RenderInteractiveElements(float deltaTime)
         {
             if (contentTexture == null || contentTexture.TextureId == 0) return;

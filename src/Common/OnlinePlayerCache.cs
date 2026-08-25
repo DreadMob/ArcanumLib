@@ -45,14 +45,14 @@ public class OnlinePlayerCache : ModSystem
     /// <summary>Current number of online server players.</summary>
     public static int Count => _allSnapshot.Length;
 
-    /// <summary>Returns a value indicating whether the operation should load.</summary>
-    /// <param name="forSide">The for side value.</param>
-    /// <returns>true if the operation should load; otherwise, false.</returns>
+    /// <summary>Loads only on the server side, where online players are authoritative.</summary>
+    /// <param name="forSide">The application side being tested.</param>
+    /// <returns><c>true</c> if the side is server; otherwise <c>false</c>.</returns>
     /// <inheritdoc />
     public override bool ShouldLoad(EnumAppSide forSide) => forSide == EnumAppSide.Server;
 
-    /// <summary>Performs the start server side operation.</summary>
-    /// <param name="api">The server API instance.</param>
+    /// <summary>Initializes the cache, subscribes to join/leave events, and starts the periodic rebuild listener.</summary>
+    /// <param name="api">The server API.</param>
     /// <inheritdoc />
     public override void StartServerSide(ICoreServerAPI api)
     {

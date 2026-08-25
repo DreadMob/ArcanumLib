@@ -8,25 +8,25 @@ namespace ArcanumLib.Gui.Theme;
 /// </summary>
 public readonly struct RGBA
 {
-    /// <summary>The r value.</summary>
+    /// <summary>Red channel, normalized to 0..1.</summary>
     public readonly double R, G, B, A;
 
-    /// <summary>Performs the rgba operation.</summary>
-    /// <param name="r">The r value.</param>
-    /// <param name="g">The g value.</param>
-    /// <param name="b">The b value.</param>
-    /// <param name="a">The a value.</param>
+    /// <summary>Creates a color from normalized 0..1 channel values.</summary>
+    /// <param name="r">Red channel, 0..1.</param>
+    /// <param name="g">Green channel, 0..1.</param>
+    /// <param name="b">Blue channel, 0..1.</param>
+    /// <param name="a">Alpha channel, 0..1.</param>
     public RGBA(double r, double g, double b, double a)
     {
         R = r; G = g; B = b; A = a;
     }
 
-    /// <summary>Performs the from operation.</summary>
-    /// <param name="r">The r value.</param>
-    /// <param name="g">The g value.</param>
-    /// <param name="b">The b value.</param>
-    /// <param name="a">The a value.</param>
-    /// <returns>The from.</returns>
+    /// <summary>Creates a color from 0..255 RGB components and a 0..1 alpha.</summary>
+    /// <param name="r">Red channel, 0..255.</param>
+    /// <param name="g">Green channel, 0..255.</param>
+    /// <param name="b">Blue channel, 0..255.</param>
+    /// <param name="a">Alpha channel, 0..1.</param>
+    /// <returns>A normalized <see cref="RGBA" /> instance.</returns>
     public static RGBA From(int r, int g, int b, double a) =>
         new RGBA(r / 255.0, g / 255.0, b / 255.0, a);
 
@@ -71,15 +71,15 @@ public readonly struct RGBA
         return From(r, g, b, a / 255.0);
     }
 
-    /// <summary>Performs the with alpha operation.</summary>
-    /// <param name="a">The a value.</param>
-    /// <returns>The with alpha.</returns>
+    /// <summary>Returns a copy of this color with the specified alpha.</summary>
+    /// <param name="a">New alpha channel, 0..1.</param>
+    /// <returns>A new <see cref="RGBA" /> with the given alpha.</returns>
     public RGBA WithAlpha(double a) => new RGBA(R, G, B, a);
 
-    /// <summary>Performs the lerp operation.</summary>
-    /// <param name="other">The other value.</param>
-    /// <param name="t">The t value.</param>
-    /// <returns>The lerp.</returns>
+    /// <summary>Linearly interpolates between this color and <paramref name="other" /> by <paramref name="t" />.</summary>
+    /// <param name="other">The target color.</param>
+    /// <param name="t">Interpolation factor, clamped to 0..1.</param>
+    /// <returns>The interpolated color.</returns>
     public RGBA Lerp(RGBA other, double t)
     {
         t = Math.Max(0.0, Math.Min(1.0, t));
@@ -90,7 +90,7 @@ public readonly struct RGBA
             A + (other.A - A) * t);
     }
 
-    /// <summary>Performs the apply operation.</summary>
-    /// <param name="ctx">The ctx value.</param>
+    /// <summary>Sets this color as the source on a Cairo <see cref="Context" />.</summary>
+    /// <param name="ctx">The Cairo context to configure.</param>
     public void Apply(Context ctx) => ctx.SetSourceRGBA(R, G, B, A);
 }

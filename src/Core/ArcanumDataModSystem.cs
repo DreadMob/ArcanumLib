@@ -34,7 +34,7 @@ public class ArcanumDataModSystem : ModSystem
 
         _sapi = sapi;
 
-        ModDataStore.Sapi = sapi;
+        ArcanumServices.Register<ICoreServerAPI>(sapi, ArcanumServiceScope.Server);
         sapi.Event.SaveGameLoaded += OnSaveGameLoaded;
         sapi.Event.SaveGameCreated += OnSaveGameCreated;
         sapi.Event.GameWorldSave += OnGameWorldSave;
@@ -75,8 +75,8 @@ public class ArcanumDataModSystem : ModSystem
 
         ArcanumServices.Unregister<ActionExecutorService>(ArcanumServiceScope.Server);
         ArcanumServices.Unregister<ActionRegistryService>(ArcanumServiceScope.Server);
+        ArcanumServices.Unregister<ICoreServerAPI>(ArcanumServiceScope.Server);
 
-        ModDataStore.Sapi = null;
         ModDataStore.Clear();
 
         _sapi = null;

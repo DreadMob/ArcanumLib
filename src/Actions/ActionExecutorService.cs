@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using ArcanumLib.Core;
-using ArcanumLib.Persistence;
 using Vintagestory.API.Common;
 using Vintagestory.API.Server;
 
@@ -137,7 +136,7 @@ internal sealed class ActionExecutorService
     /// <returns>The remaining cooldown.</returns>
     public long GetRemainingCooldown(long playerEntityId, string actionId)
     {
-        var sapi = _sapi ?? ArcanumServices.Get<ICoreServerAPI>() ?? ModDataStore.Sapi;
+        var sapi = _sapi ?? ArcanumServices.Get<ICoreServerAPI>(ArcanumServiceScope.Server);
         if (sapi == null)
         {
             // Without a server API we cannot compute a reliable remaining time.

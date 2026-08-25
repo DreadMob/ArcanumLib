@@ -1,26 +1,28 @@
 using System;
 using System.Collections.Concurrent;
+using ArcanumLib.Core;
 using Vintagestory.API.Server;
 
 namespace ArcanumLib.Persistence
 {
     /// <summary>
     /// Static registry and factory for versioned per-savegame data stores.
+    /// The server API used by the parameterless <see cref="GetOrCreate{T}(string, string, int)" />
+    /// overloads is resolved through <see cref="ArcanumServices" /> under
+    /// <see cref="ArcanumServiceScope.Server" /> by <see cref="ArcanumLib.Core.ArcanumDataModSystem" />.
     /// </summary>
     public static class ModDataStore
     {
         private static readonly ConcurrentDictionary<string, IModDataStore> _stores = new();
-        private static ICoreServerAPI? _sapi;
 
         /// <summary>
-        /// The server API used by the parameterless <see cref="GetOrCreate{T}(string, string, int)" /> overload.
-        /// Set automatically by <see cref="ArcanumLib.Core.ArcanumDataModSystem" />.
+        /// Resolves the server API registered in <see cref="ArcanumServices" /> under
+        /// <see cref="ArcanumServiceScope.Server" />. Returns <c>null</c> if no server API
+        /// has been registered (e.g., before <see cref="ArcanumLib.Core.ArcanumDataModSystem" />
+        /// has started or after it has been disposed).
         /// </summary>
-        internal static ICoreServerAPI? Sapi
-        {
-            get => _sapi;
-            set => _sapi = value;
-        }
+        private static ICoreServerAPI? ResolveSapi()
+            => ArcanumServices.Get<ICoreServerAPI>(ArcanumServiceScope.Server);
 
         /// <summary>
         /// Gets or creates a versioned data store for the given mod and store id.
@@ -60,8 +62,8 @@ namespace ArcanumLib.Persistence
 
         /// <summary>
         /// Gets or creates a versioned data store using the globally registered server API.
-        /// Requires <see cref="ArcanumLib.Core.ArcanumDataModSystem" /> to have been loaded, or
-        /// <see cref="Sapi" /> to have been set manually.
+        /// Requires <see cref="ArcanumLib.Core.ArcanumDataModSystem" /> to have registered the
+        /// server API in <see cref="ArcanumServices" /> under <see cref="ArcanumServiceScope.Server" />.
         /// </summary>
         /// <typeparam name="T">The data type. Must have a parameterless constructor.</typeparam>
         /// <param name="modId">The owner mod id.</param>
@@ -84,13 +86,14 @@ namespace ArcanumLib.Persistence
         /// <returns>The store instance.</returns>
         public static IModDataStore<T> GetOrCreate<T>(string modId, string storeId, int dataVersion, Func<T> factory)
         {
-            if (_sapi == null)
+            var sapi = ResolveSapi();
+            if (sapi == null)
             {
                 throw new InvalidOperationException(
-                    "ModDataStore has not been initialized. Call the overload with ICoreServerAPI or ensure ModDataStoreModSystem is loaded.");
+                    "ModDataStore has not been initialized. Call the overload with ICoreServerAPI or ensure ArcanumDataModSystem is loaded and has registered the server API in ArcanumServices.");
             }
 
-            return GetOrCreate(_sapi, modId, storeId, dataVersion, factory);
+            return GetOrCreate(sapi, modId, storeId, dataVersion, factory);
         }
 
         /// <summary>
@@ -98,6 +101,7 @@ namespace ArcanumLib.Persistence
         /// </summary>
         internal static void LoadAll()
         {
+            var sapi = ResolveSapi();
             foreach (var store in _stores.Values)
             {
                 try
@@ -106,7 +110,7 @@ namespace ArcanumLib.Persistence
                 }
                 catch (Exception ex)
                 {
-                    _sapi?.Logger?.Warning("[ArcanumLib] [ModDataStore] LoadAll failed for {0}: {1}", store.StoreKey, ex.Message);
+                    sapi?.Logger?.Warning("[ArcanumLib] [ModDataStore] LoadAll failed for {0}: {1}", store.StoreKey, ex.Message);
                 }
             }
         }
@@ -116,6 +120,7 @@ namespace ArcanumLib.Persistence
         /// </summary>
         internal static void SaveAll()
         {
+            var sapi = ResolveSapi();
             foreach (var store in _stores.Values)
             {
                 try
@@ -124,7 +129,7 @@ namespace ArcanumLib.Persistence
                 }
                 catch (Exception ex)
                 {
-                    _sapi?.Logger?.Warning("[ArcanumLib] [ModDataStore] SaveAll failed for {0}: {1}", store.StoreKey, ex.Message);
+                    sapi?.Logger?.Warning("[ArcanumLib] [ModDataStore] SaveAll failed for {0}: {1}", store.StoreKey, ex.Message);
                 }
             }
         }

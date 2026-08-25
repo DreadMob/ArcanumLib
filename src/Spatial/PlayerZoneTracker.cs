@@ -52,9 +52,9 @@ public readonly record struct SphereZoneShape : IZoneShape
     /// <summary>Radius in blocks.</summary>
     public double Radius { get; init; }
 
-    /// <summary>Returns a value indicating whether the specified value is contained.</summary>
-    /// <param name="point">The three-dimensional vector.</param>
-    /// <returns>true if the specified point is contained; otherwise, false.</returns>
+    /// <summary>Returns whether <paramref name="point" /> lies inside the zone.</summary>
+    /// <param name="point">The point to test.</param>
+    /// <returns><c>true</c> if the point is inside the zone; otherwise <c>false</c>.</returns>
     /// <inheritdoc />
     public bool Contains(Vec3d? point)
     {
@@ -65,9 +65,9 @@ public readonly record struct SphereZoneShape : IZoneShape
         return dx * dx + dy * dy + dz * dz <= Radius * Radius;
     }
 
-    /// <summary>Performs the distance to operation.</summary>
-    /// <param name="point">The three-dimensional vector.</param>
-    /// <returns>The distance to.</returns>
+    /// <summary>Returns the Euclidean distance from the sphere surface to <paramref name="point" />, or <see cref="double.MaxValue" /> when null.</summary>
+    /// <param name="point">The point to measure.</param>
+    /// <returns>The signed distance from the sphere surface, or <see cref="double.MaxValue" /> when <paramref name="point" /> is null.</returns>
     /// <inheritdoc />
     public double DistanceTo(Vec3d? point)
     {
@@ -115,9 +115,9 @@ public readonly record struct BoxZoneShape : IZoneShape
     /// <inheritdoc />
     public int Dimension { get; init; }
 
-    /// <summary>Returns a value indicating whether the specified value is contained.</summary>
-    /// <param name="point">The three-dimensional vector.</param>
-    /// <returns>true if the specified point is contained; otherwise, false.</returns>
+    /// <summary>Returns whether <paramref name="point" /> lies inside the zone.</summary>
+    /// <param name="point">The point to test.</param>
+    /// <returns><c>true</c> if the point is inside the zone; otherwise <c>false</c>.</returns>
     /// <inheritdoc />
     public bool Contains(Vec3d? point)
     {
@@ -127,9 +127,9 @@ public readonly record struct BoxZoneShape : IZoneShape
                point.Z >= Min.Z && point.Z <= Max.Z;
     }
 
-    /// <summary>Performs the distance to operation.</summary>
-    /// <param name="point">The three-dimensional vector.</param>
-    /// <returns>The distance to.</returns>
+    /// <summary>Returns the Euclidean distance from the box surface to <paramref name="point" />, or <see cref="double.MaxValue" /> when null.</summary>
+    /// <param name="point">The point to measure.</param>
+    /// <returns>The distance to the nearest box face, or <see cref="double.MaxValue" /> when <paramref name="point" /> is null.</returns>
     /// <inheritdoc />
     public double DistanceTo(Vec3d? point)
     {
@@ -192,14 +192,14 @@ public class PlayerZoneTracker : ModSystem
     /// <summary>Raised when a player leaves any tracked zone.</summary>
     public static event Action<string, IServerPlayer>? PlayerExited;
 
-    /// <summary>Returns a value indicating whether the operation should load.</summary>
-    /// <param name="forSide">The for side value.</param>
-    /// <returns>true if the operation should load; otherwise, false.</returns>
+    /// <summary>Loads only on the server side, where player positions are authoritative.</summary>
+    /// <param name="forSide">The application side being tested.</param>
+    /// <returns><c>true</c> if the side is server; otherwise <c>false</c>.</returns>
     /// <inheritdoc />
     public override bool ShouldLoad(EnumAppSide forSide) => forSide == EnumAppSide.Server;
 
-    /// <summary>Performs the start server side operation.</summary>
-    /// <param name="api">The server API instance.</param>
+    /// <summary>Initializes the tracker, registers the tick listener, and subscribes to player leave events.</summary>
+    /// <param name="api">The server API.</param>
     /// <inheritdoc />
     public override void StartServerSide(ICoreServerAPI api)
     {

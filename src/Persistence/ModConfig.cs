@@ -42,33 +42,33 @@ public readonly struct ConfigResult
     /// </summary>
     public string? Message { get; }
 
-    /// <summary>Performs the config result operation.</summary>
-    /// <param name="kind">The kind value.</param>
-    /// <param name="message">The message.</param>
+    /// <summary>Creates a config result with the given kind and optional message.</summary>
+    /// <param name="kind">The outcome kind.</param>
+    /// <param name="message">Optional human-readable message describing the outcome.</param>
     public ConfigResult(ConfigResultKind kind, string? message = null)
     {
         Kind = kind;
         Message = message;
     }
 
-    /// <summary>Performs the success operation.</summary>
-    /// <returns>The success.</returns>
+    /// <summary>Returns a successful config result.</summary>
+    /// <returns>A successful <see cref="ConfigResult" />.</returns>
     public static ConfigResult Success() => new(ConfigResultKind.Success);
-    /// <summary>Performs the defaults used operation.</summary>
-    /// <param name="msg">The msg value.</param>
-    /// <returns>The defaults used.</returns>
+    /// <summary>Returns a result indicating default values were used because no config file was found.</summary>
+    /// <param name="msg">Optional human-readable message.</param>
+    /// <returns>A <see cref="ConfigResult" /> with <see cref="ConfigResultKind.DefaultsUsed" />.</returns>
     public static ConfigResult DefaultsUsed(string? msg = null) => new(ConfigResultKind.DefaultsUsed, msg);
-    /// <summary>Parses failed.</summary>
-    /// <param name="msg">The msg value.</param>
-    /// <returns>The parse failed.</returns>
+    /// <summary>Returns a result indicating the config file could not be parsed.</summary>
+    /// <param name="msg">Optional human-readable message describing the parse error.</param>
+    /// <returns>A <see cref="ConfigResult" /> with <see cref="ConfigResultKind.ParseFailed" />.</returns>
     public static ConfigResult ParseFailed(string? msg = null) => new(ConfigResultKind.ParseFailed, msg);
-    /// <summary>Performs the validation failed operation.</summary>
-    /// <param name="msg">The msg value.</param>
-    /// <returns>The validation failed.</returns>
+    /// <summary>Returns a result indicating the config failed validation.</summary>
+    /// <param name="msg">Optional human-readable message describing the validation failure.</param>
+    /// <returns>A <see cref="ConfigResult" /> with <see cref="ConfigResultKind.ValidationFailed" />.</returns>
     public static ConfigResult ValidationFailed(string? msg = null) => new(ConfigResultKind.ValidationFailed, msg);
-    /// <summary>Performs the io error operation.</summary>
-    /// <param name="msg">The msg value.</param>
-    /// <returns>The io error.</returns>
+    /// <summary>Returns a result indicating an I/O error occurred while reading or writing the config.</summary>
+    /// <param name="msg">Optional human-readable message describing the I/O error.</param>
+    /// <returns>A <see cref="ConfigResult" /> with <see cref="ConfigResultKind.IOError" />.</returns>
     public static ConfigResult IOError(string? msg = null) => new(ConfigResultKind.IOError, msg);
 }
 

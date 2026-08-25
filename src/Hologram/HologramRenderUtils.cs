@@ -45,10 +45,8 @@ public static class HologramRenderUtils
     /// <returns>The compute scale.</returns>
     public static float ComputeScale(float distance)
     {
-        float scale = 4f / Math.Max(1f, distance);
-        float capped = Math.Min(1f, scale);
-        if (capped > 0.75f)
-            capped = 0.75f + (capped - 0.75f) / 2f;
-        return capped;
+        // Distance-based scale: larger close-up, smooth falloff, clamped floor/ceiling.
+        // At 1 block ~1.8x, at 10 blocks ~1.0x, at 20 blocks ~0.5x, never below 0.5x.
+        return Math.Min(1.8f, Math.Max(0.5f, 10f / Math.Max(1f, distance)));
     }
 }

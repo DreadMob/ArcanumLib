@@ -12,10 +12,10 @@ public abstract class ArcanumGuiDialog : GuiDialog
 {
     private bool _recomposeQueued;
 
-    /// <summary>Gets a value indicating whether the unregister on close is enabled.</summary>
+    /// <summary>Always unregister this dialog from the GUI when closed so it does not linger.</summary>
     public override bool UnregisterOnClose => true;
 
-    /// <summary>Performs the arcanum gui dialog operation.</summary>
+    /// <summary>Creates a base dialog bound to the given client API.</summary>
     /// <param name="capi">The client API instance.</param>
     protected ArcanumGuiDialog(ICoreClientAPI capi) : base(capi) { }
 

@@ -50,10 +50,10 @@ namespace ArcanumLib.Effects
         /// </summary>
         public Entity? Entity => _entityRef.TryGetTarget(out var e) ? e : null;
 
-        /// <summary>Gets a value indicating whether is empty.</summary>
+        /// <summary>True when no status effects are currently active on the entity.</summary>
         public bool IsEmpty => _instances.Count == 0;
 
-        /// <summary>Gets the instances.</summary>
+        /// <summary>Read-only view of the active status effect instances.</summary>
         public IReadOnlyList<StatusEffectInstance> Instances => _instances;
 
         /// <summary>

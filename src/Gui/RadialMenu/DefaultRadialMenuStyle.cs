@@ -9,21 +9,21 @@ namespace ArcanumLib.Gui.RadialMenu;
 /// </summary>
 public class DefaultRadialMenuStyle : IRadialMenuStyle
 {
-    /// <summary>Gets the key.</summary>
+    /// <summary>Style key used to register and resolve this style in <see cref="RadialMenuStyleRegistry" />.</summary>
     /// <inheritdoc />
     public string Key => "default";
 
-    /// <summary>Performs the draw sector operation.</summary>
-    /// <param name="ctx">The ctx value.</param>
-    /// <param name="cx">The cx value.</param>
-    /// <param name="cy">The cy value.</param>
-    /// <param name="a0">The a 0 value.</param>
-    /// <param name="a1">The a 1 value.</param>
-    /// <param name="hovered">The hovered value.</param>
-    /// <param name="isActive">The is active value.</param>
-    /// <param name="disabled">The disabled value.</param>
-    /// <param name="outerRadius">The outer radius value.</param>
-    /// <param name="innerRadius">The inner radius value.</param>
+    /// <summary>Draws a single radial sector with the given geometry and state flags.</summary>
+    /// <param name="ctx">The Cairo context to draw with.</param>
+    /// <param name="cx">Center X in pixels.</param>
+    /// <param name="cy">Center Y in pixels.</param>
+    /// <param name="a0">Start angle in radians.</param>
+    /// <param name="a1">End angle in radians.</param>
+    /// <param name="hovered">Whether the sector is currently hovered.</param>
+    /// <param name="isActive">Whether the sector is the active selection.</param>
+    /// <param name="disabled">Whether the sector is disabled.</param>
+    /// <param name="outerRadius">Outer wedge radius in pixels.</param>
+    /// <param name="innerRadius">Inner wedge radius in pixels.</param>
     /// <inheritdoc />
     public virtual void DrawSector(Context ctx, float cx, float cy, float a0, float a1,
         bool hovered, bool isActive, bool disabled,

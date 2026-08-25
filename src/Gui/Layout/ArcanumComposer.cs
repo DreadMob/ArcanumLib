@@ -592,7 +592,7 @@ public class ArcanumComposer
         public ElementBounds? LastChild;
         public Container? Parent;
 
-        /// <summary>Gets the available width.</summary>
+        /// <summary>Available inner width accounting for fixed sizing, padding, and parent.</summary>
         public double AvailableWidth
         {
             get
@@ -608,7 +608,7 @@ public class ArcanumComposer
             }
         }
 
-        /// <summary>Gets the available height.</summary>
+        /// <summary>Available inner height accounting for fixed sizing, padding, and parent.</summary>
         public double AvailableHeight
         {
             get
@@ -624,13 +624,13 @@ public class ArcanumComposer
             }
         }
 
-        /// <summary>Performs the container operation.</summary>
-        /// <param name="composer">The composer value.</param>
-        /// <param name="bounds">The bounds value.</param>
-        /// <param name="orientation">The orientation value.</param>
-        /// <param name="padding">The padding value.</param>
-        /// <param name="gap">The gap value.</param>
-        /// <param name="parent">The parent value.</param>
+        /// <summary>Creates a layout container bound to a composer with the given orientation and spacing.</summary>
+        /// <param name="composer">The owning composer.</param>
+        /// <param name="bounds">The bounds of this container.</param>
+        /// <param name="orientation">Layout direction (horizontal or vertical).</param>
+        /// <param name="padding">Inner padding in pixels.</param>
+        /// <param name="gap">Gap between children in pixels.</param>
+        /// <param name="parent">Optional parent container for nested layouts.</param>
         public Container(ArcanumComposer composer, ElementBounds bounds, ContainerOrientation orientation, double padding, double gap, Container? parent)
         {
             Composer = composer;
@@ -641,10 +641,10 @@ public class ArcanumComposer
             Parent = parent;
         }
 
-        /// <summary>Performs the next bounds operation.</summary>
-        /// <param name="width">The width.</param>
-        /// <param name="height">The height.</param>
-        /// <returns>The next bounds.</returns>
+        /// <summary>Computes the next child bounds within this container, advancing the layout cursor.</summary>
+        /// <param name="width">Optional fixed width; when null the available width is used.</param>
+        /// <param name="height">Optional fixed height; when null the available height is used.</param>
+        /// <returns>The <see cref="ElementBounds" /> for the next child.</returns>
         public ElementBounds NextBounds(double? width = null, double? height = null)
         {
             double innerW = Math.Max(0, width ?? AvailableWidth);

@@ -20,106 +20,106 @@ namespace ArcanumLib.Particles
         /// <summary>Named RGBA color presets for common particle effects.</summary>
         public static class Colors
         {
-            /// <summary>Gets the fire.</summary>
+            /// <summary>Bright orange-red fire color.</summary>
             public static int Fire => ColorUtil.ToRgba(255, 255, 120, 40);
-            /// <summary>Gets the fire dark.</summary>
+            /// <summary>Deep dark-red fire color.</summary>
             public static int FireDark => ColorUtil.ToRgba(255, 180, 60, 20);
-            /// <summary>Gets the poison.</summary>
+            /// <summary>Dark green poison color.</summary>
             public static int Poison => ColorUtil.ToRgba(200, 50, 200, 50);
-            /// <summary>Gets the poison green.</summary>
+            /// <summary>Bright green poison color.</summary>
             public static int PoisonGreen => ColorUtil.ToRgba(255, 60, 200, 60);
-            /// <summary>Gets the poison bright.</summary>
+            /// <summary>Vivid yellow-green poison color.</summary>
             public static int PoisonBright => ColorUtil.ToRgba(255, 80, 255, 60);
-            /// <summary>Gets the ice.</summary>
+            /// <summary>Pale blue ice color.</summary>
             public static int Ice => ColorUtil.ToRgba(220, 180, 220, 255);
-            /// <summary>Gets the ice bright.</summary>
+            /// <summary>Bright white-blue ice color.</summary>
             public static int IceBright => ColorUtil.ToRgba(255, 200, 240, 255);
-            /// <summary>Gets the nile.</summary>
+            /// <summary>Deep blue Nile color.</summary>
             public static int Nile => ColorUtil.ToRgba(220, 20, 140, 180);
-            /// <summary>Gets the nile bright.</summary>
+            /// <summary>Bright cyan Nile color.</summary>
             public static int NileBright => ColorUtil.ToRgba(255, 120, 220, 255);
-            /// <summary>Gets the nile foam.</summary>
+            /// <summary>Pale blue Nile foam color.</summary>
             public static int NileFoam => ColorUtil.ToRgba(220, 200, 240, 255);
-            /// <summary>Gets the shadow.</summary>
+            /// <summary>Dark purple shadow color.</summary>
             public static int Shadow => ColorUtil.ToRgba(200, 40, 0, 60);
-            /// <summary>Gets the shadow deep.</summary>
+            /// <summary>Very dark purple shadow color.</summary>
             public static int ShadowDeep => ColorUtil.ToRgba(180, 20, 0, 40);
-            /// <summary>Gets the lightning.</summary>
+            /// <summary>Bright white-yellow lightning color.</summary>
             public static int Lightning => ColorUtil.ToRgba(255, 255, 255, 180);
-            /// <summary>Gets the lightning blue.</summary>
+            /// <summary>Pale blue lightning color.</summary>
             public static int LightningBlue => ColorUtil.ToRgba(255, 180, 200, 255);
-            /// <summary>Gets the holy.</summary>
+            /// <summary>Warm white holy color.</summary>
             public static int Holy => ColorUtil.ToRgba(255, 255, 240, 200);
-            /// <summary>Gets the holy gold.</summary>
+            /// <summary>Golden holy color.</summary>
             public static int HolyGold => ColorUtil.ToRgba(255, 255, 200, 80);
-            /// <summary>Gets the blood.</summary>
+            /// <summary>Dark red blood color.</summary>
             public static int Blood => ColorUtil.ToRgba(220, 180, 20, 20);
-            /// <summary>Gets the blood dark.</summary>
+            /// <summary>Very dark red blood color.</summary>
             public static int BloodDark => ColorUtil.ToRgba(200, 120, 10, 10);
-            /// <summary>Gets the arcane.</summary>
+            /// <summary>Purple arcane color.</summary>
             public static int Arcane => ColorUtil.ToRgba(200, 120, 50, 200);
-            /// <summary>Gets the arcane bright.</summary>
+            /// <summary>Bright pink arcane color.</summary>
             public static int ArcaneBright => ColorUtil.ToRgba(255, 160, 80, 255);
-            /// <summary>Gets the smoke.</summary>
+            /// <summary>Medium grey smoke color.</summary>
             public static int Smoke => ColorUtil.ToRgba(140, 60, 60, 60);
-            /// <summary>Gets the smoke dark.</summary>
+            /// <summary>Very dark grey smoke color.</summary>
             public static int SmokeDark => ColorUtil.ToRgba(140, 30, 30, 30);
-            /// <summary>Gets the void.</summary>
+            /// <summary>Near-black void color.</summary>
             public static int Void => ColorUtil.ToRgba(180, 10, 0, 20);
-            /// <summary>Gets the nature.</summary>
+            /// <summary>Dark green nature color.</summary>
             public static int Nature => ColorUtil.ToRgba(200, 60, 180, 40);
-            /// <summary>Gets the nature bright.</summary>
+            /// <summary>Bright green nature color.</summary>
             public static int NatureBright => ColorUtil.ToRgba(255, 100, 220, 80);
-            /// <summary>Gets the chain.</summary>
+            /// <summary>Silver chain color.</summary>
             public static int Chain => ColorUtil.ToRgba(200, 150, 100, 200);
-            /// <summary>Gets the shield.</summary>
+            /// <summary>Pale blue shield color.</summary>
             public static int Shield => ColorUtil.ToRgba(200, 100, 150, 220);
-            /// <summary>Gets the shield gold.</summary>
+            /// <summary>Golden shield color.</summary>
             public static int ShieldGold => ColorUtil.ToRgba(220, 220, 180, 80);
-            /// <summary>Gets the white.</summary>
+            /// <summary>Pure white color.</summary>
             public static int White => ColorUtil.ToRgba(255, 255, 255, 255);
-            /// <summary>Gets the black.</summary>
+            /// <summary>Near-black color.</summary>
             public static int Black => ColorUtil.ToRgba(255, 10, 10, 10);
 
             // Themed color presets for common visual styles.
             // Mechanical / industrial — sparks, molten orange, smoke
-            /// <summary>Gets the mecha spark.</summary>
+            /// <summary>Bright yellow-orange mechanical spark color.</summary>
             public static int MechaSpark => ColorUtil.ToRgba(255, 255, 200, 60);
-            /// <summary>Gets the mecha orange.</summary>
+            /// <summary>Molten orange mechanical color.</summary>
             public static int MechaOrange => ColorUtil.ToRgba(240, 255, 140, 20);
-            /// <summary>Gets the mecha smoke.</summary>
+            /// <summary>Dark grey mechanical smoke color.</summary>
             public static int MechaSmoke => ColorUtil.ToRgba(160, 80, 70, 60);
-            /// <summary>Gets the mecha core.</summary>
+            /// <summary>Bright orange-red mechanical core color.</summary>
             public static int MechaCore => ColorUtil.ToRgba(255, 255, 80, 0);
 
             // Bone / skeletal — bone white, marrow green, primal rage
-            /// <summary>Gets the bone white.</summary>
+            /// <summary>Pale off-white bone color.</summary>
             public static int BoneWhite => ColorUtil.ToRgba(220, 230, 220, 200);
-            /// <summary>Gets the bone marrow.</summary>
+            /// <summary>Yellow-green bone marrow color.</summary>
             public static int BoneMarrow => ColorUtil.ToRgba(200, 160, 200, 80);
-            /// <summary>Gets the bone rage.</summary>
+            /// <summary>Bright orange-red bone rage color.</summary>
             public static int BoneRage => ColorUtil.ToRgba(240, 200, 40, 30);
-            /// <summary>Gets the bone dust.</summary>
+            /// <summary>Pale grey bone dust color.</summary>
             public static int BoneDust => ColorUtil.ToRgba(150, 180, 170, 140);
 
             // Stone / crypt — stone grey, crypt purple, ancient dust
-            /// <summary>Gets the stone grey.</summary>
+            /// <summary>Medium grey stone color.</summary>
             public static int StoneGrey => ColorUtil.ToRgba(180, 120, 110, 100);
-            /// <summary>Gets the crypt purple.</summary>
+            /// <summary>Dark purple crypt color.</summary>
             public static int CryptPurple => ColorUtil.ToRgba(200, 100, 40, 140);
-            /// <summary>Gets the crypt deep.</summary>
+            /// <summary>Very dark purple crypt color.</summary>
             public static int CryptDeep => ColorUtil.ToRgba(180, 60, 20, 100);
-            /// <summary>Gets the ancient dust.</summary>
+            /// <summary>Dusty grey-brown ancient dust color.</summary>
             public static int AncientDust => ColorUtil.ToRgba(140, 140, 130, 110);
 
             // Toxic / miasma — toxic green, miasma purple, corruption
-            /// <summary>Gets the toxic green.</summary>
+            /// <summary>Vivid toxic green color.</summary>
             public static int ToxicGreen => ColorUtil.ToRgba(220, 40, 220, 30);
-            /// <summary>Gets the miasma.</summary>
+            /// <summary>Dark purple miasma color.</summary>
             public static int Miasma => ColorUtil.ToRgba(180, 80, 60, 120);
-            /// <summary>Gets the miasma bright.</summary>
+            /// <summary>Bright purple miasma color.</summary>
             public static int MiasmaBright => ColorUtil.ToRgba(220, 120, 100, 180);
-            /// <summary>Gets the corruption.</summary>
+            /// <summary>Dark red-purple corruption color.</summary>
             public static int Corruption => ColorUtil.ToRgba(200, 60, 30, 80);
         }
 

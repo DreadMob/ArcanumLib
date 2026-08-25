@@ -1,4 +1,5 @@
 using System;
+using ArcanumLib.Core;
 using ArcanumLib.Persistence;
 using NSubstitute;
 using Vintagestory.API.Server;
@@ -6,8 +7,21 @@ using Xunit;
 
 namespace ArcanumLib.Tests.Unit;
 
-public class ModDataStoreTests
+[Collection("ArcanumServices")]
+public class ModDataStoreTests : IDisposable
 {
+    public ModDataStoreTests()
+    {
+        ArcanumServices.Shutdown();
+        ModDataStore.Clear();
+    }
+
+    public void Dispose()
+    {
+        ArcanumServices.Shutdown();
+        ModDataStore.Clear();
+    }
+
     private class TestData
     {
         public int Counter { get; set; }
@@ -77,9 +91,21 @@ public class ModDataStoreTests
     [Fact]
     public void GetOrCreateGlobal_Throws_WhenSapiNotSet()
     {
-        ModDataStore.Sapi = null;
+        // No ICoreServerAPI registered in ArcanumServices for Server scope.
         Assert.Throws<InvalidOperationException>(() =>
             ModDataStore.GetOrCreate<TestData>("mod", "store"));
+    }
+
+    [Fact]
+    public void GetOrCreateGlobal_UsesRegisteredSapi()
+    {
+        var sapi = Substitute.For<ICoreServerAPI>();
+        ArcanumServices.Register<ICoreServerAPI>(sapi, ArcanumServiceScope.Server);
+
+        var store = ModDataStore.GetOrCreate<TestData>("mod", "store-global-2");
+
+        Assert.NotNull(store);
+        Assert.EndsWith("mod:store-global-2", store.StoreKey);
     }
 
     [Fact]

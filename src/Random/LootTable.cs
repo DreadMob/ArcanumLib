@@ -29,13 +29,13 @@ public class LootEntry<T>
     /// </summary>
     public int Tier { get; set; } = 0;
 
-    /// <summary>Performs the loot entry operation.</summary>
+    /// <summary>Creates an empty loot entry with default values.</summary>
     public LootEntry() { }
 
-    /// <summary>Performs the loot entry operation.</summary>
-    /// <param name="value">The value to set or compare.</param>
-    /// <param name="weight">The weight value.</param>
-    /// <param name="tier">The tier value.</param>
+    /// <summary>Creates a loot entry with the given value, weight, and tier.</summary>
+    /// <param name="value">The value that can be chosen.</param>
+    /// <param name="weight">Relative chance of this entry being selected.</param>
+    /// <param name="tier">Tier used by luck-based scaling; higher tiers are favored as luck increases.</param>
     public LootEntry(T value, float weight, int tier = 0)
     {
         Value = value;

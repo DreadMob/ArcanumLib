@@ -19,13 +19,13 @@ namespace ArcanumLib.Gui.RadialMenu
         public override string? ToggleKeyCombinationCode => null;
         /// <summary>Gets the draw order.</summary>
         public override double DrawOrder => 1.0;
-        /// <summary>Gets a value indicating whether the prefers ungrabbed mouse is enabled.</summary>
+        /// <summary>Radial menus always request an ungrabbed mouse so the cursor can roam freely.</summary>
         public override bool PrefersUngrabbedMouse => true;
-        /// <summary>Returns a value indicating whether the operation should receive mouse events.</summary>
-        /// <returns>true if the operation should receive mouse events; otherwise, false.</returns>
+        /// <summary>Returns whether the menu should receive mouse events (only when open).</summary>
+        /// <returns><c>true</c> if the menu is open; otherwise <c>false</c>.</returns>
         public override bool ShouldReceiveMouseEvents() => IsOpened();
-        /// <summary>Returns a value indicating whether the operation should receive keyboard events.</summary>
-        /// <returns>true if the operation should receive keyboard events; otherwise, false.</returns>
+        /// <summary>Returns whether the menu should receive keyboard events (only when open).</summary>
+        /// <returns><c>true</c> if the menu is open; otherwise <c>false</c>.</returns>
         public override bool ShouldReceiveKeyboardEvents() => IsOpened();
 
         private readonly List<RadialMenuItem> _items;
@@ -38,7 +38,7 @@ namespace ArcanumLib.Gui.RadialMenu
         /// <summary>Visual style for this menu, resolved from the style registry.</summary>
         public IRadialMenuStyle Style { get; set; }
 
-        /// <summary>Gets the items.</summary>
+        /// <summary>The items displayed in the radial menu.</summary>
         protected List<RadialMenuItem> Items => _items;
 
         private GlKeys? _holdKey;

@@ -47,74 +47,74 @@ namespace ArcanumLib.Gui.Theme
         // --------------------------------------------------------------------
         // Accent (vanilla "active button" copper) and a warm highlight.
         // --------------------------------------------------------------------
-        /// <summary>The accent value.</summary>
+        /// <summary>Full-opacity copper accent used for active buttons and emphasis.</summary>
         public static readonly RGBA Accent           = RGBA.From(0xC5, 0x89, 0x48, 1.00);
-        /// <summary>The accent soft value.</summary>
+        /// <summary>Soft copper accent at 40% opacity for subtle highlights.</summary>
         public static readonly RGBA AccentSoft       = RGBA.From(0xC5, 0x89, 0x48, 0.40);
-        /// <summary>The accent dim value.</summary>
+        /// <summary>Dim copper accent at 18% opacity for backgrounds and hovers.</summary>
         public static readonly RGBA AccentDim        = RGBA.From(0xC5, 0x89, 0x48, 0.18);
-        /// <summary>The accent bright value.</summary>
+        /// <summary>Brightened copper accent for hover and focus states.</summary>
         public static readonly RGBA AccentBright     = RGBA.From(0xE3, 0xA8, 0x6A, 1.00);
-        /// <summary>The highlight value.</summary>
+        /// <summary>Warm parchment highlight used for separators and subtle borders.</summary>
         public static readonly RGBA Highlight        = RGBA.From(0xA8, 0x8B, 0x6C, 1.00);
 
         // --------------------------------------------------------------------
         // Status palette - tuned to read against the brown surface.
         // --------------------------------------------------------------------
-        /// <summary>The status available value.</summary>
+        /// <summary>Copper status color for available actions.</summary>
         public static readonly RGBA StatusAvailable  = RGBA.From(0xC5, 0x89, 0x48, 1.00); // copper
-        /// <summary>The status active value.</summary>
+        /// <summary>Pale steel-blue status color for active or in-progress states.</summary>
         public static readonly RGBA StatusActive     = RGBA.From(0x9B, 0xC5, 0xE6, 1.00); // pale steel blue
-        /// <summary>The status complete value.</summary>
+        /// <summary>Muted leaf-green status color for completed states.</summary>
         public static readonly RGBA StatusComplete   = RGBA.From(0x9F, 0xCB, 0x6E, 1.00); // muted leaf green
-        /// <summary>The status locked value.</summary>
+        /// <summary>Dim parchment status color for locked states.</summary>
         public static readonly RGBA StatusLocked     = RGBA.From(0x8A, 0x7C, 0x68, 1.00); // dim parchment
-        /// <summary>The status cooldown value.</summary>
+        /// <summary>Gray parchment status color for cooldown states.</summary>
         public static readonly RGBA StatusCooldown   = RGBA.From(0x8A, 0x7C, 0x68, 1.00); // gray parchment
-        /// <summary>The status failed value.</summary>
+        /// <summary>Muted iron-rust status color for failed states.</summary>
         public static readonly RGBA StatusFailed     = RGBA.From(0xCD, 0x66, 0x5C, 1.00); // muted iron-rust
 
         // --------------------------------------------------------------------
         // Text palette - vanilla parchment cream as the base.
         // --------------------------------------------------------------------
-        /// <summary>The text primary value.</summary>
+        /// <summary>Primary text color, high-contrast parchment cream.</summary>
         public static readonly RGBA TextPrimary      = RGBA.From(0xE9, 0xDD, 0xCE, 1.00);
-        /// <summary>The text secondary value.</summary>
+        /// <summary>Secondary text color for labels and supporting text.</summary>
         public static readonly RGBA TextSecondary    = RGBA.From(0xC9, 0xB7, 0x9C, 1.00);
-        /// <summary>The text muted value.</summary>
+        /// <summary>Muted text color for hints and tertiary information.</summary>
         public static readonly RGBA TextMuted        = RGBA.From(0x8F, 0x80, 0x6A, 1.00);
-        /// <summary>The text disabled value.</summary>
+        /// <summary>Disabled text color for unavailable controls.</summary>
         public static readonly RGBA TextDisabled     = RGBA.From(0x55, 0x47, 0x36, 1.00);
 
         // --------------------------------------------------------------------
         // Sizing tokens (already wrapped in GuiElement.scaled where used).
         // Keep these unscaled so callers explicitly opt into HiDPI scaling.
         // --------------------------------------------------------------------
-        /// <summary>Represents radius.</summary>
+        /// <summary>Corner radius tokens for buttons, panels, and cards.</summary>
         public static class Radius
         {
-            /// <summary>The small value.</summary>
+            /// <summary>Small corner radius for compact controls.</summary>
             public const double Small  =  4.0;
-            /// <summary>The medium value.</summary>
+            /// <summary>Medium corner radius for standard controls.</summary>
             public const double Medium =  8.0;
-            /// <summary>The large value.</summary>
+            /// <summary>Large corner radius for panels and dialogs.</summary>
             public const double Large  = 12.0;
-            /// <summary>The pill value.</summary>
+            /// <summary>Pill-shaped radius for tags and badges.</summary>
             public const double Pill   = 20.0;
         }
 
-        /// <summary>Represents spacing.</summary>
+        /// <summary>Spacing tokens for consistent layout gaps.</summary>
         public static class Spacing
         {
-            /// <summary>The xs value.</summary>
+            /// <summary>Extra-small spacing for tight inline gaps.</summary>
             public const double Xs =  4.0;
-            /// <summary>The sm value.</summary>
+            /// <summary>Small spacing for compact layouts.</summary>
             public const double Sm =  8.0;
-            /// <summary>The md value.</summary>
+            /// <summary>Medium spacing for standard layouts.</summary>
             public const double Md = 12.0;
-            /// <summary>The lg value.</summary>
+            /// <summary>Large spacing for section separation.</summary>
             public const double Lg = 18.0;
-            /// <summary>The xl value.</summary>
+            /// <summary>Extra-large spacing for major section breaks.</summary>
             public const double Xl = 28.0;
         }
 

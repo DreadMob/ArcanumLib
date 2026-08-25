@@ -43,28 +43,28 @@ namespace ArcanumLib.Gui.Icons
     public abstract class VectorIconBase : ICustomIconRenderer
     {
         /// <summary>Draw the icon using the provided color for strokes and fills.</summary>
-        /// <param name="ctx">The ctx value.</param>
-        /// <param name="cx">The cx value.</param>
-        /// <param name="cy">The cy value.</param>
-        /// <param name="radius">The radius.</param>
-        /// <param name="color">The color value.</param>
+        /// <param name="ctx">The Cairo context to draw with.</param>
+        /// <param name="cx">Center X in pixels.</param>
+        /// <param name="cy">Center Y in pixels.</param>
+        /// <param name="radius">Icon radius in pixels.</param>
+        /// <param name="color">Color to draw with.</param>
         public abstract void DrawColored(Context ctx, double cx, double cy, double radius, RGBA color);
 
-        /// <summary>Performs the draw operation.</summary>
-        /// <param name="ctx">The ctx value.</param>
-        /// <param name="cx">The cx value.</param>
-        /// <param name="cy">The cy value.</param>
-        /// <param name="radius">The radius.</param>
-        /// <param name="color">The color value.</param>
+        /// <summary>Draws the icon with an explicit color at the given center and radius.</summary>
+        /// <param name="ctx">The Cairo context to draw with.</param>
+        /// <param name="cx">Center X in pixels.</param>
+        /// <param name="cy">Center Y in pixels.</param>
+        /// <param name="radius">Icon radius in pixels.</param>
+        /// <param name="color">Color to draw with.</param>
         /// <inheritdoc />
         public void Draw(Context ctx, double cx, double cy, double radius, RGBA color)
             => DrawColored(ctx, cx, cy, radius, color);
 
-        /// <summary>Performs the draw operation.</summary>
-        /// <param name="ctx">The ctx value.</param>
-        /// <param name="cx">The cx value.</param>
-        /// <param name="cy">The cy value.</param>
-        /// <param name="radius">The radius.</param>
+        /// <summary>Draws the icon with the default color at the given center and radius.</summary>
+        /// <param name="ctx">The Cairo context to draw with.</param>
+        /// <param name="cx">Center X in pixels.</param>
+        /// <param name="cy">Center Y in pixels.</param>
+        /// <param name="radius">Icon radius in pixels.</param>
         /// <inheritdoc />
         public void Draw(Context ctx, double cx, double cy, double radius)
             => DrawColored(ctx, cx, cy, radius, default);

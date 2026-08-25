@@ -93,7 +93,7 @@ public class MyModSystem : ModSystem
 ## Notes
 
 - `ModDataStore` is **server-side only**.
-- In unit tests, set `ModDataStore.Sapi` to a test `ICoreServerAPI` or use the overload that accepts `sapi`.
+- In unit tests, register a test `ICoreServerAPI` in `ArcanumServices` under `ArcanumServiceScope.Server` (e.g., `ArcanumServices.Register<ICoreServerAPI>(sapi, ArcanumServiceScope.Server)`) or use the overload that accepts `sapi` directly.
 - Increment `dataVersion` when the data shape changes; future migrations can check this value.
 - `MarkDirty()` must be called when `Data` is modified, otherwise `Save()` is a no-op.
 - `IsDirty` returns `true` if the store has been modified since the last successful `Save()`.

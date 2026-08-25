@@ -6,9 +6,15 @@ using Xunit;
 
 namespace ArcanumLib.Tests.Unit;
 
-public class OnlinePlayerCacheTests
+[Collection("ArcanumServices")]
+public class OnlinePlayerCacheTests : IDisposable
 {
     public OnlinePlayerCacheTests()
+    {
+        new OnlinePlayerCache().Dispose();
+    }
+
+    public void Dispose()
     {
         new OnlinePlayerCache().Dispose();
     }

@@ -36,8 +36,8 @@ public static class ImageIconCache
     private static readonly ConcurrentDictionary<string, long> _missing = new(StringComparer.OrdinalIgnoreCase);
     private const long MissingRetryMs = 60000;
 
-    /// <summary>Performs the init operation.</summary>
-    /// <param name="capi">The client API instance.</param>
+    /// <summary>Initializes the cache with the given client API, disposing any previously cached surfaces.</summary>
+    /// <param name="capi">The client API used to resolve asset paths.</param>
     public static void Init(ICoreClientAPI capi)
     {
         if (_capi == capi) return;

@@ -10,17 +10,17 @@ public static class ArcanumLifecycle
 {
     private readonly struct Registration
     {
-        /// <summary>Gets the name.</summary>
+        /// <summary>Human-readable name used in diagnostics.</summary>
         public string Name { get; }
-        /// <summary>Gets the init.</summary>
+        /// <summary>Action invoked when the registry is initialized.</summary>
         public Action Init { get; }
-        /// <summary>Gets the dispose.</summary>
+        /// <summary>Action invoked when the registry is disposed.</summary>
         public Action Dispose { get; }
 
-        /// <summary>Performs the registration operation.</summary>
-        /// <param name="name">The name.</param>
-        /// <param name="init">The init value.</param>
-        /// <param name="dispose">The dispose value.</param>
+        /// <summary>Creates a lifecycle registration.</summary>
+        /// <param name="name">Human-readable name used in diagnostics.</param>
+        /// <param name="init">Action to run during initialization.</param>
+        /// <param name="dispose">Action to run during disposal.</param>
         /// <exception cref="ArgumentNullException">Thrown when <paramref name="name" /> is <see langword="null" />.</exception>
         public Registration(string name, Action init, Action dispose)
         {

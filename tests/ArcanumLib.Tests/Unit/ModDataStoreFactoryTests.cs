@@ -1,4 +1,5 @@
 using System;
+using ArcanumLib.Core;
 using ArcanumLib.Persistence;
 using NSubstitute;
 using Vintagestory.API.Server;
@@ -6,18 +7,19 @@ using Xunit;
 
 namespace ArcanumLib.Tests.Unit;
 
+[Collection("ArcanumServices")]
 public class ModDataStoreFactoryTests : IDisposable
 {
     public ModDataStoreFactoryTests()
     {
+        ArcanumServices.Shutdown();
         ModDataStore.Clear();
-        ModDataStore.Sapi = null;
     }
 
     public void Dispose()
     {
+        ArcanumServices.Shutdown();
         ModDataStore.Clear();
-        ModDataStore.Sapi = null;
     }
 
     [Fact]
@@ -46,7 +48,7 @@ public class ModDataStoreFactoryTests : IDisposable
     public void GetOrCreate_GlobalSapi_UsesRegisteredApi()
     {
         var sapi = Substitute.For<ICoreServerAPI>();
-        ModDataStore.Sapi = sapi;
+        ArcanumServices.Register<ICoreServerAPI>(sapi, ArcanumServiceScope.Server);
 
         var store = ModDataStore.GetOrCreate<TestData>("mod", "store-global");
 
