@@ -39,7 +39,7 @@ public record PlayerKilledEvent : IEvent
 using ArcanumLib.Core;
 using ArcanumLib.Events;
 
-var bus = ArcanumServices.Get<EventBusService>();
+var bus = ArcanumServices.Get<IEventBusService>();
 var sub = bus!.Subscribe<PlayerKilledEvent>(e =>
 {
     ArcanumServices.Get<ICoreAPI>()?.Logger.Notification("Player {0} was killed by {1}", e.VictimUid, e.KillerUid);

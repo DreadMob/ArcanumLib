@@ -10,11 +10,53 @@ using Vintagestory.API.Server;
 namespace ArcanumLib.Common
 {
     /// <summary>
+    /// Interface for tracking total online time per player.
+    /// </summary>
+    public interface IPlaytimeTracker : IDisposable
+    {
+        /// <summary>Fired when a session is saved: (playerUid, totalMs).</summary>
+        event Action<string, long>? OnSessionSaved;
+
+        /// <summary>Total playtime in hours for the given player.</summary>
+        float GetPlaytimeHours(string playerUid);
+
+        /// <summary>Total playtime in milliseconds for the given player.</summary>
+        long GetPlaytimeMs(string playerUid);
+
+        /// <summary>
+        /// Returns all tracked player UIDs with their total playtime in hours.
+        /// </summary>
+        Dictionary<string, float> GetAllPlaytimeHours();
+
+        /// <summary>First join timestamp in UTC milliseconds, or null if unknown.</summary>
+        long? GetFirstJoinMs(string playerUid);
+
+        /// <summary>Last online timestamp in UTC milliseconds. Returns now if currently online.</summary>
+        long? GetLastOnlineMs(string playerUid);
+
+        /// <summary>Current login streak (consecutive days).</summary>
+        int GetLoginStreak(string playerUid);
+
+        /// <summary>Sets the first join timestamp for a player.</summary>
+        void SetFirstJoinMs(string playerUid, long ms);
+
+        /// <summary>
+        /// Sets the total accumulated playtime for a player.
+        /// </summary>
+        void SetTotalMs(string playerUid, long totalMs);
+
+        /// <summary>
+        /// Bulk import playtime from a map of playerUid -&gt; totalMs.
+        /// </summary>
+        int ImportFromDictionary(Dictionary<string, long> playtimes);
+    }
+
+    /// <summary>
     /// Tracks total online time per player via PlayerJoin / PlayerLeave events.
     /// Also tracks first join date, last online date, and login streaks.
     /// Persists data through <see cref="ModDataStore" /> so it survives savegame copy/delete.
     /// </summary>
-    public class PlaytimeTracker : IDisposable
+    public class PlaytimeTracker : IPlaytimeTracker
     {
         private readonly ICoreServerAPI? _sapi;
         private readonly IModDataStore<PlaytimeData>? _store;
@@ -26,8 +68,8 @@ namespace ArcanumLib.Common
         /// The current server-scoped tracker instance, if one has been registered in <see cref="ArcanumServices" />.
         /// Use <see cref="ArcanumServices.Register{T}(T, ArcanumServiceScope)" /> to publish a tracker explicitly.
         /// </summary>
-        public static PlaytimeTracker? Current
-            => ArcanumServices.Get<PlaytimeTracker>(ArcanumServiceScope.Server);
+        public static IPlaytimeTracker? Current
+            => ArcanumServices.Get<IPlaytimeTracker>(ArcanumServiceScope.Server);
 
         /// <summary>Fired when a session is saved: (playerUid, totalMs).</summary>
         public event Action<string, long>? OnSessionSaved;

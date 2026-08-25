@@ -12,8 +12,8 @@ namespace ArcanumLib.Performance;
 /// </summary>
 public class ArcanumPerformanceModSystem : ModSystem
 {
-    private StatCoalescingEngine? _statCoalescing;
-    private GameTimeScheduler? _gameTimeScheduler;
+    private IStatCoalescingEngine? _statCoalescing;
+    private IGameTimeScheduler? _gameTimeScheduler;
 
     /// <summary>
     /// Returns the execution order relative to other systems.
@@ -34,7 +34,7 @@ public class ArcanumPerformanceModSystem : ModSystem
     /// <param name="capi">The client API.</param>
     public override void StartClientSide(ICoreClientAPI capi)
     {
-        ArcanumServices.Get<DeferredWorkService>()?.Start(capi);
+        ArcanumServices.Get<IDeferredWorkService>()?.Start(capi);
     }
 
     /// <summary>
@@ -43,15 +43,19 @@ public class ArcanumPerformanceModSystem : ModSystem
     /// <param name="sapi">The server API.</param>
     public override void StartServerSide(ICoreServerAPI sapi)
     {
-        ArcanumServices.Get<DeferredWorkService>()?.Start(sapi);
+        ArcanumServices.Get<IDeferredWorkService>()?.Start(sapi);
 
-        _gameTimeScheduler = new GameTimeScheduler();
-        _gameTimeScheduler.Start(sapi);
-        ArcanumServices.Register(_gameTimeScheduler, ArcanumServiceScope.Server);
+        var gameTime = new GameTimeScheduler();
+        _gameTimeScheduler = gameTime;
+        gameTime.Start(sapi);
+        ArcanumServices.Register(gameTime, ArcanumServiceScope.Server);
+        ArcanumServices.Register<IGameTimeScheduler>(gameTime, ArcanumServiceScope.Server);
 
-        _statCoalescing = new StatCoalescingEngine();
-        _statCoalescing.Start(sapi);
-        ArcanumServices.Register(_statCoalescing, ArcanumServiceScope.Server);
+        var statCoalescing = new StatCoalescingEngine();
+        _statCoalescing = statCoalescing;
+        statCoalescing.Start(sapi);
+        ArcanumServices.Register(statCoalescing, ArcanumServiceScope.Server);
+        ArcanumServices.Register<IStatCoalescingEngine>(statCoalescing, ArcanumServiceScope.Server);
     }
 
     /// <summary>
@@ -61,11 +65,13 @@ public class ArcanumPerformanceModSystem : ModSystem
     {
         _statCoalescing?.Dispose();
         ArcanumServices.Unregister<StatCoalescingEngine>();
+        ArcanumServices.Unregister<IStatCoalescingEngine>();
 
         _gameTimeScheduler?.Dispose();
         ArcanumServices.Unregister<GameTimeScheduler>();
+        ArcanumServices.Unregister<IGameTimeScheduler>();
 
-        ArcanumServices.Get<DeferredWorkService>()?.Stop();
+        ArcanumServices.Get<IDeferredWorkService>()?.Stop();
         base.Dispose();
     }
 }

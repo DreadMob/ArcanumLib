@@ -37,7 +37,7 @@ public class DiagnosticsModSystem : ModSystem
     private readonly List<MonitorSnapshot> _monitorHistory = new();
     private const int MaxMonitorHistory = 60;
 
-    private static EventBusService? EventBusService => ArcanumServices.Get<EventBusService>();
+    private static IEventBusService? EventBusService => ArcanumServices.Get<IEventBusService>();
 
     /// <summary>Runs after all other ArcanumLib systems so registrations are complete.</summary>
     /// <returns>The execute order.</returns>
@@ -101,10 +101,10 @@ public class DiagnosticsModSystem : ModSystem
 
         // 2. Expected services
         report.AppendLine("-- Services --");
-        var actionRegistry = ArcanumServices.Get<ActionRegistryService>();
-        var actionExecutor = ArcanumServices.Get<ActionExecutorService>();
-        var statusEffect = ArcanumServices.Get<StatusEffectService>();
-        var logger = ArcanumServices.Get<CategorizedLogger>();
+        var actionRegistry = ArcanumServices.Get<IActionRegistryService>();
+        var actionExecutor = ArcanumServices.Get<IActionExecutorService>();
+        var statusEffect = ArcanumServices.Get<IStatusEffectService>();
+        var logger = ArcanumServices.Get<ICategorizedLogger>();
 
         if (actionRegistry != null)
             report.AppendLine("  [OK]   ActionRegistryService");

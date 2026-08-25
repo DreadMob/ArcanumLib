@@ -4,6 +4,7 @@ using Xunit;
 
 namespace ArcanumLib.Tests.Unit;
 
+[Collection("ArcanumServices")]
 public class ArcanumLifecycleTests
 {
     public ArcanumLifecycleTests()

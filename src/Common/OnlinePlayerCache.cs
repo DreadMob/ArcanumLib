@@ -7,6 +7,27 @@ using Vintagestory.API.Server;
 namespace ArcanumLib.Common;
 
 /// <summary>
+/// Interface for a fast, read-only snapshot of all currently connected server players.
+/// </summary>
+public interface IOnlinePlayerCache
+{
+    /// <summary>Returns true once the cache has been initialized server-side.</summary>
+    bool IsLoaded { get; }
+
+    /// <summary>All currently online server players.</summary>
+    IReadOnlyList<IServerPlayer> All { get; }
+
+    /// <summary>Online server players indexed by UID.</summary>
+    IReadOnlyDictionary<string, IServerPlayer> ByUid { get; }
+
+    /// <summary>Returns the online server player for the given UID, or null.</summary>
+    IServerPlayer? GetByUid(string playerUid);
+
+    /// <summary>Current number of online server players.</summary>
+    int Count { get; }
+}
+
+/// <summary>
 /// Maintains a fast, read-only snapshot of all currently connected server players.
 /// Updated via PlayerJoin/PlayerLeave events, with a periodic safety rebuild.
 /// Useful for consumers that would otherwise call sapi.World.AllOnlinePlayers repeatedly
@@ -15,9 +36,9 @@ namespace ArcanumLib.Common;
 /// <remarks>
 /// The active instance is registered in <see cref="ArcanumServices" /> during
 /// <see cref="StartServerSide" />. Resolve via
-/// <c>ArcanumRuntime.Current.Services.Get&lt;OnlinePlayerCache&gt;()</c>.
+/// <c>ArcanumRuntime.Current.Services.Get&lt;IOnlinePlayerCache&gt;()</c>.
 /// </remarks>
-public class OnlinePlayerCache : ModSystem
+public class OnlinePlayerCache : ModSystem, IOnlinePlayerCache
 {
     private readonly object _syncLock = new();
     private readonly List<IServerPlayer> _all = new();
@@ -66,6 +87,7 @@ public class OnlinePlayerCache : ModSystem
         IsLoaded = true;
 
         ArcanumServices.Register(this, ArcanumServiceScope.Server);
+        ArcanumServices.Register<IOnlinePlayerCache>(this, ArcanumServiceScope.Server);
 
         Rebuild();
 
@@ -105,6 +127,7 @@ public class OnlinePlayerCache : ModSystem
         }
 
         ArcanumServices.Unregister<OnlinePlayerCache>(ArcanumServiceScope.Server);
+        ArcanumServices.Unregister<IOnlinePlayerCache>(ArcanumServiceScope.Server);
 
         base.Dispose();
     }

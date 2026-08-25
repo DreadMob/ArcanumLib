@@ -18,7 +18,7 @@ public class ActionExecutorServiceTests : IDisposable
     public ActionExecutorServiceTests()
     {
         ArcanumRuntime.Activate();
-        ArcanumServices.Register(new ActionRegistryService());
+        ArcanumServices.Register<IActionRegistryService>(new ActionRegistryService());
 
         _world = Substitute.For<IServerWorldAccessor>();
         _sapi = Substitute.For<ICoreServerAPI>();
@@ -82,7 +82,7 @@ public class ActionExecutorServiceTests : IDisposable
     {
         var service = new ActionExecutorService(_sapi);
         var handler = CreateHandler("wave");
-        ArcanumServices.Get<ActionRegistryService>()!.Register(handler);
+        ArcanumServices.Get<IActionRegistryService>()!.Register(handler);
 
         var result = service.Execute(new ActionDescriptor { Id = "wave" }, CreateContext());
 
@@ -98,7 +98,7 @@ public class ActionExecutorServiceTests : IDisposable
         var handler = CreateHandler("say");
         handler.Execute(Arg.Do<ActionContext>(ctx => capturedArgs = ctx.Args))
             .Returns(ActionResult.Success());
-        ArcanumServices.Get<ActionRegistryService>()!.Register(handler);
+        ArcanumServices.Get<IActionRegistryService>()!.Register(handler);
 
         service.Execute(new ActionDescriptor { Id = "say", Args = new[] { "hello", "world" } }, CreateContext());
 
@@ -122,7 +122,7 @@ public class ActionExecutorServiceTests : IDisposable
         var service = new ActionExecutorService(_sapi);
         var player = CreatePlayerWithEntity(7);
         var handler = CreateHandler("spell");
-        ArcanumServices.Get<ActionRegistryService>()!.Register(handler);
+        ArcanumServices.Get<IActionRegistryService>()!.Register(handler);
 
         service.Execute(new ActionDescriptor
         {
@@ -143,7 +143,7 @@ public class ActionExecutorServiceTests : IDisposable
         var service = new ActionExecutorService(_sapi);
         var player = CreatePlayerWithEntity(8);
         var handler = CreateHandler("shout");
-        ArcanumServices.Get<ActionRegistryService>()!.Register(handler);
+        ArcanumServices.Get<IActionRegistryService>()!.Register(handler);
 
         service.Execute(new ActionDescriptor
         {
@@ -171,7 +171,7 @@ public class ActionExecutorServiceTests : IDisposable
         var service = new ActionExecutorService(_sapi);
         var player = CreatePlayerWithEntity(9);
         var handler = CreateHandler("jump");
-        ArcanumServices.Get<ActionRegistryService>()!.Register(handler);
+        ArcanumServices.Get<IActionRegistryService>()!.Register(handler);
 
         service.Execute(new ActionDescriptor { Id = "jump", CooldownMs = 10000 }, CreateContext(player));
         service.ClearCooldowns(9);
@@ -187,7 +187,7 @@ public class ActionExecutorServiceTests : IDisposable
         var service = new ActionExecutorService(_sapi);
         var player = CreatePlayerWithEntity(10);
         var handler = CreateHandler("roll");
-        ArcanumServices.Get<ActionRegistryService>()!.Register(handler);
+        ArcanumServices.Get<IActionRegistryService>()!.Register(handler);
 
         service.Execute(new ActionDescriptor { Id = "roll", CooldownMs = 10000 }, CreateContext(player));
         service.ClearAllCooldowns();

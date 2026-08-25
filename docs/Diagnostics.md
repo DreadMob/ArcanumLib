@@ -155,7 +155,7 @@ The file is UTF-8 encoded and accumulates across server restarts. Each entry is 
 
 ## EventBusService diagnostic API
 
-The following methods on `EventBusService` are available for programmatic access. Resolve the service via `ArcanumServices.Get<EventBusService>()`:
+The following methods on `EventBusService` are available for programmatic access. Resolve the service via `ArcanumServices.Get<IEventBusService>()`:
 
 ### `GetDiagnostics()`
 

@@ -85,7 +85,7 @@ public class EventBusAtlasTests : AtlasScenarioBase
     {
         await World.Ticks(5);
 
-        var bus = ArcanumServices.Get<EventBusService>();
+        var bus = ArcanumServices.Get<IEventBusService>();
         Assert.NotNull(bus);
 
         TestEvent? received = null;
@@ -104,7 +104,7 @@ public class EventBusAtlasTests : AtlasScenarioBase
     {
         await World.Ticks(5);
 
-        var bus = ArcanumServices.Get<EventBusService>();
+        var bus = ArcanumServices.Get<IEventBusService>();
         Assert.NotNull(bus);
 
         int count = 0;
@@ -126,7 +126,7 @@ public class EventBusAtlasTests : AtlasScenarioBase
     {
         await World.Ticks(5);
 
-        var bus = ArcanumServices.Get<EventBusService>();
+        var bus = ArcanumServices.Get<IEventBusService>();
         Assert.NotNull(bus);
 
         string? taggedReceived = null;
@@ -147,7 +147,7 @@ public class EventBusAtlasTests : AtlasScenarioBase
     {
         await World.Ticks(5);
 
-        var bus = ArcanumServices.Get<EventBusService>();
+        var bus = ArcanumServices.Get<IEventBusService>();
         Assert.NotNull(bus);
 
         int before = bus!.ActiveSubscriptionCount();
@@ -189,7 +189,7 @@ public class StatusEffectAtlasTests : AtlasScenarioBase
     {
         await World.Ticks(5);
 
-        var service = ArcanumServices.Get<StatusEffectService>();
+        var service = ArcanumServices.Get<IStatusEffectService>();
         Assert.NotNull(service);
 
         var player = await World.JoinPlayer("se-test");
@@ -211,7 +211,7 @@ public class StatusEffectAtlasTests : AtlasScenarioBase
     {
         await World.Ticks(5);
 
-        var service = ArcanumServices.Get<StatusEffectService>();
+        var service = ArcanumServices.Get<IStatusEffectService>();
         Assert.NotNull(service);
 
         var player = await World.JoinPlayer("se-active");
@@ -229,7 +229,7 @@ public class StatusEffectAtlasTests : AtlasScenarioBase
     {
         await World.Ticks(5);
 
-        var service = ArcanumServices.Get<StatusEffectService>();
+        var service = ArcanumServices.Get<IStatusEffectService>();
         Assert.NotNull(service);
 
         var player = await World.JoinPlayer("se-rm");
@@ -379,7 +379,7 @@ public class ActionRegistryAtlasTests : AtlasScenarioBase
 
         var results = registry.ExecuteAll(descriptors, context, continueOnError: false);
 
-        Assert.Equal(1, results.Count);
+        Assert.Single(results);
         Assert.False(results[0].IsSuccess);
     }
 
@@ -419,7 +419,7 @@ public class DeferredWorkAtlasTests : AtlasScenarioBase
     {
         await World.Ticks(5);
 
-        var service = ArcanumServices.Get<DeferredWorkService>();
+        var service = ArcanumServices.Get<IDeferredWorkService>();
         Assert.NotNull(service);
 
         bool executed = false;
@@ -435,7 +435,7 @@ public class DeferredWorkAtlasTests : AtlasScenarioBase
     {
         await World.Ticks(5);
 
-        var service = ArcanumServices.Get<DeferredWorkService>();
+        var service = ArcanumServices.Get<IDeferredWorkService>();
         Assert.NotNull(service);
 
         int count = 0;
@@ -452,7 +452,7 @@ public class DeferredWorkAtlasTests : AtlasScenarioBase
     {
         await World.Ticks(5);
 
-        var service = ArcanumServices.Get<DeferredWorkService>();
+        var service = ArcanumServices.Get<IDeferredWorkService>();
         Assert.NotNull(service);
 
         int count = 0;

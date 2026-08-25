@@ -90,13 +90,99 @@ public sealed class EventBusSubscriptionInfo
 }
 
 /// <summary>
+/// Interface for the instance-based publish/subscribe event bus.
+/// </summary>
+public interface IEventBusService : IDisposable
+{
+    /// <summary>
+    /// Subscribes a handler to events of type <typeparamref name="T" />.
+    /// </summary>
+    EventBusSubscription Subscribe<T>(Action<T> handler, EventBusPriority priority = EventBusPriority.Normal) where T : IEvent;
+
+    /// <summary>
+    /// Subscribes a handler to events of type <typeparamref name="T" /> with the given tag.
+    /// </summary>
+    EventBusSubscription Subscribe<T>(string tag, Action<T> handler, EventBusPriority priority = EventBusPriority.Normal) where T : IEvent;
+
+    /// <summary>
+    /// Subscribes a handler to events by name only, without type constraints.
+    /// </summary>
+    EventBusSubscription Subscribe(string tag, Action<object?> handler, EventBusPriority priority = EventBusPriority.Normal);
+
+    /// <summary>
+    /// Publishes an event to all subscribers of type <typeparamref name="T" />.
+    /// </summary>
+    int Publish<T>(T evt) where T : IEvent;
+
+    /// <summary>
+    /// Publishes an event on the next server or client game tick.
+    /// </summary>
+    int PublishAsync<T>(T evt) where T : IEvent;
+
+    /// <summary>
+    /// Publishes a tagged event to all subscribers of type <typeparamref name="T" /> with matching tag.
+    /// </summary>
+    int Publish<T>(string tag, T evt) where T : IEvent;
+
+    /// <summary>
+    /// Publishes a tagged event on the next game tick.
+    /// </summary>
+    int PublishAsync<T>(string tag, T evt) where T : IEvent;
+
+    /// <summary>
+    /// Publishes a payload to all subscribers of the given name, regardless of type.
+    /// </summary>
+    int Publish(string tag, object? payload);
+
+    /// <summary>
+    /// Removes all subscriptions for event type <typeparamref name="T" />.
+    /// </summary>
+    void Clear<T>() where T : IEvent;
+
+    /// <summary>
+    /// Removes all subscriptions for event type <typeparamref name="T" /> with the given tag.
+    /// </summary>
+    void Clear<T>(string tag) where T : IEvent;
+
+    /// <summary>
+    /// Removes all subscriptions for all event types.
+    /// </summary>
+    void ClearAll();
+
+    /// <summary>
+    /// Returns a diagnostic snapshot of all known subscriptions.
+    /// </summary>
+    List<EventBusSubscriptionInfo> GetDiagnostics();
+
+    /// <summary>
+    /// Returns tags that have active subscribers but were never published.
+    /// </summary>
+    List<string> GetDanglingSubscriptions();
+
+    /// <summary>
+    /// Returns the number of active (non-disposed) subscriptions.
+    /// </summary>
+    int ActiveSubscriptionCount();
+
+    /// <summary>
+    /// Returns the number of active subscriptions for event type <typeparamref name="T" />.
+    /// </summary>
+    int SubscriberCount<T>() where T : IEvent;
+
+    /// <summary>
+    /// Returns the number of active subscriptions for event type <typeparamref name="T" /> with the given tag.
+    /// </summary>
+    int SubscriberCount<T>(string tag) where T : IEvent;
+}
+
+/// <summary>
 /// Instance-based publish/subscribe event bus for cross-mod communication.
 /// Mods can publish events without knowing who subscribes, and subscribe
 /// to event types without a hard reference to the publisher.
 /// Supports both type-only and string-tagged subscriptions for flexibility.
 /// Registered in <see cref="ArcanumServices" /> and disposed with the <see cref="ArcanumRuntime" />.
 /// </summary>
-public sealed class EventBusService : IDisposable
+public sealed class EventBusService : IEventBusService
 {
     private sealed class HandlerEntry
     {

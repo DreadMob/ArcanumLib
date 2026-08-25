@@ -9,6 +9,56 @@ using Vintagestory.API.Common;
 namespace ArcanumLib.Logging;
 
 /// <summary>
+/// Interface for a categorized file logger.
+/// </summary>
+public interface ICategorizedLogger : IDisposable
+{
+    /// <summary>Current logging configuration.</summary>
+    LogConfig Config { get; }
+
+    /// <summary>
+    /// Write an explicitly important event. Goes to both the category file and the consolidated important.log.
+    /// </summary>
+    void Important(string category, string message, Exception? ex = null);
+
+    /// <summary>
+    /// Write an error. Errors go to the category file, important.log and the console.
+    /// </summary>
+    void Error(string category, string message, Exception? ex = null);
+
+    /// <summary>
+    /// Write a warning. Warnings go to the category file and the consolidated important.log.
+    /// </summary>
+    void Warning(string category, string message, Exception? ex = null);
+
+    /// <summary>
+    /// Write an informational log entry to the category file only.
+    /// </summary>
+    void Info(string category, string message);
+
+    /// <summary>
+    /// Write a debug log entry (throttled to avoid per-tick bloat).
+    /// </summary>
+    void Debug(string category, string message);
+
+    /// <summary>
+    /// Write a structured log entry with key-value pairs.
+    /// </summary>
+    void Structured(string category, string eventType, params (string key, string value)[] fields);
+
+    /// <summary>
+    /// Flush all log writers immediately.
+    /// </summary>
+    void FlushAll();
+
+    /// <summary>
+    /// Applies a new config to the logger, updating the log path if needed.
+    /// </summary>
+    /// <param name="config">The config value.</param>
+    void ApplyConfig(LogConfig config);
+}
+
+/// <summary>
 /// Categorized file logger for Vintage Story mods. Writes structured logs to
 /// categorized files in a configurable subfolder of the game's Logs directory.
 /// All warnings/errors and explicitly important events are also copied to
@@ -21,21 +71,28 @@ namespace ArcanumLib.Logging;
 /// <c>"combat"</c>, <c>"economy/trades"</c>, <c>"system/errors"</c>.
 /// Subcategories are created automatically using the forward slash separator.
 /// </remarks>
-public class CategorizedLogger : IDisposable
+public class CategorizedLogger : ICategorizedLogger, IDisposable
 {
     /// <summary>
     /// Singleton instance. Backed by <see cref="ArcanumServices" />.
     /// Set by <see cref="Init" /> and cleared by <see cref="Dispose" />.
     /// </summary>
-    public static CategorizedLogger? Instance
+    public static ICategorizedLogger? Instance
     {
-        get => ArcanumServices.Get<CategorizedLogger>();
+        get => ArcanumServices.Get<ICategorizedLogger>();
         protected set
         {
             if (value == null)
+            {
                 ArcanumServices.Unregister<CategorizedLogger>();
+                ArcanumServices.Unregister<ICategorizedLogger>();
+            }
             else
-                ArcanumServices.Register(value);
+            {
+                if (value is CategorizedLogger concrete)
+                    ArcanumServices.Register(concrete);
+                ArcanumServices.Register<ICategorizedLogger>(value);
+            }
         }
     }
 
@@ -61,10 +118,20 @@ public class CategorizedLogger : IDisposable
     /// <param name="config">The config value.</param>
     public static void ApplyConfig(LogConfig config)
     {
-        if (Instance == null || config == null) return;
-        Instance.Config = config;
-        Instance.UpdateBaseLogPath();
-        Instance.api?.Logger?.Notification("[{0}] Config applied (mode: {1}).", Instance._consolePrefix, config.Mode);
+        if (config == null) return;
+        Instance?.ApplyConfig(config);
+    }
+
+    /// <summary>
+    /// Applies a new config to this logger, updating the log path if needed.
+    /// </summary>
+    /// <param name="config">The config value.</param>
+    void ICategorizedLogger.ApplyConfig(LogConfig config)
+    {
+        if (config == null) return;
+        Config = config;
+        UpdateBaseLogPath();
+        api?.Logger?.Notification("[{0}] Config applied (mode: {1}).", _consolePrefix, config.Mode);
     }
 
     private readonly ICoreAPI api;

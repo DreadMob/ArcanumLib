@@ -59,9 +59,9 @@ ArcanumServices.Register(tracker, ArcanumServiceScope.Server);
 ### Consume a service
 
 ```csharp
-var tracker = ArcanumServices.Get<PityTracker>(); // searches all scopes
+var tracker = ArcanumServices.Get<IPityTracker>(); // searches all scopes
 // or explicitly server-side:
-var tracker = ArcanumServices.Get<PityTracker>(ArcanumServiceScope.Server);
+var tracker = ArcanumServices.Get<IPityTracker>(ArcanumServiceScope.Server);
 
 tracker?.RecordOpen(playerUid, "my:milestone", rolledTier);
 ```
@@ -116,7 +116,7 @@ ArcanumRuntime.Current?.Dispose();
 ## Notes
 
 - Registration is thread-safe.
-- Use `T` as the service contract. For example, register `PityTracker` and resolve it via `ArcanumServices.Get<PityTracker>()`.
+- Use `T` as the service contract. For example, register `PityTracker` and resolve it via `ArcanumServices.Get<IPityTracker>()`.
 - Services that implement `IDisposable` are disposed by `Shutdown` and `Unregister`.
 - Prefer explicit `Client` / `Server` scopes for side-specific services to avoid singleplayer conflicts.
 - `Get<T>` and `Get(Type)` return null when no runtime is active, making them safe for logging paths.

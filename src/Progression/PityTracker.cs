@@ -8,18 +8,69 @@ using Vintagestory.API.Server;
 namespace ArcanumLib.Progression
 {
     /// <summary>
+    /// Interface for the full pity tracker service.
+    /// </summary>
+    public interface IPityTracker : IPityProvider
+    {
+        /// <summary>
+        /// Legacy save keys to check and import when no new-store data exists.
+        /// </summary>
+        IReadOnlyList<string> LegacyFallbackKeys { get; }
+
+        /// <summary>
+        /// Registers an additional legacy savegame key to check during initialization.
+        /// </summary>
+        void AddLegacyFallbackKey(string key);
+
+        /// <summary>
+        /// Loads data and performs one-time migration from the registered legacy save keys if needed.
+        /// </summary>
+        void Initialize();
+
+        /// <summary>
+        /// Saves the tracker data.
+        /// </summary>
+        void Save();
+
+        /// <summary>
+        /// Registers a pity definition. Existing definition with the same id is replaced.
+        /// </summary>
+        void RegisterDefinition(PityDefinition def);
+
+        /// <summary>
+        /// Convenience helper to register tiered pity definitions.
+        /// </summary>
+        void RegisterPityDefinitions(string prefix, int tier3Cap, int tier4Cap, string? tier3NameKey = null, string? tier4NameKey = null);
+
+        /// <summary>
+        /// Returns the number of opens remaining until the next guaranteed quality drop.
+        /// </summary>
+        int GetOpensUntilGuarantee(string playerUid, string definitionId, int qualityTierIndex = -1);
+
+        /// <summary>
+        /// Returns all registered definition IDs.
+        /// </summary>
+        IEnumerable<string> GetDefinitionIds();
+
+        /// <summary>
+        /// Removes all pity counters for a player.
+        /// </summary>
+        void ResetPlayerData(string playerUid);
+    }
+
+    /// <summary>
     /// Standalone pity tracker for any loot-quality system.
     /// Tracks per-player "opens since last quality drop" counters keyed by (definitionId, subKey).
     /// Persists via <see cref="ModDataStore" /> and can migrate legacy savegame data.
     /// </summary>
-    public class PityTracker : IPityProvider
+    public class PityTracker : IPityTracker
     {
         /// <summary>
         /// The current server-scoped tracker instance, if one has been registered in <see cref="ArcanumServices" />.
         /// Use <see cref="ArcanumServices.Register{T}(T, ArcanumServiceScope)" /> to publish a tracker explicitly.
         /// </summary>
-        public static PityTracker? Current
-            => ArcanumServices.Get<PityTracker>(ArcanumServiceScope.Server);
+        public static IPityTracker? Current
+            => ArcanumServices.Get<IPityTracker>(ArcanumServiceScope.Server);
 
         private readonly ICoreServerAPI? _sapi;
         private readonly IModDataStore<Dictionary<string, PityPlayerData>> _store;

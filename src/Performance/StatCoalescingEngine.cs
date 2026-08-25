@@ -9,6 +9,54 @@ using Vintagestory.API.Server;
 namespace ArcanumLib.Performance;
 
 /// <summary>
+/// Interface for an engine that coalesces entity stat updates to reduce network sync spam.
+/// </summary>
+public interface IStatCoalescingEngine : IDisposable
+{
+    /// <summary>Enables or disables coalescing at runtime.</summary>
+    bool IsEnabled { get; set; }
+
+    /// <summary>Default category used when none is supplied.</summary>
+    string DefaultCategory { get; set; }
+
+    /// <summary>Optional watched attribute path to mark dirty after all coalesced stats are applied.</summary>
+    string? MarkDirtyAttributePath { get; set; }
+
+    /// <summary>Time window in milliseconds during which stat updates are coalesced.</summary>
+    int CoalesceWindowMs { get; set; }
+
+    /// <summary>Maximum delay in milliseconds before a forced flush.</summary>
+    int MaxDelayMs { get; set; }
+
+    /// <summary>Starts the coalescing engine on the server.</summary>
+    void Start(ICoreServerAPI api);
+
+    /// <summary>Stops the coalescing engine, cancels pending deferred work and clears the queue.</summary>
+    void Stop();
+
+    /// <summary>Queues a stat update for coalescing.</summary>
+    void QueueStatUpdate(ICoreServerAPI api, EntityPlayer player, string stat, float value, string? category = null);
+
+    /// <summary>Queues several stat updates at once.</summary>
+    void QueueStatUpdates(ICoreServerAPI api, EntityPlayer player, Dictionary<string, float> stats, string? category = null);
+
+    /// <summary>Forces an immediate flush for the given player.</summary>
+    void ForceFlush(ICoreServerAPI api, long entityId);
+
+    /// <summary>Applies a single stat immediately, bypassing coalescing.</summary>
+    void ApplyStatImmediate(EntityPlayer player, string stat, float value, string? category = null);
+
+    /// <summary>Returns true if the player has pending stat updates.</summary>
+    bool HasPendingUpdates(long entityId);
+
+    /// <summary>Total number of pending stat updates across all players.</summary>
+    int GetPendingUpdateCount();
+
+    /// <summary>Clears all pending updates and cancels scheduled flushes.</summary>
+    void ClearAllPending(ICoreServerAPI api);
+}
+
+/// <summary>
 /// Coalesces multiple <see cref="EntityStats.Set" /> calls within a time window into a
 /// single network sync. Useful for reducing packet spam when stats change rapidly
 /// (equipment swaps, buffs, debuffs).
@@ -18,7 +66,7 @@ namespace ArcanumLib.Performance;
 /// dispose it on world unload. The static members delegate to the registered instance
 /// for backward compatibility.
 /// </remarks>
-public class StatCoalescingEngine : IDisposable
+public class StatCoalescingEngine : IStatCoalescingEngine, IDisposable
 {
     private ICoreServerAPI? _sapi;
 
@@ -86,7 +134,7 @@ public class StatCoalescingEngine : IDisposable
             }
             foreach (var key in keys)
             {
-                ArcanumServices.Get<DeferredWorkService>()?.Cancel(StatKey(key));
+                ArcanumServices.Get<IDeferredWorkService>()?.Cancel(StatKey(key));
             }
             lock (_syncLock)
             {
@@ -139,7 +187,7 @@ public class StatCoalescingEngine : IDisposable
 
         if (needsSchedule)
         {
-            ArcanumServices.Get<DeferredWorkService>()?.Coalesce(
+            ArcanumServices.Get<IDeferredWorkService>()?.Coalesce(
                 StatKey(entityId),
                 () => FlushUpdates(api, entityId),
                 CoalesceWindowMs,
@@ -190,7 +238,7 @@ public class StatCoalescingEngine : IDisposable
 
         if (needsSchedule)
         {
-            ArcanumServices.Get<DeferredWorkService>()?.Coalesce(
+            ArcanumServices.Get<IDeferredWorkService>()?.Coalesce(
                 StatKey(entityId),
                 () => FlushUpdates(api, entityId),
                 CoalesceWindowMs,
@@ -213,7 +261,7 @@ public class StatCoalescingEngine : IDisposable
             if (update.IsFlushing) return;
         }
 
-        ArcanumServices.Get<DeferredWorkService>()?.Cancel(StatKey(entityId));
+        ArcanumServices.Get<IDeferredWorkService>()?.Cancel(StatKey(entityId));
         FlushUpdates(api, entityId);
     }
 
@@ -272,7 +320,7 @@ public class StatCoalescingEngine : IDisposable
         }
         foreach (var key in keys)
         {
-            ArcanumServices.Get<DeferredWorkService>()?.Cancel(StatKey(key));
+            ArcanumServices.Get<IDeferredWorkService>()?.Cancel(StatKey(key));
         }
         lock (_syncLock)
         {
@@ -350,7 +398,7 @@ public class StatCoalescingEngine : IDisposable
     {
         long entityId = player.Entity.EntityId;
 
-        ArcanumServices.Get<DeferredWorkService>()?.Cancel(StatKey(entityId));
+        ArcanumServices.Get<IDeferredWorkService>()?.Cancel(StatKey(entityId));
         lock (_syncLock)
         {
             _pendingUpdates.Remove(entityId);
@@ -359,7 +407,7 @@ public class StatCoalescingEngine : IDisposable
 
     // ── Static convenience facade ────────────────────────────────────────
 
-    private static StatCoalescingEngine? Instance => ArcanumServices.Get<StatCoalescingEngine>();
+    private static IStatCoalescingEngine? Instance => ArcanumServices.Get<IStatCoalescingEngine>();
 
     /// <summary>
     /// Starts the registered engine instance. Delegates to the instance in <see cref="ArcanumServices"/>.

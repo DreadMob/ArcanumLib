@@ -6,6 +6,42 @@ using Vintagestory.API.Server;
 namespace ArcanumLib.Performance;
 
 /// <summary>
+/// Interface for an in-game time scheduler.
+/// </summary>
+public interface IGameTimeScheduler : IDisposable
+{
+    /// <summary>Enables or disables the scheduler at runtime.</summary>
+    bool IsEnabled { get; set; }
+
+    /// <summary>How often (in ms) the scheduler checks for due schedules.</summary>
+    int CheckIntervalMs { get; set; }
+
+    /// <summary>Starts the in-game time scheduler on the server.</summary>
+    void Start(ICoreServerAPI api);
+
+    /// <summary>Stops the scheduler and clears all schedules.</summary>
+    void Stop();
+
+    /// <summary>Schedules a daily recurring action at the given in-game hour.</summary>
+    int ScheduleDaily(int hour, Action<double> action);
+
+    /// <summary>Schedules an hourly recurring action at the given in-game minute.</summary>
+    int ScheduleHourly(int minute, Action<double> action);
+
+    /// <summary>Schedules a one-shot action after the given in-game hours.</summary>
+    int ScheduleAfterHours(double hours, Action<double> action);
+
+    /// <summary>Cancels a schedule by ID.</summary>
+    void Cancel(int scheduleId);
+
+    /// <summary>Cancels all scheduled actions.</summary>
+    void CancelAll();
+
+    /// <summary>Returns the number of active schedules.</summary>
+    int GetScheduleCount();
+}
+
+/// <summary>
 /// Schedules actions based on in-game time rather than real time.
 /// Supports recurring schedules (e.g. "every day at 6:00", "every hour on the hour")
 /// and one-shot schedules at a specific in-game hour.
@@ -17,7 +53,7 @@ namespace ArcanumLib.Performance;
 /// Register an instance in <see cref="Core.ArcanumServices" /> during server startup
 /// and dispose it on world unload.
 /// </remarks>
-public class GameTimeScheduler : IDisposable
+public class GameTimeScheduler : IGameTimeScheduler, IDisposable
 {
     private ICoreServerAPI? _sapi;
     private long _tickListenerId;

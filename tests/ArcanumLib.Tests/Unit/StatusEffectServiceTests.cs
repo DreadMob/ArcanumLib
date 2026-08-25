@@ -16,7 +16,9 @@ public class StatusEffectServiceTests : IDisposable
     public StatusEffectServiceTests()
     {
         ArcanumRuntime.Activate();
-        ArcanumServices.Register(new EffectResistanceService());
+        var resistance = new EffectResistanceService();
+        ArcanumServices.Register(resistance);
+        ArcanumServices.Register<IEffectResistanceService>(resistance);
     }
 
     public void Dispose()
@@ -117,7 +119,7 @@ public class StatusEffectServiceTests : IDisposable
         var entity = new DummyEntity(6);
         var effect = CreateEffect("cold", EnumStackMode.Refresh, tags: new[] { "ice" });
 
-        ArcanumServices.Get<EffectResistanceService>()!.AddImmunity(entity, "ice");
+        ArcanumServices.Get<IEffectResistanceService>()!.AddImmunity(entity, "ice");
 
         Assert.Null(service.Apply(entity, effect, 1000f));
     }
@@ -129,7 +131,7 @@ public class StatusEffectServiceTests : IDisposable
         var entity = new DummyEntity(7);
         var effect = CreateEffect("shock", EnumStackMode.Refresh, tags: new[] { "lightning" });
 
-        ArcanumServices.Get<EffectResistanceService>()!.AddResistance(entity, "lightning", 0.5f);
+        ArcanumServices.Get<IEffectResistanceService>()!.AddResistance(entity, "lightning", 0.5f);
 
         var instance = service.Apply(entity, effect, 1000f);
 

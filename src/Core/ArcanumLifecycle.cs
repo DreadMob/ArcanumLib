@@ -89,6 +89,7 @@ public static class ArcanumLifecycle
         {
             _initialized = false;
             copy = new List<Registration>(_registrations);
+            _registrations.Clear();
         }
 
         for (int i = copy.Count - 1; i >= 0; i--)

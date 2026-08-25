@@ -32,7 +32,7 @@ public class ArcanumLibAtlasTests : AtlasScenarioBase
         var player = await World.JoinPlayer("testcache");
         await World.Ticks(5);
 
-        var cache = ArcanumServices.Get<OnlinePlayerCache>();
+        var cache = ArcanumServices.Get<IOnlinePlayerCache>();
         Assert.NotNull(cache);
         Assert.True(cache!.IsLoaded);
         Assert.Equal(1, cache.Count);
@@ -46,7 +46,7 @@ public class ArcanumLibAtlasTests : AtlasScenarioBase
         var player = await World.JoinPlayer("testcache2");
         await World.Ticks(5);
 
-        var cache = ArcanumServices.Get<OnlinePlayerCache>();
+        var cache = ArcanumServices.Get<IOnlinePlayerCache>();
         Assert.NotNull(cache);
 
         Assert.Contains(cache!.All, p => p.PlayerUID == player.Player.PlayerUID);

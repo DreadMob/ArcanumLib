@@ -26,7 +26,7 @@ has_children: true
 using ArcanumLib.Core;
 using ArcanumLib.Performance;
 
-var dw = ArcanumServices.Get<DeferredWorkService>()!;
+var dw = ArcanumServices.Get<IDeferredWorkService>()!;
 dw.Schedule("spawn-particles", () => SpawnParticles(pos), 250);
 ```
 

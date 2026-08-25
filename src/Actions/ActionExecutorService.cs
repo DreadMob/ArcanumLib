@@ -7,14 +7,56 @@ using Vintagestory.API.Server;
 namespace ArcanumLib.Actions;
 
 /// <summary>
+/// Interface for an action executor that tracks cooldowns and executes descriptors.
+/// </summary>
+public interface IActionExecutorService
+{
+    /// <summary>
+    /// Executes an <see cref="ActionDescriptor" /> with cooldown and permission checks.
+    /// </summary>
+    /// <param name="descriptor">The descriptor value.</param>
+    /// <param name="context">The operation context.</param>
+    /// <returns>The execute result.</returns>
+    ActionResult Execute(ActionDescriptor descriptor, ActionContext context);
+
+    /// <summary>
+    /// Returns the remaining cooldown in milliseconds for the given player and action.
+    /// </summary>
+    /// <param name="playerEntityId">The player entity id value.</param>
+    /// <param name="actionId">The action id value.</param>
+    /// <param name="sapi">The server API instance.</param>
+    /// <returns>The remaining cooldown.</returns>
+    long GetRemainingCooldown(long playerEntityId, string actionId, ICoreServerAPI sapi);
+
+    /// <summary>
+    /// Returns the remaining cooldown in milliseconds for the given player and action.
+    /// </summary>
+    /// <param name="playerEntityId">The player entity id value.</param>
+    /// <param name="actionId">The action id value.</param>
+    /// <returns>The remaining cooldown.</returns>
+    long GetRemainingCooldown(long playerEntityId, string actionId);
+
+    /// <summary>
+    /// Clears all cooldowns for the given player. Call on disconnect.
+    /// </summary>
+    /// <param name="playerEntityId">The player entity id value.</param>
+    void ClearCooldowns(long playerEntityId);
+
+    /// <summary>
+    /// Clears all cooldown state. Intended for world unload / test teardown.
+    /// </summary>
+    void ClearAllCooldowns();
+}
+
+/// <summary>
 /// Instance-based executor for <see cref="ActionDescriptor" /> instances.
 /// Tracks per-player, per-action cooldowns and delegates execution to
-/// <see cref="ActionRegistryService" />.
+/// <see cref="IActionRegistryService" />.
 /// </summary>
-public sealed class ActionExecutorService
+public sealed class ActionExecutorService : IActionExecutorService
 {
     private readonly ICoreServerAPI? _sapi;
-    private readonly ActionRegistryService _registry;
+    private readonly IActionRegistryService _registry;
     private readonly Dictionary<long, Dictionary<string, long>> _cooldowns = new();
     private readonly object _syncLock = new();
 
@@ -24,12 +66,12 @@ public sealed class ActionExecutorService
     /// </summary>
     /// <param name="sapi">The server API instance.</param>
     /// <param name="registry">The action registry used to execute actions. If null, resolves from <see cref="ArcanumServices" />.</param>
-    public ActionExecutorService(ICoreServerAPI? sapi = null, ActionRegistryService? registry = null)
+    public ActionExecutorService(ICoreServerAPI? sapi = null, IActionRegistryService? registry = null)
     {
         _sapi = sapi;
-        _registry = registry ?? ArcanumServices.Get<ActionRegistryService>()
+        _registry = registry ?? ArcanumServices.Get<IActionRegistryService>()
             ?? throw new InvalidOperationException(
-                "ActionRegistryService is not registered. Ensure ActionRegistryModSystem has started.");
+                "IActionRegistryService is not registered. Ensure ActionRegistryModSystem has started.");
     }
 
     /// <summary>

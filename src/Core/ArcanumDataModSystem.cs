@@ -39,13 +39,27 @@ public class ArcanumDataModSystem : ModSystem
         sapi.Event.SaveGameCreated += OnSaveGameCreated;
         sapi.Event.GameWorldSave += OnGameWorldSave;
 
-        if (ArcanumServices.Get<PlaytimeTracker>(ArcanumServiceScope.Server) == null)
-            ArcanumServices.Register(new PlaytimeTracker(sapi), ArcanumServiceScope.Server);
-        if (ArcanumServices.Get<PityTracker>(ArcanumServiceScope.Server) == null)
-            ArcanumServices.Register(new PityTracker(sapi), ArcanumServiceScope.Server);
+        if (ArcanumServices.Get<IPlaytimeTracker>(ArcanumServiceScope.Server) == null)
+        {
+            var playtime = new PlaytimeTracker(sapi);
+            ArcanumServices.Register(playtime, ArcanumServiceScope.Server);
+            ArcanumServices.Register<IPlaytimeTracker>(playtime, ArcanumServiceScope.Server);
+        }
+        if (ArcanumServices.Get<IPityTracker>(ArcanumServiceScope.Server) == null)
+        {
+            var pity = new PityTracker(sapi);
+            ArcanumServices.Register(pity, ArcanumServiceScope.Server);
+            ArcanumServices.Register<IPityTracker>(pity, ArcanumServiceScope.Server);
+            ArcanumServices.Register<IPityProvider>(pity, ArcanumServiceScope.Server);
+        }
 
-        ArcanumServices.Register(new ActionRegistryService(), ArcanumServiceScope.Server);
-        ArcanumServices.Register(new ActionExecutorService(sapi), ArcanumServiceScope.Server);
+        var registry = new ActionRegistryService();
+        ArcanumServices.Register(registry, ArcanumServiceScope.Server);
+        ArcanumServices.Register<IActionRegistryService>(registry, ArcanumServiceScope.Server);
+
+        var executor = new ActionExecutorService(sapi, registry);
+        ArcanumServices.Register(executor, ArcanumServiceScope.Server);
+        ArcanumServices.Register<IActionExecutorService>(executor, ArcanumServiceScope.Server);
 
         sapi.Event.PlayerDisconnect += OnPlayerDisconnect;
     }
@@ -63,22 +77,27 @@ public class ArcanumDataModSystem : ModSystem
             _sapi.Event.GameWorldSave -= OnGameWorldSave;
         }
 
-        if (ArcanumServices.Get<PlaytimeTracker>(ArcanumServiceScope.Server) is { } playtime)
+        if (ArcanumServices.Get<IPlaytimeTracker>(ArcanumServiceScope.Server) is { } playtime)
             playtime.Dispose();
         ArcanumServices.Unregister<PlaytimeTracker>(ArcanumServiceScope.Server);
+        ArcanumServices.Unregister<IPlaytimeTracker>(ArcanumServiceScope.Server);
 
-        if (ArcanumServices.Get<PityTracker>(ArcanumServiceScope.Server) is { } pity)
+        if (ArcanumServices.Get<IPityTracker>(ArcanumServiceScope.Server) is { } pity)
             pity.Save();
         ArcanumServices.Unregister<PityTracker>(ArcanumServiceScope.Server);
+        ArcanumServices.Unregister<IPityTracker>(ArcanumServiceScope.Server);
+        ArcanumServices.Unregister<IPityProvider>(ArcanumServiceScope.Server);
 
-        if (ArcanumServices.Get<ActionExecutorService>() is { } executor)
+        if (ArcanumServices.Get<IActionExecutorService>() is { } executor)
             executor.ClearAllCooldowns();
 
-        if (ArcanumServices.Get<ActionRegistryService>() is { } registry)
+        if (ArcanumServices.Get<IActionRegistryService>() is { } registry)
             registry.Clear();
 
         ArcanumServices.Unregister<ActionExecutorService>(ArcanumServiceScope.Server);
+        ArcanumServices.Unregister<IActionExecutorService>(ArcanumServiceScope.Server);
         ArcanumServices.Unregister<ActionRegistryService>(ArcanumServiceScope.Server);
+        ArcanumServices.Unregister<IActionRegistryService>(ArcanumServiceScope.Server);
         ArcanumServices.Unregister<ICoreServerAPI>(ArcanumServiceScope.Server);
 
         ModDataStore.Clear();
@@ -106,7 +125,7 @@ public class ArcanumDataModSystem : ModSystem
     {
         if (player?.Entity?.EntityId != null)
         {
-            ArcanumServices.Get<ActionExecutorService>()?.ClearCooldowns(player.Entity.EntityId);
+            ArcanumServices.Get<IActionExecutorService>()?.ClearCooldowns(player.Entity.EntityId);
         }
     }
 }

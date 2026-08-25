@@ -7,12 +7,63 @@ using Vintagestory.API.Common.Entities;
 namespace ArcanumLib.Effects;
 
 /// <summary>
+/// Interface for an instance-based store of per-entity immunities and resistances to status effects.
+/// </summary>
+public interface IEffectResistanceService
+{
+    /// <summary>
+    /// Adds a full immunity to effects with the given tag.
+    /// </summary>
+    void AddImmunity(Entity entity, string tag);
+
+    /// <summary>
+    /// Removes an immunity by tag.
+    /// </summary>
+    void RemoveImmunity(Entity entity, string tag);
+
+    /// <summary>
+    /// Adds a resistance (0..1) to effects with the given tag.
+    /// </summary>
+    void AddResistance(Entity entity, string tag, float amount);
+
+    /// <summary>
+    /// Removes a resistance by tag.
+    /// </summary>
+    void RemoveResistance(Entity entity, string tag);
+
+    /// <summary>
+    /// Returns true if the entity is fully immune to the given tag.
+    /// </summary>
+    bool IsImmune(Entity entity, string tag);
+
+    /// <summary>
+    /// Returns true if the entity is immune to any of the effect's tags.
+    /// </summary>
+    bool IsImmuneToEffect(Entity entity, IStatusEffect effect);
+
+    /// <summary>
+    /// Returns the effective duration multiplier for an effect (0..1).
+    /// </summary>
+    float GetDurationMultiplier(Entity entity, IStatusEffect effect);
+
+    /// <summary>
+    /// Clears all immunities and resistances for the entity.
+    /// </summary>
+    void Clear(Entity entity);
+
+    /// <summary>
+    /// Clears all stored modifiers. Intended for world shutdown.
+    /// </summary>
+    void ClearAll();
+}
+
+/// <summary>
 /// Instance-based store for per-entity immunities and resistances to status effects.
 /// Immunities completely block effects whose tags match.
 /// Resistances reduce the effective duration of matching effects.
 /// Registered in <see cref="Core.ArcanumServices" /> and disposed with the <see cref="Core.ArcanumRuntime" />.
 /// </summary>
-public sealed class EffectResistanceService : IDisposable
+public sealed class EffectResistanceService : IEffectResistanceService, IDisposable
 {
     private sealed class EntityModifiers
     {

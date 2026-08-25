@@ -18,7 +18,7 @@ public class StatusEffectModSystem : ModSystem
     private ICoreServerAPI? _sapi;
     private readonly List<IEventAPI> _despawnEvents = new();
     private EntityDespawnDelegate? _despawnHandler;
-    private StatusEffectService? _service;
+    private IStatusEffectService? _service;
 
     /// <summary>
     /// Registers the tick listener on the client.
@@ -48,13 +48,15 @@ public class StatusEffectModSystem : ModSystem
         _despawnEvents.Add(sapi.Event);
     }
 
-    private static StatusEffectService EnsureService()
+    private static IStatusEffectService EnsureService()
     {
-        var service = ArcanumServices.Get<StatusEffectService>();
+        var service = ArcanumServices.Get<IStatusEffectService>();
         if (service == null)
         {
-            service = new StatusEffectService();
-            ArcanumServices.Register(service);
+            var concrete = new StatusEffectService();
+            ArcanumServices.Register(concrete);
+            ArcanumServices.Register<IStatusEffectService>(concrete);
+            service = concrete;
         }
         return service;
     }
@@ -88,5 +90,6 @@ public class StatusEffectModSystem : ModSystem
 
         _service?.Clear();
         ArcanumServices.Unregister<StatusEffectService>();
+        ArcanumServices.Unregister<IStatusEffectService>();
     }
 }

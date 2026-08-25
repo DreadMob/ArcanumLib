@@ -149,7 +149,7 @@ namespace ArcanumLib.Network
             if (_api is not ICoreServerAPI) return;
 
             var exceptUid = exceptPlayer?.PlayerUID;
-            var cache = ArcanumServices.Get<OnlinePlayerCache>();
+            var cache = ArcanumServices.Get<IOnlinePlayerCache>();
             var players = cache?.All ?? Array.Empty<IServerPlayer>();
             foreach (var player in players)
             {

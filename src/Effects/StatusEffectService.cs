@@ -9,10 +9,76 @@ using Vintagestory.API.Common.Entities;
 namespace ArcanumLib.Effects;
 
 /// <summary>
+/// Interface for an instance-based manager of status effects on entities.
+/// </summary>
+public interface IStatusEffectService
+{
+    /// <summary>Raised when a new effect instance is created.</summary>
+    event Action<Entity, IStatusEffectInstance>? OnEffectApplied;
+
+    /// <summary>Raised when an existing effect's duration is refreshed.</summary>
+    event Action<Entity, IStatusEffectInstance>? OnEffectRefreshed;
+
+    /// <summary>Raised when an effect's stack count increases.</summary>
+    event Action<Entity, IStatusEffectInstance>? OnEffectStacked;
+
+    /// <summary>Raised when an effect is removed because it expired.</summary>
+    event Action<Entity, IStatusEffectInstance>? OnEffectExpired;
+
+    /// <summary>Raised when an effect is removed manually or because the entity died.</summary>
+    event Action<Entity, IStatusEffectInstance>? OnEffectRemoved;
+
+    /// <summary>
+    /// Applies an effect to an entity.
+    /// </summary>
+    IStatusEffectInstance? Apply(Entity? entity, IStatusEffect effect, float durationMs, object? data = null);
+
+    /// <summary>
+    /// Removes all effects with the given code from the entity.
+    /// </summary>
+    bool Remove(Entity? entity, string effectCode);
+
+    /// <summary>
+    /// Removes a specific effect instance from the entity.
+    /// </summary>
+    bool Remove(Entity? entity, long instanceId);
+
+    /// <summary>
+    /// Removes all active effects from the entity.
+    /// </summary>
+    bool RemoveAll(Entity? entity);
+
+    /// <summary>
+    /// Removes all effects matching the given category from the entity.
+    /// </summary>
+    bool RemoveByCategory(Entity? entity, EffectCategory category);
+
+    /// <summary>
+    /// Returns true if the entity has an active effect with the given code.
+    /// </summary>
+    bool Has(Entity? entity, string effectCode);
+
+    /// <summary>
+    /// Returns all active effect instances on the entity.
+    /// </summary>
+    IReadOnlyCollection<IStatusEffectInstance> GetActive(Entity? entity);
+
+    /// <summary>
+    /// Ticks all active effects by the given elapsed time.
+    /// </summary>
+    void Tick(float dt);
+
+    /// <summary>
+    /// Clears the manager. Intended for tests and shutdown paths.
+    /// </summary>
+    void Clear();
+}
+
+/// <summary>
 /// Instance-based manager for applying, ticking, and removing status effects on entities.
 /// Register with <see cref="ArcanumServices" />; resolve via <see cref="ArcanumRuntime.Current" />.<see cref="ArcanumRuntime.Services" />.
 /// </summary>
-public class StatusEffectService
+public class StatusEffectService : IStatusEffectService
 {
     private readonly ConcurrentDictionary<long, StatusEffectContainer> _containers = new();
     private readonly object _sync = new();
@@ -58,7 +124,7 @@ public class StatusEffectService
         lock (_sync)
         {
             // Check immunities and resistances
-            var resistance = ArcanumServices.Get<EffectResistanceService>();
+            var resistance = ArcanumServices.Get<IEffectResistanceService>();
             if (resistance != null)
             {
                 if (resistance.IsImmuneToEffect(entity, effect)) return null;

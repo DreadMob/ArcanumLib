@@ -150,12 +150,15 @@ public class StatusEffectInstanceTests
     }
 }
 
+[Collection("ArcanumServices")]
 public class StatusEffectServiceAdditionalTests : IDisposable
 {
     public StatusEffectServiceAdditionalTests()
     {
         ArcanumRuntime.Activate();
-        ArcanumServices.Register(new EffectResistanceService());
+        var resistance = new EffectResistanceService();
+        ArcanumServices.Register(resistance);
+        ArcanumServices.Register<IEffectResistanceService>(resistance);
     }
 
     public void Dispose()
@@ -183,7 +186,7 @@ public class StatusEffectServiceAdditionalTests : IDisposable
         var second = service.Apply(entity, effect, 1000f)!;
 
         Assert.True(service.Remove(entity, first.Id));
-        Assert.Equal(1, service.GetActive(entity).Count);
+        Assert.Single(service.GetActive(entity));
         Assert.True(service.Has(entity, "dot"));
     }
 
@@ -273,7 +276,7 @@ public class StatusEffectServiceAdditionalTests : IDisposable
         var second = service.Apply(entity, effect, 2000f);
 
         Assert.NotSame(first, second);
-        Assert.Equal(1, service.GetActive(entity).Count);
+        Assert.Single(service.GetActive(entity));
         Assert.Equal(2000f, second!.RemainingMs);
     }
 
@@ -438,7 +441,7 @@ public class StatusEffectServiceAdditionalTests : IDisposable
         var effect = CreateEffect("fire", EnumStackMode.Refresh, tags: new[] { "fire" });
 
         // Resistance of 1.0 means 100% resisted → multiplier = 0 → returns null
-        ArcanumServices.Get<EffectResistanceService>()!.AddResistance(entity, "fire", 1f);
+        ArcanumServices.Get<IEffectResistanceService>()!.AddResistance(entity, "fire", 1f);
 
         Assert.Null(service.Apply(entity, effect, 1000f));
     }

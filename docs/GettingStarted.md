@@ -90,7 +90,7 @@ Run code on the game tick loop without a manual tick listener:
 using ArcanumLib.Core;
 using ArcanumLib.Performance;
 
-var dw = ArcanumServices.Get<DeferredWorkService>()!;
+var dw = ArcanumServices.Get<IDeferredWorkService>()!;
 
 // On the server
 dw.Server.Schedule("mymod.cleanup", () => Cleanup(), 5000);
@@ -107,7 +107,7 @@ Apply timed buffs and debuffs to entities:
 using ArcanumLib.Core;
 using ArcanumLib.Effects;
 
-var svc = ArcanumServices.Get<StatusEffectService>()!;
+var svc = ArcanumServices.Get<IStatusEffectService>()!;
 var effect = new StatModifierEffect("mymod:swiftness", EntityStats.Speed, 1.5f);
 svc.Apply(entity, effect, durationMs: 10000, data: null);
 
@@ -158,7 +158,7 @@ Resolve the current API or a shared service by scope:
 using ArcanumLib.Core;
 
 var sapi = ArcanumServices.Get<ICoreServerAPI>(ArcanumServiceScope.Server);
-var playtime = ArcanumServices.Get<PlaytimeTracker>(ArcanumServiceScope.Server);
+var playtime = ArcanumServices.Get<IPlaytimeTracker>(ArcanumServiceScope.Server);
 ```
 
 ## Next steps

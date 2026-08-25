@@ -8,12 +8,44 @@ using Vintagestory.API.Server;
 namespace ArcanumLib.Performance;
 
 /// <summary>
+/// Interface for the deferred work service, providing both the active-side scheduler API
+/// and explicit client/server facades.
+/// </summary>
+public interface IDeferredWorkService : IDeferredWork
+{
+    /// <summary>
+    /// Enables or disables the scheduler. When disabled, pending work is executed immediately.
+    /// </summary>
+    bool IsEnabled { get; set; }
+
+    /// <summary>
+    /// Client-side scheduler. Use this from client-side code or for client-only effects.
+    /// </summary>
+    IDeferredWork Client { get; }
+
+    /// <summary>
+    /// Server-side scheduler. Use this from server-side code or for server-authoritative work.
+    /// </summary>
+    IDeferredWork Server { get; }
+
+    /// <summary>
+    /// Starts the deferred work scheduler for the given API side.
+    /// </summary>
+    void Start(ICoreAPI api);
+
+    /// <summary>
+    /// Stops the deferred work scheduler, cancels pending callbacks and clears the task queue.
+    /// </summary>
+    void Stop();
+}
+
+/// <summary>
 /// Instance-based scheduler for deferred and coalesced work on the game tick loop.
 /// Use this to debounce repeated events, batch mark-dirty calls, or delay
 /// expensive work without storing callback IDs in every caller.
 /// Registered in <see cref="Core.ArcanumServices" /> and disposed with the <see cref="Core.ArcanumRuntime" />.
 /// </summary>
-public sealed class DeferredWorkService : IDisposable
+public sealed class DeferredWorkService : IDeferredWorkService, IDisposable
 {
     private sealed class Scheduler
     {

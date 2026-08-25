@@ -107,7 +107,7 @@ namespace ArcanumLib.Common
             {
                 try
                 {
-                    ArcanumServices.Get<DeferredWorkService>()?.Cancel(_deferredKeys[i]);
+                    ArcanumServices.Get<IDeferredWorkService>()?.Cancel(_deferredKeys[i]);
                 }
                 catch (Exception ex)
                 {

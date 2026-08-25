@@ -119,7 +119,7 @@ public class PlayerInLandTracker : ModSystem
     {
         if (_sapi == null) return;
 
-        var cache = ArcanumServices.Get<OnlinePlayerCache>();
+        var cache = ArcanumServices.Get<IOnlinePlayerCache>();
         IEnumerable<IPlayer> players = cache?.IsLoaded == true
             ? (IEnumerable<IPlayer>)cache.All
             : _sapi.World.AllOnlinePlayers;

@@ -49,8 +49,8 @@ public class ArcanumDataModSystemTests : IDisposable
         system.StartServerSide(sapi);
 
         Assert.Same(sapi, ArcanumServices.Get<ICoreServerAPI>(ArcanumServiceScope.Server));
-        Assert.NotNull(ArcanumServices.Get<ActionRegistryService>(ArcanumServiceScope.Server));
-        Assert.NotNull(ArcanumServices.Get<ActionExecutorService>(ArcanumServiceScope.Server));
+        Assert.NotNull(ArcanumServices.Get<IActionRegistryService>(ArcanumServiceScope.Server));
+        Assert.NotNull(ArcanumServices.Get<IActionExecutorService>(ArcanumServiceScope.Server));
         Assert.NotNull(PlaytimeTracker.Current);
         Assert.NotNull(PityTracker.Current);
     }
@@ -72,8 +72,8 @@ public class ArcanumDataModSystemTests : IDisposable
         system.Dispose();
 
         Assert.Null(ArcanumServices.Get<ICoreServerAPI>(ArcanumServiceScope.Server));
-        Assert.Null(ArcanumServices.Get<ActionRegistryService>(ArcanumServiceScope.Server));
-        Assert.Null(ArcanumServices.Get<ActionExecutorService>(ArcanumServiceScope.Server));
+        Assert.Null(ArcanumServices.Get<IActionRegistryService>(ArcanumServiceScope.Server));
+        Assert.Null(ArcanumServices.Get<IActionExecutorService>(ArcanumServiceScope.Server));
         Assert.Null(PlaytimeTracker.Current);
         Assert.Null(PityTracker.Current);
     }

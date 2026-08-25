@@ -48,7 +48,7 @@ public class TeleportAction : IActionHandler
 }
 
 // In StartServerSide:
-var registry = ArcanumServices.Get<ActionRegistryService>(ArcanumServiceScope.Server)!;
+var registry = ArcanumServices.Get<IActionRegistryService>(ArcanumServiceScope.Server)!;
 registry.Register(new TeleportAction());
 ```
 
@@ -66,7 +66,7 @@ registry.Register(new TeleportAction());
 ### Execute
 
 ```csharp
-var executor = ArcanumServices.Get<ActionExecutorService>(ArcanumServiceScope.Server)!;
+var executor = ArcanumServices.Get<IActionExecutorService>(ArcanumServiceScope.Server)!;
 var descriptor = ActionDescriptor.FromJson(jsonString);
 var context = new ActionContext(sapi, player, itemSlot, targetPos);
 ActionResult result = executor.Execute(descriptor, context);

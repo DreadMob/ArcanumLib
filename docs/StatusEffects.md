@@ -45,7 +45,7 @@ Effects can be classified as `Buff`, `Debuff`, or `None`. This enables dispel-by
 using ArcanumLib.Core;
 using ArcanumLib.Effects;
 
-var svc = ArcanumServices.Get<StatusEffectService>()!;
+var svc = ArcanumServices.Get<IStatusEffectService>()!;
 svc.RemoveByCategory(entity, EffectCategory.Debuff);
 ```
 
@@ -85,7 +85,7 @@ Resistance reduces the effective duration: `actualDuration = baseDuration * (1 -
 using ArcanumLib.Core;
 using ArcanumLib.Effects;
 
-var svc = ArcanumServices.Get<StatusEffectService>()!;
+var svc = ArcanumServices.Get<IStatusEffectService>()!;
 var instance = svc.Apply(entity, new SlowEffect(), durationMs: 10000);
 ```
 

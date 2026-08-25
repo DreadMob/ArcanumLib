@@ -80,9 +80,17 @@ public class ArcanumLibModSystem : ModSystem
 
     private void RegisterCommonServices()
     {
-        _runtime!.Services.Register(new EffectResistanceService());
-        _runtime!.Services.Register(new EventBusService());
-        _runtime!.Services.Register(new DeferredWorkService());
+        var resistance = new EffectResistanceService();
+        _runtime!.Services.Register(resistance);
+        _runtime!.Services.Register<IEffectResistanceService>(resistance);
+
+        var eventBus = new EventBusService();
+        _runtime!.Services.Register(eventBus);
+        _runtime!.Services.Register<IEventBusService>(eventBus);
+
+        var deferred = new DeferredWorkService();
+        _runtime!.Services.Register(deferred);
+        _runtime!.Services.Register<IDeferredWorkService>(deferred);
     }
 
     /// <summary>

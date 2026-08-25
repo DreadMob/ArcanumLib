@@ -5,11 +5,86 @@ using Vintagestory.API.Common;
 namespace ArcanumLib.Actions;
 
 /// <summary>
+/// Interface for an action registry used by <see cref="ActionExecutorService" /> and consumers.
+/// </summary>
+public interface IActionRegistryService
+{
+    /// <summary>
+    /// Registers an action handler. Replaces any existing handler with the same id.
+    /// </summary>
+    /// <param name="handler">The handler value.</param>
+    void Register(IActionHandler handler);
+
+    /// <summary>
+    /// Registers multiple action handlers.
+    /// </summary>
+    /// <param name="handlers">The collection of handlers values.</param>
+    void RegisterAll(IEnumerable<IActionHandler> handlers);
+
+    /// <summary>
+    /// Unregisters a handler by id.
+    /// </summary>
+    /// <param name="id">The identifier.</param>
+    /// <returns>true if the operation succeeds; otherwise, false.</returns>
+    bool Unregister(string id);
+
+    /// <summary>
+    /// Returns the handler for the given id, or null if not registered.
+    /// </summary>
+    /// <param name="id">The identifier.</param>
+    /// <returns>The handler, or null if none is found.</returns>
+    IActionHandler? GetHandler(string id);
+
+    /// <summary>
+    /// Returns true if a handler with the given id is registered.
+    /// </summary>
+    /// <param name="id">The identifier.</param>
+    /// <returns>true if registered; otherwise, false.</returns>
+    bool IsRegistered(string id);
+
+    /// <summary>
+    /// Returns a snapshot of all registered handler ids.
+    /// </summary>
+    /// <returns>A collection of registered ids values.</returns>
+    IReadOnlyList<string> GetRegisteredIds();
+
+    /// <summary>
+    /// Validates that an action descriptor can be executed.
+    /// </summary>
+    /// <param name="descriptor">The descriptor value.</param>
+    /// <param name="context">The operation context.</param>
+    /// <returns>The validation result.</returns>
+    ActionResult Validate(ActionDescriptor descriptor, ActionContext context);
+
+    /// <summary>
+    /// Executes an action descriptor.
+    /// </summary>
+    /// <param name="descriptor">The descriptor value.</param>
+    /// <param name="context">The operation context.</param>
+    /// <returns>The execution result.</returns>
+    ActionResult Execute(ActionDescriptor descriptor, ActionContext context);
+
+    /// <summary>
+    /// Executes a sequence of action descriptors in order.
+    /// </summary>
+    /// <param name="descriptors">The collection of descriptors values.</param>
+    /// <param name="context">The operation context.</param>
+    /// <param name="continueOnError">The continue on error value.</param>
+    /// <returns>The list of results, one per descriptor.</returns>
+    List<ActionResult> ExecuteAll(IEnumerable<ActionDescriptor> descriptors, ActionContext context, bool continueOnError = false);
+
+    /// <summary>
+    /// Clears all registered handlers.
+    /// </summary>
+    void Clear();
+}
+
+/// <summary>
 /// Instance-based registry for <see cref="IActionHandler" /> implementations.
 /// Mods register their handlers during startup; the registry is then used to
 /// execute <see cref="ActionDescriptor" /> instances loaded from JSON assets.
 /// </summary>
-public sealed class ActionRegistryService
+public sealed class ActionRegistryService : IActionRegistryService
 {
     private readonly Dictionary<string, IActionHandler> _handlers =
         new(StringComparer.OrdinalIgnoreCase);
