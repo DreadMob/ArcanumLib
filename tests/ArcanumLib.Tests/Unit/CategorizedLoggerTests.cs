@@ -42,6 +42,22 @@ public class CategorizedLoggerTests : IDisposable
     }
 
     [Fact]
+    public void Init_RegistersUnderConcreteAndInterface()
+    {
+        var api = CreateApi(_tempRoot);
+        CategorizedLogger.Init(api, logFolderName: "mod");
+
+        var concrete = ArcanumServices.Get<CategorizedLogger>();
+        var @interface = ArcanumServices.Get<ICategorizedLogger>();
+        Assert.NotNull(concrete);
+        Assert.NotNull(@interface);
+        Assert.Same(CategorizedLogger.Instance, @interface);
+        Assert.Same(CategorizedLogger.Instance, concrete);
+
+        CategorizedLogger.Instance!.Dispose();
+    }
+
+    [Fact]
     public void Dispose_ClearsSingleton()
     {
         var api = CreateApi(_tempRoot);

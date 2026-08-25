@@ -78,6 +78,17 @@ public class ArcanumDataModSystemTests : IDisposable
         Assert.Null(PityTracker.Current);
     }
 
+    [Fact]
+    public void PityTracker_Current_Setter_RegistersInServices()
+    {
+        var tracker = new PityTracker(CreateSapi());
+        PityTracker.Current = tracker;
+
+        Assert.Same(tracker, PityTracker.Current);
+        Assert.Same(tracker, ArcanumServices.Get<IPityTracker>(ArcanumServiceScope.Server));
+        Assert.Same(tracker, ArcanumServices.Get<PityTracker>(ArcanumServiceScope.Server));
+    }
+
     private static ICoreServerAPI CreateSapi()
     {
         var sapi = Substitute.For<ICoreServerAPI>();
