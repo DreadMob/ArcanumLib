@@ -22,10 +22,13 @@ When stats change rapidly (equipment swaps, buff stacks, debuff removals), each 
 ## Quick example
 
 ```csharp
+using ArcanumLib.Core;
 using ArcanumLib.Performance;
 
+var engine = ArcanumServices.Get<IStatCoalescingEngine>()!;
+
 // Queue a stat update (applied after the coalesce window).
-StatCoalescingEngine.QueueStatUpdate(
+engine.QueueStatUpdate(
     sapi,
     player.Entity,
     stat: "walkspeed",
@@ -33,7 +36,7 @@ StatCoalescingEngine.QueueStatUpdate(
     category: "mymod");
 
 // Queue multiple stats at once.
-StatCoalescingEngine.QueueStatUpdates(
+engine.QueueStatUpdates(
     sapi,
     player.Entity,
     new Dictionary<string, float>

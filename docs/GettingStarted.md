@@ -150,15 +150,21 @@ if (tracker.ShouldRecalculate(player))
 }
 ```
 
-## Services
+## Resolving common services
 
-Resolve the current API or a shared service by scope:
+Resolve shared services from `ArcanumServices`:
 
 ```csharp
 using ArcanumLib.Core;
 
-var sapi = ArcanumServices.Get<ICoreServerAPI>(ArcanumServiceScope.Server);
-var playtime = ArcanumServices.Get<IPlaytimeTracker>(ArcanumServiceScope.Server);
+var online = ArcanumServices.Get<IOnlinePlayerCache>();
+var events = ArcanumServices.Get<IEventBusService>();
+var statusEffects = ArcanumServices.Get<IStatusEffectService>();
+var resistances = ArcanumServices.Get<IEffectResistanceService>();
+var logger = ArcanumServices.Get<ICategorizedLogger>();
+var deferredWork = ArcanumServices.Get<IDeferredWorkService>();
+var gameTime = ArcanumServices.Get<IGameTimeScheduler>();
+var statEngine = ArcanumServices.Get<IStatCoalescingEngine>();
 ```
 
 ## Next steps

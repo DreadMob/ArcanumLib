@@ -71,30 +71,14 @@ public interface ICategorizedLogger : IDisposable
 /// <c>"combat"</c>, <c>"economy/trades"</c>, <c>"system/errors"</c>.
 /// Subcategories are created automatically using the forward slash separator.
 /// </remarks>
-public class CategorizedLogger : ICategorizedLogger, IDisposable
+public sealed class CategorizedLogger : ICategorizedLogger, IDisposable
 {
     /// <summary>
     /// Singleton instance. Backed by <see cref="ArcanumServices" />.
-    /// Set by <see cref="Init" /> and cleared by <see cref="Dispose" />.
+    /// Published by <see cref="Init" /> and cleared by <see cref="Dispose" />.
     /// </summary>
     public static ICategorizedLogger? Instance
-    {
-        get => ArcanumServices.Get<ICategorizedLogger>();
-        protected set
-        {
-            if (value == null)
-            {
-                ArcanumServices.Unregister<CategorizedLogger>();
-                ArcanumServices.Unregister<ICategorizedLogger>();
-            }
-            else
-            {
-                if (value is CategorizedLogger concrete)
-                    ArcanumServices.Register(concrete);
-                ArcanumServices.Register<ICategorizedLogger>(value);
-            }
-        }
-    }
+        => ArcanumServices.Get<ICategorizedLogger>();
 
     /// <summary>
     /// Initializes the singleton with the given API, config, and log subfolder name.
@@ -107,9 +91,11 @@ public class CategorizedLogger : ICategorizedLogger, IDisposable
     public static void Init(ICoreAPI api, LogConfig? config = null, string logFolderName = "mod", string consolePrefix = "CategorizedLogger")
     {
         Instance?.Dispose();
-        Instance = new CategorizedLogger(api, config, logFolderName, consolePrefix);
+        var logger = new CategorizedLogger(api, config, logFolderName, consolePrefix);
+        ArcanumServices.Register(logger);
+        ArcanumServices.Register<ICategorizedLogger>(logger);
         api?.Logger?.Notification("[{0}] Singleton initialized (mode: {1}, folder: {2}).",
-            consolePrefix, Instance.Config.Mode, logFolderName);
+            consolePrefix, logger.Config.Mode, logFolderName);
     }
 
     /// <summary>
@@ -150,7 +136,7 @@ public class CategorizedLogger : ICategorizedLogger, IDisposable
     /// <summary>
     /// Current logging configuration.
     /// </summary>
-    public LogConfig Config { get; protected set; } = new();
+    public LogConfig Config { get; private set; } = new();
 
     /// <summary>
     /// Creates a categorized logger.
@@ -553,7 +539,8 @@ public class CategorizedLogger : ICategorizedLogger, IDisposable
         finally
         {
             flushSemaphore.Dispose();
-            Instance = null;
+            ArcanumServices.Unregister<CategorizedLogger>();
+            ArcanumServices.Unregister<ICategorizedLogger>();
         }
     }
 }

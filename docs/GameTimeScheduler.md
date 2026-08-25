@@ -23,27 +23,29 @@ Schedule recurring actions by in-game time (daily, hourly, after N hours).
 ## Quick example
 
 ```csharp
+using ArcanumLib.Core;
 using ArcanumLib.Performance;
 
 // In your ModSystem.StartServerSide
-GameTimeScheduler.ScheduleDaily(hour: 6, hours =>
+var scheduler = ArcanumServices.Get<IGameTimeScheduler>()!;
+scheduler.ScheduleDaily(hour: 6, hours =>
 {
     sapi.Logger.Notification("It is 6:00 in-game. Resetting daily counters.");
     // ... reset logic
 });
 
-GameTimeScheduler.ScheduleHourly(minute: 0, hours =>
+scheduler.ScheduleHourly(minute: 0, hours =>
 {
     // Runs every in-game hour on the hour
 });
 
-int id = GameTimeScheduler.ScheduleAfterHours(2.5, hours =>
+int id = scheduler.ScheduleAfterHours(2.5, hours =>
 {
     // Runs once after 2.5 in-game hours
 });
 
 // Cancel later
-GameTimeScheduler.Cancel(id);
+scheduler.Cancel(id);
 ```
 
 ## API overview

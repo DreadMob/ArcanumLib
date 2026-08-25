@@ -30,6 +30,7 @@ public class ArcanumPerformanceModSystem : ModSystem
 
     /// <summary>
     /// Starts the deferred work scheduler on the client.
+    /// <see cref="IDeferredWorkService"/> is owned and registered by <see cref="ArcanumLibModSystem"/>.
     /// </summary>
     /// <param name="capi">The client API.</param>
     public override void StartClientSide(ICoreClientAPI capi)
@@ -39,6 +40,7 @@ public class ArcanumPerformanceModSystem : ModSystem
 
     /// <summary>
     /// Starts the deferred work scheduler, game-time scheduler and stat coalescing engine on the server.
+    /// <see cref="IDeferredWorkService"/> is owned and registered by <see cref="ArcanumLibModSystem"/>.
     /// </summary>
     /// <param name="sapi">The server API.</param>
     public override void StartServerSide(ICoreServerAPI sapi)
@@ -60,16 +62,17 @@ public class ArcanumPerformanceModSystem : ModSystem
 
     /// <summary>
     /// Stops all performance and scheduling systems.
+    /// <see cref="IDeferredWorkService"/> is owned by <see cref="ArcanumLibModSystem"/> and is only stopped here.
     /// </summary>
     public override void Dispose()
     {
         _statCoalescing?.Dispose();
-        ArcanumServices.Unregister<StatCoalescingEngine>();
-        ArcanumServices.Unregister<IStatCoalescingEngine>();
+        ArcanumServices.Unregister<StatCoalescingEngine>(ArcanumServiceScope.Server);
+        ArcanumServices.Unregister<IStatCoalescingEngine>(ArcanumServiceScope.Server);
 
         _gameTimeScheduler?.Dispose();
-        ArcanumServices.Unregister<GameTimeScheduler>();
-        ArcanumServices.Unregister<IGameTimeScheduler>();
+        ArcanumServices.Unregister<GameTimeScheduler>(ArcanumServiceScope.Server);
+        ArcanumServices.Unregister<IGameTimeScheduler>(ArcanumServiceScope.Server);
 
         ArcanumServices.Get<IDeferredWorkService>()?.Stop();
         base.Dispose();

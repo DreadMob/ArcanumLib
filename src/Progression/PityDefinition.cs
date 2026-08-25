@@ -65,7 +65,7 @@ namespace ArcanumLib.Progression
                 var rule = rules[i];
                 if (rule.opensUntilGuarantee <= 0) continue;
                 opensSinceQuality.TryGetValue(rule.qualityTierIndex, out int opens);
-                if (opens >= rule.opensUntilGuarantee - 1)
+                if (opens >= rule.opensUntilGuarantee)
                     return rule.qualityTierIndex;
             }
             return 0;

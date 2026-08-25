@@ -17,15 +17,20 @@ File and console logger with per-category files, structured events, and throttle
 ## Quick example
 
 ```csharp
+using ArcanumLib.Core;
 using ArcanumLib.Logging;
 
-CategorizedLogger.Init(api, new LogConfig { Mode = LogMode.Verbose }, "myMod", "MyMod");
+var logger = ArcanumServices.Get<ICategorizedLogger>();
+logger?.Info("combat", "Player hit target for {0}", damage);
+logger?.Warning("combat", "Target enraged", ex);
+
+// or the static facade:
 CategorizedLogger.Instance?.Info("combat", "Player hit target for {0}", damage);
 CategorizedLogger.Instance?.Warning("combat", "Target enraged", ex);
 ```
 
 ## Notes
 
-- `CategorizedLogger.Instance` is a facade for the instance registered in `ArcanumServices`.
+- `CategorizedLogger.Instance` is a facade for the instance registered in `ArcanumServices`. It is `ICategorizedLogger?`.
 - `Dispose` flushes and closes all file writers; call it on world unload.
 - Empty `catch` blocks are not used; all failures are logged.

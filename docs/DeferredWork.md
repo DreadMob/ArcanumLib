@@ -34,7 +34,7 @@ dw.Schedule("spawn-particles", () => SpawnParticles(pos), 250);
 
 `DeferredWorkService` is registered in `ArcanumServices` by `ArcanumLibModSystem`, which starts client and server schedulers automatically.
 
-The instance methods (`Schedule`, `Coalesce`, etc.) pick the right side automatically based on the calling thread. For code that runs on a known side, you can use the explicit scopes:
+The `IDeferredWorkService` instance methods (`Schedule`, `Coalesce`, etc.) pick the right side automatically based on the calling thread. The `Client` and `Server` properties are `IDeferredWork` facades for code that runs on a known side:
 
 ```csharp
 dw.Server.Schedule("save-all", () => Save(), 1000);

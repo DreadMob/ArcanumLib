@@ -52,7 +52,7 @@ public class ArcanumDataModSystemTests : IDisposable
         Assert.NotNull(ArcanumServices.Get<IActionRegistryService>(ArcanumServiceScope.Server));
         Assert.NotNull(ArcanumServices.Get<IActionExecutorService>(ArcanumServiceScope.Server));
         Assert.NotNull(PlaytimeTracker.Current);
-        Assert.NotNull(PityTracker.Current);
+        Assert.Null(PityTracker.Current);
     }
 
     [Fact]
@@ -76,17 +76,6 @@ public class ArcanumDataModSystemTests : IDisposable
         Assert.Null(ArcanumServices.Get<IActionExecutorService>(ArcanumServiceScope.Server));
         Assert.Null(PlaytimeTracker.Current);
         Assert.Null(PityTracker.Current);
-    }
-
-    [Fact]
-    public void PityTracker_Current_Setter_RegistersInServices()
-    {
-        var tracker = new PityTracker(CreateSapi());
-        PityTracker.Current = tracker;
-
-        Assert.Same(tracker, PityTracker.Current);
-        Assert.Same(tracker, ArcanumServices.Get<IPityTracker>(ArcanumServiceScope.Server));
-        Assert.Same(tracker, ArcanumServices.Get<PityTracker>(ArcanumServiceScope.Server));
     }
 
     private static ICoreServerAPI CreateSapi()

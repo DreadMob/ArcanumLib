@@ -25,10 +25,11 @@ parent: Common & Utility
 ### Setup
 
 ```csharp
+using ArcanumLib.Core;
 using ArcanumLib.Common;
 
 // In your ModSystem.StartServerSide:
-var tracker = new PlaytimeTracker(sapi, "myplaytime_data.json");
+var tracker = ArcanumServices.Get<IPlaytimeTracker>()!;
 var cooldowns = new PlaytimeCooldownManager(tracker);
 ```
 
@@ -112,4 +113,5 @@ int imported = tracker.ImportFromDictionary(historical);
 
 - All timestamps use `DateTimeOffset.UtcNow` so cooldowns survive server restarts.
 - Data is persisted to `ModData/<dataFileName>.json` on save and player leave.
+- `PlaytimeTracker.Current` is an `IPlaytimeTracker?` facade backed by `ArcanumServices`.
 - The tracker auto-subscribes to `PlayerJoin`, `PlayerLeave`, and `GameWorldSave` events via `EventScope`.

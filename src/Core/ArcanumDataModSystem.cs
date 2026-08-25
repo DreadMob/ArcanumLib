@@ -11,7 +11,8 @@ namespace ArcanumLib.Core;
 /// <summary>
 /// Consolidated server-side data lifecycle ModSystem.
 /// Initializes and disposes <see cref="ModDataStore" />, <see cref="PlaytimeTracker" />,
-/// <see cref="PityTracker" /> and the action registry/executor services.
+/// and the action registry/executor services. <see cref="IPityTracker" /> is published
+/// by the consuming mod rather than here, to avoid save-key collisions.
 /// </summary>
 public class ArcanumDataModSystem : ModSystem
 {
@@ -45,13 +46,6 @@ public class ArcanumDataModSystem : ModSystem
             ArcanumServices.Register(playtime, ArcanumServiceScope.Server);
             ArcanumServices.Register<IPlaytimeTracker>(playtime, ArcanumServiceScope.Server);
         }
-        if (ArcanumServices.Get<IPityTracker>(ArcanumServiceScope.Server) == null)
-        {
-            var pity = new PityTracker(sapi);
-            ArcanumServices.Register(pity, ArcanumServiceScope.Server);
-            ArcanumServices.Register<IPityTracker>(pity, ArcanumServiceScope.Server);
-            ArcanumServices.Register<IPityProvider>(pity, ArcanumServiceScope.Server);
-        }
 
         var registry = new ActionRegistryService();
         ArcanumServices.Register(registry, ArcanumServiceScope.Server);
@@ -81,12 +75,6 @@ public class ArcanumDataModSystem : ModSystem
             playtime.Dispose();
         ArcanumServices.Unregister<PlaytimeTracker>(ArcanumServiceScope.Server);
         ArcanumServices.Unregister<IPlaytimeTracker>(ArcanumServiceScope.Server);
-
-        if (ArcanumServices.Get<IPityTracker>(ArcanumServiceScope.Server) is { } pity)
-            pity.Save();
-        ArcanumServices.Unregister<PityTracker>(ArcanumServiceScope.Server);
-        ArcanumServices.Unregister<IPityTracker>(ArcanumServiceScope.Server);
-        ArcanumServices.Unregister<IPityProvider>(ArcanumServiceScope.Server);
 
         if (ArcanumServices.Get<IActionExecutorService>() is { } executor)
             executor.ClearAllCooldowns();

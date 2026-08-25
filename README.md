@@ -220,6 +220,34 @@ ArcanumLib/
 
 ---
 
+## Service ownership
+
+Most subsystems publish themselves through `ArcanumServices`. The table below shows which `ModSystem` owns each public service and how consumers should resolve it.
+
+| Service | Interface | Owner (`ModSystem`) | How to resolve |
+|---------|-----------|---------------------|----------------|
+| `ArcanumRuntime` / `ICoreAPI` | `ICoreAPI`, `ICoreServerAPI`, `ICoreClientAPI` | `ArcanumLibModSystem` | `ArcanumServices.Get<ICoreServerAPI>(ArcanumServiceScope.Server)` |
+| `ActionRegistry` | `IActionRegistryService` | `ArcanumDataModSystem` | `ArcanumServices.Get<IActionRegistryService>(ArcanumServiceScope.Server)` |
+| `ActionExecutor` | `IActionExecutorService` | `ArcanumDataModSystem` | `ArcanumServices.Get<IActionExecutorService>(ArcanumServiceScope.Server)` |
+| `PlaytimeTracker` | `IPlaytimeTracker` | `ArcanumDataModSystem` | `ArcanumServices.Get<IPlaytimeTracker>(ArcanumServiceScope.Server)` |
+| `OnlinePlayerCache` | `IOnlinePlayerCache` | `OnlinePlayerCache` | `ArcanumServices.Get<IOnlinePlayerCache>()` |
+| `EventBus` | `IEventBusService` | `ArcanumLibModSystem` | `ArcanumServices.Get<IEventBusService>()` |
+| `CategorizedLogger` | `ICategorizedLogger` | `CategorizedLogger` (consumer calls `Init`) | `ArcanumServices.Get<ICategorizedLogger>()` or `CategorizedLogger.Instance` |
+| `DeferredWork` | `IDeferredWorkService` | `ArcanumLibModSystem` | `ArcanumServices.Get<IDeferredWorkService>()` |
+| `GameTimeScheduler` | `IGameTimeScheduler` | `ArcanumPerformanceModSystem` | `ArcanumServices.Get<IGameTimeScheduler>(ArcanumServiceScope.Server)` |
+| `StatCoalescingEngine` | `IStatCoalescingEngine` | `ArcanumPerformanceModSystem` | `ArcanumServices.Get<IStatCoalescingEngine>(ArcanumServiceScope.Server)` |
+| `StatusEffectService` | `IStatusEffectService` | `StatusEffectModSystem` | `ArcanumServices.Get<IStatusEffectService>()` |
+| `EffectResistanceService` | `IEffectResistanceService` | `StatusEffectModSystem` | `ArcanumServices.Get<IEffectResistanceService>()` |
+| `PityTracker` | `IPityTracker`, `IPityProvider` | **Consumer** (e.g. quest/progression mod) | `ArcanumServices.Get<IPityTracker>(ArcanumServiceScope.Server)` |
+
+Notes:
+
+- `PityTracker` is intentionally **not** owned by ArcanumLib. The library provides the implementation; the consuming mod decides the save key and publishes the instance. This avoids multiple mods fighting over the same global tracker.
+- `CategorizedLogger` is published by whichever mod calls `CategorizedLogger.Init(api, ...)`. ArcanumLib does not create one automatically.
+- `ArcanumLibModSystem` and `ArcanumDataModSystem` are loaded by Vintage Story in order (`ExecuteOrder = 0.1` for the performance system), so the owned services above are available before most other `StartServerSide` / `StartClientSide` calls.
+
+---
+
 ## Building
 
 ```bash

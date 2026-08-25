@@ -40,8 +40,8 @@ public class PityDefinitionTests
 
         var counters = new Dictionary<int, int>
         {
-            [3] = 4,
-            [5] = 9
+            [3] = 5,
+            [5] = 10
         };
 
         Assert.Equal(5, def.GetGuaranteedQuality(counters));
@@ -89,7 +89,7 @@ public class PityDefinitionTests
             }
         };
 
-        var counters = new Dictionary<int, int> { [3] = 100, [4] = 4 };
+        var counters = new Dictionary<int, int> { [3] = 100, [4] = 5 };
 
         Assert.Equal(4, def.GetGuaranteedQuality(counters));
     }

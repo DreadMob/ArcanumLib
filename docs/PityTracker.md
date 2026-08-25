@@ -30,9 +30,11 @@ It persists via `ModDataStore` and can import legacy save data.
 ## Quick example
 
 ```csharp
+using ArcanumLib.Core;
 using ArcanumLib.Progression;
 
-var tracker = new PityTracker(sapi, "oldmod:pity:data");
+var tracker = ArcanumServices.Get<IPityTracker>()!;
+// or: var tracker = PityTracker.Current!;
 
 tracker.RegisterDefinition(new PityDefinition
 {
@@ -96,7 +98,8 @@ Returns 0 if a guarantee is already due, or -1 if the definition/player is not f
 ### Legacy migration
 
 ```csharp
-var tracker = new PityTracker(sapi, "oldmod:pity:data");
+var tracker = ArcanumServices.Get<IPityTracker>()!;
+// or: var tracker = PityTracker.Current!;
 tracker.AddLegacyFallbackKey("anothermod:oldpity");
 ```
 
@@ -117,9 +120,9 @@ public class MyPityModSystem : ModSystem
 
     public override void StartServerSide(ICoreServerAPI sapi)
     {
-        tracker = new PityTracker(sapi);
+        tracker = ArcanumServices.Get<IPityTracker>()!;
+        // or: tracker = PityTracker.Current!;
         // register definitions
-        ArcanumServices.Register(tracker, ArcanumServiceScope.Server);
     }
 
     public override void OnSaveGameData()
@@ -132,6 +135,6 @@ public class MyPityModSystem : ModSystem
 ## Thread-safety and lifecycle
 
 - All public methods on `PityTracker` are thread-safe (`_syncLock`).
-- `PityTracker.Current` is a read-only facade backed by `ArcanumServices`. Register the instance with `ArcanumServices.Register(tracker, ArcanumServiceScope.Server)` and it will be returned here.
+- `PityTracker.Current` is an `IPityTracker?` read-only facade backed by `ArcanumServices`. Register the instance with `ArcanumServices.Register(tracker, ArcanumServiceScope.Server)` and it will be returned here.
 - `PityTrackerModSystem` creates and saves the global tracker on the server.
 - `RecordOpen` automatically marks the `ModDataStore` as dirty so the next `Save` persists.
