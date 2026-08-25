@@ -10,11 +10,15 @@ namespace ArcanumLib.Hologram;
 /// </summary>
 public class SingleHologramRenderer : IRenderer, IDisposable
 {
+    private const int OcclusionCheckIntervalMs = 1000;
+
     private readonly ICoreClientAPI _capi;
     private readonly IHologramTextSource _source;
     private readonly HologramTextureOptions _options;
     private readonly string? _renderKey;
     private HologramTexture? _texture;
+    private long _lastOcclusionCheckMs = long.MinValue;
+    private bool _isOccluded;
 
     /// <summary>Render priority within the Ortho stage.</summary>
     public double RenderOrder => 1.0;
@@ -62,8 +66,14 @@ public class SingleHologramRenderer : IRenderer, IDisposable
 
         if (!_source.IsHologramVisibleThroughWalls())
         {
-            var eyePos = plrPos.XYZ.AddCopy(0, _capi.World.Player.Entity.LocalEyePos.Y, 0);
-            if (HologramRenderUtils.IsOccluded(_capi, eyePos, worldPos, pos)) return;
+            long nowMs = _capi.InWorldEllapsedMilliseconds;
+            if (nowMs - _lastOcclusionCheckMs >= OcclusionCheckIntervalMs)
+            {
+                var eyePos = plrPos.XYZ.AddCopy(0, _capi.World.Player.Entity.LocalEyePos.Y, 0);
+                _isOccluded = HologramRenderUtils.IsOccluded(_capi, eyePos, worldPos, pos);
+                _lastOcclusionCheckMs = nowMs;
+            }
+            if (_isOccluded) return;
         }
 
         var screenPos = MatrixToolsd.Project(worldPos,

@@ -15,7 +15,7 @@ public class AreaHologramRenderer : IRenderer, IDisposable
 {
     private const int CacheRefreshIntervalMs = 1000;
     private const int CacheRefreshMoveThresholdBlocks = 4;
-    private const int OcclusionCheckIntervalMs = 100;
+    private const int OcclusionCheckIntervalMs = 1000;
 
     private readonly ICoreClientAPI _capi;
     private readonly System.Func<BlockEntity, IHologramTextSource?> _sourceFactory;
@@ -116,12 +116,12 @@ public class AreaHologramRenderer : IRenderer, IDisposable
                 rapi.FrameHeight);
             if (screenPos.Z < 0.0) continue;
 
-            string? text = entry.Source.GetHologramText();
-            if (string.IsNullOrWhiteSpace(text)) continue;
-
             long version = entry.Source.GetHologramVersion();
             if (entry.Texture == null || entry.Texture.Version != version || !entry.Texture.IsValid)
             {
+                string? text = entry.Source.GetHologramText();
+                if (string.IsNullOrWhiteSpace(text)) continue;
+
                 entry.Texture?.Dispose();
                 var options = GetOptionsForSource(entry.Source);
                 entry.Texture = HologramTextureGenerator.Generate(_capi, text, options, version);

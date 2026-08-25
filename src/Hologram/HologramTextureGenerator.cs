@@ -51,7 +51,9 @@ public static class HologramTextureGenerator
                 width = (int)Math.Ceiling(needed);
         }
 
-        var surface = new ImageSurface(Format.Argb32, width, (int)Math.Ceiling(height));
+        int textureWidth = Math.Max(2, width);
+        int textureHeight = Math.Max(2, (int)Math.Ceiling(height));
+        var surface = new ImageSurface(Format.Argb32, textureWidth, textureHeight);
         var ctx = new Context(surface);
 
         if (options.DrawBackground)

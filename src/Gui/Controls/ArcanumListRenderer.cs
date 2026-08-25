@@ -145,8 +145,8 @@ internal sealed class ArcanumListRenderer<T> : IDisposable
     {
         if (state.Bounds == null || api?.Render == null) return;
 
-        int width = Math.Max(1, (int)state.Bounds.OuterWidth);
-        int height = Math.Max(1, (int)state.Bounds.OuterHeight);
+        int width = Math.Max(4, (int)state.Bounds.OuterWidth);
+        int height = Math.Max(4, (int)state.Bounds.OuterHeight);
 
         // Round scrollY to whole pixels so smooth wheel scrolling does not regenerate
         // the texture on every fractional change (was :F2, causing ~100 regen/s).

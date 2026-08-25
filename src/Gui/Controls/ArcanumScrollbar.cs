@@ -164,8 +164,9 @@ public class ArcanumScrollbar : GuiElement
 
     private LoadedTexture GetOrCreateTrack()
     {
-        int w = Math.Max(2, (int)Math.Round(Bounds.InnerWidth - scaled(6.0)));
-        int h = Math.Max(2, (int)Math.Round(Bounds.InnerHeight));
+        // Some Linux GL drivers reject very small/non-power-of-two textures.
+        int w = Math.Max(4, (int)Math.Round(Bounds.InnerWidth - scaled(6.0)));
+        int h = Math.Max(4, (int)Math.Round(Bounds.InnerHeight));
 
         if (trackTexture == null || trackTexture.TextureId == 0 || trackSize != (w, h))
         {
@@ -202,7 +203,8 @@ public class ArcanumScrollbar : GuiElement
 
     private LoadedTexture GetOrCreateHandle()
     {
-        int w = Math.Max(2, (int)Math.Round(Bounds.InnerWidth));
+        // Some Linux GL drivers reject very small/non-power-of-two textures.
+        int w = Math.Max(4, (int)Math.Round(Bounds.InnerWidth));
         (double _, double hd) = ComputeHandleRect();
         int h = Math.Max(8, (int)Math.Round(hd));
         bool hov = hovered || dragging;
