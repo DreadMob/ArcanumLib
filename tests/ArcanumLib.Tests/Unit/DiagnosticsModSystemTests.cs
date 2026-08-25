@@ -70,8 +70,8 @@ public class DiagnosticsModSystemTests
     [Fact]
     public void GetMonitorReport_NoSamples_ContainsNoSamplesMessage()
     {
-        var system = new DiagnosticsModSystem();
-        var report = system.GetMonitorReport();
+        var monitor = new RuntimeMonitor();
+        var report = monitor.GetMonitorReport();
 
         Assert.Contains("no samples yet", report);
         Assert.Contains("=== ArcanumLib Runtime Monitor ===", report);
@@ -80,8 +80,8 @@ public class DiagnosticsModSystemTests
     [Fact]
     public void ExtractSummary_NoSummarySection_ReturnsDefaultMessage()
     {
-        // ExtractSummary is private — test indirectly through reflection
-        var method = typeof(DiagnosticsModSystem).GetMethod("ExtractSummary",
+        // ExtractSummary is internal static on DiagnosticsReporter
+        var method = typeof(DiagnosticsReporter).GetMethod("ExtractSummary",
             System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static);
         Assert.NotNull(method);
 
@@ -93,7 +93,7 @@ public class DiagnosticsModSystemTests
     [Fact]
     public void ExtractSummary_WithSummarySection_ReturnsSummary()
     {
-        var method = typeof(DiagnosticsModSystem).GetMethod("ExtractSummary",
+        var method = typeof(DiagnosticsReporter).GetMethod("ExtractSummary",
             System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static);
         Assert.NotNull(method);
 
@@ -108,7 +108,7 @@ public class DiagnosticsModSystemTests
     [Fact]
     public void IsVersionSatisfied_EqualVersions_ReturnsTrue()
     {
-        var method = typeof(DiagnosticsModSystem).GetMethod("IsVersionSatisfied",
+        var method = typeof(DiagnosticsReporter).GetMethod("IsVersionSatisfied",
             System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static);
         Assert.NotNull(method);
 
@@ -120,7 +120,7 @@ public class DiagnosticsModSystemTests
     [Fact]
     public void IsVersionSatisfied_HigherInstalled_ReturnsTrue()
     {
-        var method = typeof(DiagnosticsModSystem).GetMethod("IsVersionSatisfied",
+        var method = typeof(DiagnosticsReporter).GetMethod("IsVersionSatisfied",
             System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static);
 
         var result = (bool)method!.Invoke(null, new object[] { "2.0.0", "1.0.0" })!;
@@ -131,7 +131,7 @@ public class DiagnosticsModSystemTests
     [Fact]
     public void IsVersionSatisfied_LowerInstalled_ReturnsFalse()
     {
-        var method = typeof(DiagnosticsModSystem).GetMethod("IsVersionSatisfied",
+        var method = typeof(DiagnosticsReporter).GetMethod("IsVersionSatisfied",
             System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static);
 
         var result = (bool)method!.Invoke(null, new object[] { "0.9.0", "1.0.0" })!;
@@ -142,7 +142,7 @@ public class DiagnosticsModSystemTests
     [Fact]
     public void IsVersionSatisfied_InstalledPreRelease_RequiredRelease_ReturnsFalse()
     {
-        var method = typeof(DiagnosticsModSystem).GetMethod("IsVersionSatisfied",
+        var method = typeof(DiagnosticsReporter).GetMethod("IsVersionSatisfied",
             System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static);
 
         var result = (bool)method!.Invoke(null, new object[] { "1.0.0-rc1", "1.0.0" })!;
@@ -153,7 +153,7 @@ public class DiagnosticsModSystemTests
     [Fact]
     public void IsVersionSatisfied_InstalledRelease_RequiredPreRelease_ReturnsTrue()
     {
-        var method = typeof(DiagnosticsModSystem).GetMethod("IsVersionSatisfied",
+        var method = typeof(DiagnosticsReporter).GetMethod("IsVersionSatisfied",
             System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static);
 
         var result = (bool)method!.Invoke(null, new object[] { "1.0.0", "1.0.0-rc1" })!;
@@ -164,7 +164,7 @@ public class DiagnosticsModSystemTests
     [Fact]
     public void IsVersionSatisfied_EmptyRequired_ReturnsTrue()
     {
-        var method = typeof(DiagnosticsModSystem).GetMethod("IsVersionSatisfied",
+        var method = typeof(DiagnosticsReporter).GetMethod("IsVersionSatisfied",
             System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static);
 
         var result = (bool)method!.Invoke(null, new object[] { "1.0.0", "" })!;
@@ -175,7 +175,7 @@ public class DiagnosticsModSystemTests
     [Fact]
     public void IsVersionSatisfied_EmptyInstalled_ReturnsFalse()
     {
-        var method = typeof(DiagnosticsModSystem).GetMethod("IsVersionSatisfied",
+        var method = typeof(DiagnosticsReporter).GetMethod("IsVersionSatisfied",
             System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static);
 
         var result = (bool)method!.Invoke(null, new object[] { "", "1.0.0" })!;
@@ -186,7 +186,7 @@ public class DiagnosticsModSystemTests
     [Fact]
     public void IsVersionSatisfied_BothPreRelease_SameBase_HigherPreRelease_ReturnsTrue()
     {
-        var method = typeof(DiagnosticsModSystem).GetMethod("IsVersionSatisfied",
+        var method = typeof(DiagnosticsReporter).GetMethod("IsVersionSatisfied",
             System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static);
 
         var result = (bool)method!.Invoke(null, new object[] { "1.0.0-rc2", "1.0.0-rc1" })!;
@@ -197,7 +197,7 @@ public class DiagnosticsModSystemTests
     [Fact]
     public void IsVersionSatisfied_InvalidInstalled_ReturnsFalse()
     {
-        var method = typeof(DiagnosticsModSystem).GetMethod("IsVersionSatisfied",
+        var method = typeof(DiagnosticsReporter).GetMethod("IsVersionSatisfied",
             System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static);
 
         var result = (bool)method!.Invoke(null, new object[] { "not-a-version", "1.0.0" })!;
@@ -208,7 +208,7 @@ public class DiagnosticsModSystemTests
     [Fact]
     public void TryParseVersion_ValidVersion_ReturnsTrue()
     {
-        var method = typeof(DiagnosticsModSystem).GetMethod("TryParseVersion",
+        var method = typeof(DiagnosticsReporter).GetMethod("TryParseVersion",
             System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static);
 
         var args = new object[] { "1.2.3", 0, 0, 0 };
@@ -223,7 +223,7 @@ public class DiagnosticsModSystemTests
     [Fact]
     public void TryParseVersion_TwoPartVersion_ReturnsTrue()
     {
-        var method = typeof(DiagnosticsModSystem).GetMethod("TryParseVersion",
+        var method = typeof(DiagnosticsReporter).GetMethod("TryParseVersion",
             System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static);
 
         var args = new object[] { "1.2", 0, 0, 0 };
@@ -238,7 +238,7 @@ public class DiagnosticsModSystemTests
     [Fact]
     public void TryParseVersion_InvalidVersion_ReturnsFalse()
     {
-        var method = typeof(DiagnosticsModSystem).GetMethod("TryParseVersion",
+        var method = typeof(DiagnosticsReporter).GetMethod("TryParseVersion",
             System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static);
 
         var args = new object[] { "abc", 0, 0, 0 };

@@ -3,6 +3,7 @@ using ArcanumLib.Events;
 using ArcanumLib.Gui.Icons;
 using ArcanumLib.Gui.RadialMenu;
 using ArcanumLib.Helpers;
+using ArcanumLib.Logging;
 using ArcanumLib.Persistence;
 using ArcanumLib.Performance;
 using Vintagestory.API.Client;
@@ -18,6 +19,7 @@ namespace ArcanumLib.Core;
 public class ArcanumLibModSystem : ModSystem
 {
     private ArcanumRuntime? _runtime;
+    private bool _lifecycleRegistered;
 
     /// <summary>
     /// Returns the execution order relative to other systems.
@@ -33,17 +35,41 @@ public class ArcanumLibModSystem : ModSystem
     public override bool ShouldLoad(EnumAppSide forSide) => true;
 
     /// <summary>
-    /// Activates the runtime, registers the client API and common API, and initializes client-side caches.
+    /// Activates the runtime early (during the Pre phase) so that mods whose
+    /// <c>StartPre</c> runs after ours can call <see cref="ArcanumServices" />
+    /// immediately. Side-specific API and services are registered later in
+    /// <see cref="StartClientSide" /> / <see cref="StartServerSide" />.
+    /// </summary>
+    /// <param name="api">The core API.</param>
+    public override void StartPre(ICoreAPI api)
+    {
+        if (_runtime != null) return;
+
+        _runtime = ArcanumRuntime.Activate();
+        _runtime.Api = api;
+
+        WireStaticLogSink(api);
+        RegisterLifecycleHandlers();
+
+        _runtime.Services.Register<ICoreAPI>(api, ArcanumServiceScope.Global);
+        _runtime.Initialize();
+    }
+
+    /// <summary>
+    /// Registers the client API, common services, and initializes client-side caches.
+    /// The runtime is expected to have been activated in <see cref="StartPre" />; if not,
+    /// it is activated here as a fallback.
     /// </summary>
     /// <param name="capi">The client API.</param>
     public override void StartClientSide(ICoreClientAPI capi)
     {
-        _runtime = ArcanumRuntime.Activate();
-        _runtime.Side = EnumAppSide.Client;
+        EnsureRuntime(capi);
+
+        _runtime!.Side = EnumAppSide.Client;
         _runtime.Api = capi;
 
-        RegisterLifecycleHandlers();
-        RegisterCommonServices();
+        WireStaticLogSink(capi);
+        RegisterCommonServices(ArcanumServiceScope.Client);
 
         _runtime.Services.Register<ICoreAPI>(capi, ArcanumServiceScope.Client);
         _runtime.Services.Register<ICoreClientAPI>(capi, ArcanumServiceScope.Client);
@@ -53,44 +79,66 @@ public class ArcanumLibModSystem : ModSystem
     }
 
     /// <summary>
-    /// Activates the runtime, registers the server API and common API.
+    /// Registers the server API and common services.
+    /// The runtime is expected to have been activated in <see cref="StartPre" />; if not,
+    /// it is activated here as a fallback.
     /// </summary>
     /// <param name="sapi">The server API.</param>
     public override void StartServerSide(ICoreServerAPI sapi)
     {
-        _runtime = ArcanumRuntime.Activate();
-        _runtime.Side = EnumAppSide.Server;
+        EnsureRuntime(sapi);
+
+        _runtime!.Side = EnumAppSide.Server;
         _runtime.Api = sapi;
 
-        RegisterLifecycleHandlers();
-        RegisterCommonServices();
+        WireStaticLogSink(sapi);
+        RegisterCommonServices(ArcanumServiceScope.Server);
 
         _runtime.Services.Register<ICoreAPI>(sapi, ArcanumServiceScope.Server);
         _runtime.Services.Register<ICoreServerAPI>(sapi, ArcanumServiceScope.Server);
         _runtime.Initialize();
     }
 
+    private void EnsureRuntime(ICoreAPI api)
+    {
+        if (_runtime != null) return;
+
+        _runtime = ArcanumRuntime.Activate();
+        _runtime.Api = api;
+        WireStaticLogSink(api);
+        RegisterLifecycleHandlers();
+        _runtime.Services.Register<ICoreAPI>(api, ArcanumServiceScope.Global);
+        _runtime.Initialize();
+    }
+
     private void RegisterLifecycleHandlers()
     {
+        if (_lifecycleRegistered) return;
+        _lifecycleRegistered = true;
         ArcanumLifecycle.Register("ImageIconCache", () => { }, ImageIconCache.Dispose);
         ArcanumLifecycle.Register("CollectibleNameResolver", () => { }, CollectibleNameResolver.Clear);
         ArcanumLifecycle.Register("ModDataStore", () => { }, ModDataStore.Clear);
         ArcanumLifecycle.Register("CustomIconRegistry", () => { }, CustomIconRegistry.Clear);
     }
 
-    private void RegisterCommonServices()
+    private void RegisterCommonServices(ArcanumServiceScope scope)
     {
         var resistance = new EffectResistanceService();
-        _runtime!.Services.Register(resistance);
-        _runtime!.Services.Register<IEffectResistanceService>(resistance);
+        _runtime!.Services.Register(resistance, scope);
+        _runtime!.Services.Register<IEffectResistanceService>(resistance, scope);
 
         var eventBus = new EventBusService();
-        _runtime!.Services.Register(eventBus);
-        _runtime!.Services.Register<IEventBusService>(eventBus);
+        _runtime!.Services.Register(eventBus, scope);
+        _runtime!.Services.Register<IEventBusService>(eventBus, scope);
 
         var deferred = new DeferredWorkService();
-        _runtime!.Services.Register(deferred);
-        _runtime!.Services.Register<IDeferredWorkService>(deferred);
+        _runtime!.Services.Register(deferred, scope);
+        _runtime!.Services.Register<IDeferredWorkService>(deferred, scope);
+    }
+
+    private static void WireStaticLogSink(ICoreAPI api)
+    {
+        StaticLogSink.SetLogger(msg => api?.Logger?.Warning(msg));
     }
 
     /// <summary>
@@ -100,6 +148,8 @@ public class ArcanumLibModSystem : ModSystem
     {
         _runtime?.Dispose();
         _runtime = null;
+        _lifecycleRegistered = false;
+        StaticLogSink.SetLogger(null);
         base.Dispose();
     }
 }

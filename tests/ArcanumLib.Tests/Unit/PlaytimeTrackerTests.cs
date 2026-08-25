@@ -1,13 +1,28 @@
+using System;
 using System.Collections.Generic;
 using ArcanumLib.Common;
+using ArcanumLib.Core;
+using ArcanumLib.Persistence;
 using NSubstitute;
 using Vintagestory.API.Server;
 using Xunit;
 
 namespace ArcanumLib.Tests.Unit;
 
-public class PlaytimeTrackerTests
+[Collection("ArcanumServices")]
+public class PlaytimeTrackerTests : IDisposable
 {
+    public PlaytimeTrackerTests()
+    {
+        ArcanumRuntime.Activate();
+        ArcanumServices.Register<ModDataStoreRegistry>(new ModDataStoreRegistry(), ArcanumServiceScope.Server);
+    }
+
+    public void Dispose()
+    {
+        ArcanumRuntime.Current?.Dispose();
+    }
+
     [Fact]
     public void GetPlaytimeMs_ReturnsStoredValue()
     {

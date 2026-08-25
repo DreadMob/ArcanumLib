@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using ArcanumLib.Logging;
 using Vintagestory.API.Client;
 using Vintagestory.API.Common;
 using Vintagestory.API.Server;
@@ -217,7 +218,7 @@ public sealed class ArcanumServiceRegistry : IDisposable
             try { disposable.Dispose(); }
             catch (Exception ex)
             {
-                Console.WriteLine("[ArcanumLib] Service disposal failed: {0}", ex.Message);
+                StaticLogSink.Log($"[ArcanumLib] Service disposal failed: {ex.Message}");
             }
         }
     }

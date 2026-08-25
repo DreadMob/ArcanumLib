@@ -35,7 +35,10 @@ public class ArcanumDataModSystem : ModSystem
 
         _sapi = sapi;
 
-        ArcanumServices.Register<ICoreServerAPI>(sapi, ArcanumServiceScope.Server);
+        // Register the data-store registry so ModDataStore facade calls resolve it.
+        var storeRegistry = new ModDataStoreRegistry();
+        ArcanumServices.Register<ModDataStoreRegistry>(storeRegistry, ArcanumServiceScope.Server);
+
         sapi.Event.SaveGameLoaded += OnSaveGameLoaded;
         sapi.Event.SaveGameCreated += OnSaveGameCreated;
         sapi.Event.GameWorldSave += OnGameWorldSave;
@@ -86,9 +89,8 @@ public class ArcanumDataModSystem : ModSystem
         ArcanumServices.Unregister<IActionExecutorService>(ArcanumServiceScope.Server);
         ArcanumServices.Unregister<ActionRegistryService>(ArcanumServiceScope.Server);
         ArcanumServices.Unregister<IActionRegistryService>(ArcanumServiceScope.Server);
-        ArcanumServices.Unregister<ICoreServerAPI>(ArcanumServiceScope.Server);
 
-        ModDataStore.Clear();
+        ArcanumServices.Unregister<ModDataStoreRegistry>(ArcanumServiceScope.Server);
 
         _sapi = null;
         base.Dispose();

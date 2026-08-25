@@ -15,28 +15,17 @@ namespace ArcanumLib.Gui.Controls;
 public class ArcanumList<T> : GuiElement
 {
     private readonly List<T> _items = new();
-    private readonly System.Func<T, string> _label;
     private readonly double _rowHeight;
-    private readonly System.Action<T, int>? _onSelected;
-    private readonly CairoFont _font;
-    private readonly double _textPadding;
-    private readonly bool _drawZebra;
+
+    private readonly ArcanumListSelection<T> _selection;
+    private readonly ArcanumListRenderer<T> _renderer;
 
     private float _scrollY;
     private int _hoveredIndex = -1;
-    private int _selectedIndex = -1;
-
-    private LoadedTexture _texture;
-    private string? _textureKey;
-    private bool _dirty = true;
 
     private bool _dragging;
     private double _dragStartMouseY;
     private float _dragStartScroll;
-
-    private const double ScrollbarWidth = 8.0;
-    private const double ScrollbarPadding = 3.0;
-    private const double MinHandleHeight = 24.0;
 
     /// <summary>
     /// Creates a new Arcanum list with the given row factory and selection callback.
@@ -60,13 +49,11 @@ public class ArcanumList<T> : GuiElement
         bool drawZebra = true)
         : base(capi, bounds)
     {
-        _label = labelSelector;
         _rowHeight = Math.Max(8.0, rowHeight);
-        _onSelected = onSelected;
-        _font = font ?? ArcanumFont.Body;
-        _textPadding = textPadding;
-        _drawZebra = drawZebra;
-        _texture = new LoadedTexture(capi);
+        _selection = new ArcanumListSelection<T>(onSelected);
+        _renderer = new ArcanumListRenderer<T>(
+            capi, labelSelector, font ?? ArcanumFont.Body, textPadding, drawZebra,
+            scaled, GenerateTextureImpl);
     }
 
     /// <summary>
@@ -80,7 +67,7 @@ public class ArcanumList<T> : GuiElement
         _items.AddRange(items);
         _scrollY = 0;
         _hoveredIndex = -1;
-        _selectedIndex = -1;
+        _selection.Reset();
         MarkDirty();
         return this;
     }
@@ -101,14 +88,7 @@ public class ArcanumList<T> : GuiElement
     /// <param name="index">The zero-based index.</param>
     public void Select(int index)
     {
-        if (index < 0 || index >= _items.Count)
-        {
-            _selectedIndex = -1;
-        }
-        else
-        {
-            _selectedIndex = index;
-        }
+        _selection.Set(index, _items.Count);
         MarkDirty();
     }
 
@@ -136,12 +116,8 @@ public class ArcanumList<T> : GuiElement
         if (Bounds.OuterWidth <= 0 || Bounds.OuterHeight <= 0) return;
 
         UpdateHover();
-        RegenerateIfNeeded();
-
-        if (_texture.TextureId > 0)
-        {
-            api?.Render?.Render2DLoadedTexture(_texture, (float)Bounds.absX, (float)Bounds.absY);
-        }
+        _renderer.Render(api, BuildRenderState());
+        _renderer.Draw(api, Bounds);
     }
 
     private void UpdateHover()
@@ -187,173 +163,23 @@ public class ArcanumList<T> : GuiElement
         return GameMath.Clamp(row, -1, RowCount - 1);
     }
 
-    private bool IsOnScrollbar(int mouseX, int mouseY)
-    {
-        if (Bounds == null || !ScrollNeeded) return false;
-        double localX = mouseX - Bounds.absX;
-        double trackX = Bounds.OuterWidth - scaled(ScrollbarWidth) - scaled(ScrollbarPadding);
-        return localX >= trackX;
-    }
+    private void MarkDirty() => _renderer.MarkDirty();
 
-    private (double x, double y, double w, double h) ScrollbarHandleRect()
-    {
-        double trackH = Bounds.OuterHeight;
-        double ratio = VisibleHeight / Math.Max(1f, TotalHeight);
-        double handleH = Math.Max(scaled(MinHandleHeight), trackH * ratio);
-        double range = trackH - handleH;
-        double t = MaxScroll > 0.001f ? _scrollY / MaxScroll : 0.0;
-        double trackX = Bounds.OuterWidth - scaled(ScrollbarWidth) - scaled(ScrollbarPadding);
-        double handleY = range * t;
-        return (trackX, handleY, scaled(ScrollbarWidth), handleH);
-    }
+    private ArcanumListRenderState<T> BuildRenderState() => new(
+        _items,
+        Bounds!,
+        _scrollY,
+        _hoveredIndex,
+        _selection.SelectedIndex,
+        _dragging,
+        ScaledRowHeight,
+        TotalHeight,
+        VisibleHeight,
+        MaxScroll,
+        ScrollNeeded);
 
-    private void MarkDirty()
-    {
-        _dirty = true;
-        _textureKey = null;
-    }
-
-    private void RegenerateIfNeeded()
-    {
-        if (Bounds == null || api?.Render == null) return;
-
-        int width = Math.Max(1, (int)Bounds.OuterWidth);
-        int height = Math.Max(1, (int)Bounds.OuterHeight);
-
-        // Round scrollY to whole pixels so smooth wheel scrolling does not regenerate
-        // the texture on every fractional change (was :F2, causing ~100 regen/s).
-        string newKey = $"{width}|{height}|{(int)Math.Round(_scrollY)}|{_hoveredIndex}|{_selectedIndex}|{RowCount}";
-        if (!_dirty && string.Equals(_textureKey, newKey, StringComparison.Ordinal) && _texture.TextureId > 0)
-            return;
-
-        _textureKey = newKey;
-        _dirty = false;
-
-        ImageSurface? surface = null;
-        Context? ctx = null;
-
-        try
-        {
-            _texture?.Dispose();
-            _texture = new LoadedTexture(api);
-
-            surface = new ImageSurface(Format.Argb32, width, height);
-            ctx = new Context(surface);
-
-            ctx.SetSourceRGBA(0, 0, 0, 0);
-            ctx.Paint();
-
-            // Background
-            ArcanumGuiTheme.FillRoundedRect(
-                ctx, 0, 0, width, height,
-                GuiElement.scaled(ArcanumGuiTheme.Radius.Medium),
-                ArcanumGuiTheme.SurfaceDeepest.WithAlpha(0.65));
-            ArcanumGuiTheme.StrokeRoundedRect(
-                ctx, 0, 0, width, height,
-                GuiElement.scaled(ArcanumGuiTheme.Radius.Medium),
-                ArcanumGuiTheme.BorderSubtle, GuiElement.scaled(1.0));
-
-            // Clip to the list area
-            ctx.Rectangle(0, 0, width, height);
-            ctx.Clip();
-
-            double contentW = ScrollNeeded ? width - scaled(ScrollbarWidth) - scaled(ScrollbarPadding) * 2.0 : width;
-
-            if (RowCount > 0)
-            {
-                int firstRow = Math.Max(0, (int)(_scrollY / ScaledRowHeight));
-                int lastRow = Math.Min(RowCount - 1, (int)((_scrollY + height) / ScaledRowHeight) + 1);
-
-                for (int i = firstRow; i <= lastRow; i++)
-                {
-                    double rowY = i * ScaledRowHeight - _scrollY;
-
-                    // Row background
-                    RGBA bgColor;
-                    if (i == _selectedIndex)
-                    {
-                        bgColor = ArcanumGuiTheme.StatusActive.WithAlpha(0.85);
-                    }
-                    else if (i == _hoveredIndex)
-                    {
-                        bgColor = ArcanumGuiTheme.SurfaceCardHover;
-                    }
-                    else if (_drawZebra && i % 2 == 1)
-                    {
-                        bgColor = ArcanumGuiTheme.SurfaceCard.WithAlpha(0.18);
-                    }
-                    else
-                    {
-                        bgColor = default;
-                    }
-
-                    if (bgColor.A > 0.001)
-                    {
-                        ctx.Rectangle(0, rowY, contentW, ScaledRowHeight);
-                        bgColor.Apply(ctx);
-                        ctx.Fill();
-                    }
-
-                    // Row text
-                    string? label = _label(_items[i]) ?? "";
-                    if (string.IsNullOrWhiteSpace(label)) continue;
-
-                    _font.SetupContext(ctx);
-
-                    RGBA textColor = i == _selectedIndex || i == _hoveredIndex
-                        ? ArcanumGuiTheme.TextPrimary
-                        : ArcanumGuiTheme.TextSecondary;
-                    textColor.Apply(ctx);
-
-                    var ext = ctx.TextExtents(label);
-                    double x = scaled(_textPadding) - ext.XBearing;
-                    double y = rowY + (ScaledRowHeight - ext.Height) / 2.0 - ext.YBearing;
-
-                    ctx.MoveTo(x, y);
-                    ctx.ShowText(label);
-                }
-            }
-
-            ctx.ResetClip();
-
-            // Scrollbar
-            if (ScrollNeeded)
-            {
-                double trackX = Bounds.OuterWidth - scaled(ScrollbarWidth) - scaled(ScrollbarPadding);
-                ArcanumGuiTheme.FillRoundedRect(
-                    ctx, trackX, 0, scaled(ScrollbarWidth), height,
-                    scaled(ScrollbarWidth / 2.0),
-                    ArcanumGuiTheme.SurfaceDeepest.WithAlpha(0.85));
-                ArcanumGuiTheme.StrokeRoundedRect(
-                    ctx, trackX, 0, scaled(ScrollbarWidth), height,
-                    scaled(ScrollbarWidth / 2.0),
-                    ArcanumGuiTheme.BorderSubtle, GuiElement.scaled(1.0));
-
-                var (hX, hY, hW, hH) = ScrollbarHandleRect();
-                RGBA handleColor = _dragging || _hoveredIndex == -2
-                    ? ArcanumGuiTheme.Accent.WithAlpha(0.95)
-                    : ArcanumGuiTheme.AccentDim.Lerp(ArcanumGuiTheme.Accent, 0.55);
-                ArcanumGuiTheme.FillRoundedRect(
-                    ctx, hX, hY, hW, hH,
-                    hW / 2.0,
-                    handleColor);
-            }
-
-            generateTexture(surface, ref _texture);
-
-        }
-        catch (Exception ex)
-        {
-            api?.Logger?.Warning("[ArcanumList] Failed to generate texture: {0}", ex);
-            _textureKey = null;
-            _dirty = true;
-        }
-        finally
-        {
-            ctx?.Dispose();
-            surface?.Dispose();
-        }
-    }
+    private void GenerateTextureImpl(ImageSurface surface, ref LoadedTexture texture) =>
+        generateTexture(surface, ref texture);
 
     /// <summary>Handles mouse down for scrollbar dragging and row selection.</summary>
     /// <param name="api">The client API instance.</param>
@@ -363,9 +189,9 @@ public class ArcanumList<T> : GuiElement
         if (Bounds == null) return;
         if (!Bounds.PointInside(args.X, args.Y)) return;
 
-        if (IsOnScrollbar(args.X, args.Y))
+        if (_renderer.IsOnScrollbar(args.X, Bounds, ScrollNeeded))
         {
-            var (hX, hY, hW, hH) = ScrollbarHandleRect();
+            var (_, hY, _, hH) = _renderer.ScrollbarHandleRect(BuildRenderState());
             double localY = args.Y - Bounds.absY;
 
             if (localY < hY || localY > hY + hH)
@@ -387,15 +213,7 @@ public class ArcanumList<T> : GuiElement
         int row = HitTest(args.X, args.Y);
         if (row >= 0 && row < RowCount)
         {
-            _selectedIndex = row;
-            try
-            {
-                _onSelected?.Invoke(_items[row], row);
-            }
-            catch (Exception ex)
-            {
-                api?.Logger?.Warning("[ArcanumList] Selection callback failed: {0}", ex);
-            }
+            _selection.SelectByClick(row, _items, api?.Logger);
             MarkDirty();
             args.Handled = true;
         }
@@ -410,7 +228,7 @@ public class ArcanumList<T> : GuiElement
 
         if (_dragging)
         {
-            var (_, _, _, hH) = ScrollbarHandleRect();
+            var (_, _, _, hH) = _renderer.ScrollbarHandleRect(BuildRenderState());
             double pixelRange = Math.Max(1.0, Bounds.OuterHeight - hH);
             double dy = args.Y - _dragStartMouseY;
             double tDelta = dy / pixelRange;
@@ -471,7 +289,7 @@ public class ArcanumList<T> : GuiElement
     /// <summary>Releases the cached list texture.</summary>
     public override void Dispose()
     {
-        _texture?.Dispose();
+        _renderer.Dispose();
         base.Dispose();
     }
 }

@@ -226,11 +226,10 @@ namespace ArcanumLib.Progression
                 if (!_definitions.TryGetValue(definitionId, out var def) || def == null) return;
 
                 var data = GetOrCreatePlayerData(playerUid);
-                var key = MakeKey(playerUid, definitionId);
-                if (!data.counters.TryGetValue(key, out var counters))
+                if (!data.counters.TryGetValue(definitionId, out var counters))
                 {
                     counters = new PityCounters();
-                    data.counters[key] = counters;
+                    data.counters[definitionId] = counters;
                 }
 
                 counters.totalOpens++;
@@ -264,8 +263,7 @@ namespace ArcanumLib.Progression
                 var data = TryGetPlayerData(playerUid);
                 if (data == null) return 0;
 
-                var key = MakeKey(playerUid, definitionId);
-                if (!data.counters.TryGetValue(key, out var counters)) return 0;
+                if (!data.counters.TryGetValue(definitionId, out var counters)) return 0;
 
                 return def.GetGuaranteedQuality(counters.opensSinceQuality);
             }
@@ -286,8 +284,7 @@ namespace ArcanumLib.Progression
                 var data = TryGetPlayerData(playerUid);
                 if (data == null) return null;
 
-                var key = MakeKey(playerUid, definitionId);
-                return data.counters.TryGetValue(key, out var counters) ? counters : null;
+                return data.counters.TryGetValue(definitionId, out var counters) ? counters : null;
             }
         }
 
@@ -309,9 +306,8 @@ namespace ArcanumLib.Progression
                 if (!_definitions.TryGetValue(definitionId, out var def) || def == null) return -1;
 
                 var data = TryGetPlayerData(playerUid);
-                var key = MakeKey(playerUid, definitionId);
                 int currentOpens = 0;
-                if (data != null && data.counters.TryGetValue(key, out var counters))
+                if (data != null && data.counters.TryGetValue(definitionId, out var counters))
                 {
                     currentOpens = counters.totalOpens;
                 }
@@ -326,7 +322,7 @@ namespace ArcanumLib.Progression
 
                     anyRule = true;
                     int opensSince = 0;
-                    if (data != null && data.counters.TryGetValue(key, out var ruleCounters))
+                    if (data != null && data.counters.TryGetValue(definitionId, out var ruleCounters))
                     {
                         opensSince = ruleCounters.opensSinceQuality.GetValueOrDefault(rule.qualityTierIndex, 0);
                     }
@@ -411,7 +407,5 @@ namespace ArcanumLib.Progression
                 }
             }
         }
-
-        private static string MakeKey(string playerUid, string definitionId) => $"{playerUid}::{definitionId}";
     }
 }

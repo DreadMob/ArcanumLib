@@ -1,4 +1,5 @@
 using System;
+using ArcanumLib.Logging;
 using Vintagestory.API.Common;
 
 namespace ArcanumLib.Core;
@@ -13,16 +14,25 @@ public sealed class ArcanumRuntime : IDisposable
 {
     private static ArcanumRuntime? _current;
     private static readonly object _currentLock = new();
+    private static IArcanumRuntimeProvider? _provider;
     private bool _disposed;
 
     /// <summary>
     /// The active runtime instance, or <c>null</c> if no world is loaded.
     /// Accessing this property does not auto-create a runtime; use <see cref="Activate" /> instead.
+    /// When a provider has been registered via <see cref="SetProvider" />, the provider is
+    /// consulted first; otherwise the static field is used.
     /// </summary>
     public static ArcanumRuntime? Current
     {
         get
         {
+            var provider = _provider;
+            if (provider != null)
+            {
+                return provider.Current;
+            }
+
             lock (_currentLock)
             {
                 return _current;
@@ -99,7 +109,7 @@ public sealed class ArcanumRuntime : IDisposable
         }
         catch (Exception ex)
         {
-            Console.WriteLine("[ArcanumLib] Lifecycle disposal failed: {0}", ex.Message);
+            StaticLogSink.Log($"[ArcanumLib] Lifecycle disposal failed: {ex.Message}");
         }
 
         Services.Dispose();
@@ -112,4 +122,42 @@ public sealed class ArcanumRuntime : IDisposable
             }
         }
     }
+
+    /// <summary>
+    /// Registers a custom runtime provider that overrides the default static
+    /// <see cref="Current" /> resolution. Pass <c>null</c> to revert to the
+    /// default static-field behavior. Intended for test isolation.
+    /// </summary>
+    /// <param name="provider">The provider to use, or <c>null</c> to clear.</param>
+    public static void SetProvider(IArcanumRuntimeProvider? provider)
+    {
+        _provider = provider;
+    }
+
+    /// <summary>
+    /// Disposes and clears the current runtime (including any provider-backed
+    /// resolution) and clears the provider. Intended for test cleanup.
+    /// </summary>
+    public static void Reset()
+    {
+        _provider = null;
+        lock (_currentLock)
+        {
+            _current?.Dispose();
+            _current = null;
+        }
+    }
+}
+
+/// <summary>
+/// Provides a custom resolution strategy for <see cref="ArcanumRuntime.Current" />,
+/// allowing tests or multi-world hosts to inject their own runtime without
+/// touching the static field.
+/// </summary>
+public interface IArcanumRuntimeProvider
+{
+    /// <summary>
+    /// The runtime instance this provider resolves, or <c>null</c> if none is active.
+    /// </summary>
+    ArcanumRuntime? Current { get; }
 }

@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using ArcanumLib.Logging;
 
 namespace ArcanumLib.Core;
 
@@ -51,7 +52,7 @@ public static class ArcanumLifecycle
                 try { init(); }
                 catch (Exception ex)
                 {
-                    Console.WriteLine("[ArcanumLib] Lifecycle init for '{0}' failed: {1}", name, ex.Message);
+                    StaticLogSink.Log($"[ArcanumLib] Lifecycle init for '{name}' failed: {ex.Message}");
                 }
             }
         }
@@ -74,7 +75,7 @@ public static class ArcanumLifecycle
             try { reg.Init(); }
             catch (Exception ex)
             {
-                Console.WriteLine("[ArcanumLib] Lifecycle init for '{0}' failed: {1}", reg.Name, ex.Message);
+                StaticLogSink.Log($"[ArcanumLib] Lifecycle init for '{reg.Name}' failed: {ex.Message}");
             }
         }
     }
@@ -97,7 +98,7 @@ public static class ArcanumLifecycle
             try { copy[i].Dispose(); }
             catch (Exception ex)
             {
-                Console.WriteLine("[ArcanumLib] Lifecycle dispose for '{0}' failed: {1}", copy[i].Name, ex.Message);
+                StaticLogSink.Log($"[ArcanumLib] Lifecycle dispose for '{copy[i].Name}' failed: {ex.Message}");
             }
         }
     }

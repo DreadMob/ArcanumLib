@@ -1,13 +1,28 @@
+using System;
 using System.Threading;
 using ArcanumLib.Common;
+using ArcanumLib.Core;
+using ArcanumLib.Persistence;
 using NSubstitute;
 using Vintagestory.API.Server;
 using Xunit;
 
 namespace ArcanumLib.Tests.Unit;
 
-public class PlaytimeCooldownManagerTests
+[Collection("ArcanumServices")]
+public class PlaytimeCooldownManagerTests : IDisposable
 {
+    public PlaytimeCooldownManagerTests()
+    {
+        ArcanumRuntime.Activate();
+        ArcanumServices.Register<ModDataStoreRegistry>(new ModDataStoreRegistry(), ArcanumServiceScope.Server);
+    }
+
+    public void Dispose()
+    {
+        ArcanumRuntime.Current?.Dispose();
+    }
+
     [Fact]
     public void IsOnCooldown_ImmediatelyAfterSet_ReturnsTrue()
     {

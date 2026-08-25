@@ -27,7 +27,7 @@ namespace ArcanumLib.Progression
     public class PityPlayerData
     {
         /// <summary>
-        /// Key = "playerUid::definitionId", Value = counters.
+        /// Key = definitionId, Value = counters.
         /// </summary>
         public Dictionary<string, PityCounters> counters = new();
     }

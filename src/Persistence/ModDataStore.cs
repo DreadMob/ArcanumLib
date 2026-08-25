@@ -1,19 +1,24 @@
 using System;
-using System.Collections.Concurrent;
 using ArcanumLib.Core;
 using Vintagestory.API.Server;
 
 namespace ArcanumLib.Persistence
 {
     /// <summary>
-    /// Static registry and factory for versioned per-savegame data stores.
-    /// The server API used by the parameterless <see cref="GetOrCreate{T}(string, string, int)" />
-    /// overloads is resolved through <see cref="ArcanumServices" /> under
-    /// <see cref="ArcanumServiceScope.Server" /> by <see cref="ArcanumLib.Core.ArcanumDataModSystem" />.
+    /// Static facade over the instance-based <see cref="ModDataStoreRegistry" />.
+    /// The registry is resolved through <see cref="ArcanumServices" /> and lives
+    /// in the current <see cref="ArcanumRuntime" />, so stores are scoped to a
+    /// world and disposed with it. The static API is preserved for backward
+    /// compatibility with existing callers.
     /// </summary>
     public static class ModDataStore
     {
-        private static readonly ConcurrentDictionary<string, IModDataStore> _stores = new();
+        /// <summary>
+        /// Resolves the active <see cref="ModDataStoreRegistry" /> from
+        /// <see cref="ArcanumServices" />, or <c>null</c> if no runtime is active.
+        /// </summary>
+        private static ModDataStoreRegistry? ResolveRegistry()
+            => ArcanumServices.Get<ModDataStoreRegistry>();
 
         /// <summary>
         /// Resolves the server API registered in <see cref="ArcanumServices" /> under
@@ -50,14 +55,10 @@ namespace ArcanumLib.Persistence
         /// <returns>The store instance.</returns>
         public static IModDataStore<T> GetOrCreate<T>(ICoreServerAPI sapi, string modId, string storeId, int dataVersion, Func<T> factory)
         {
-            if (sapi == null) throw new ArgumentNullException(nameof(sapi));
-            if (factory == null) throw new ArgumentNullException(nameof(factory));
-            if (string.IsNullOrWhiteSpace(modId)) throw new ArgumentException("modId cannot be empty.", nameof(modId));
-            if (string.IsNullOrWhiteSpace(storeId)) throw new ArgumentException("storeId cannot be empty.", nameof(storeId));
-            if (dataVersion <= 0) throw new ArgumentOutOfRangeException(nameof(dataVersion), "dataVersion must be greater than 0.");
-
-            var key = $"{modId}:{storeId}";
-            return (IModDataStore<T>)_stores.GetOrAdd(key, _ => new ModDataStoreInstance<T>(sapi, modId, storeId, dataVersion, factory));
+            var registry = ResolveRegistry()
+                ?? throw new InvalidOperationException(
+                    "ModDataStoreRegistry is not registered. Ensure ArcanumDataModSystem has started and registered the registry in ArcanumServices.");
+            return registry.GetOrCreate(sapi, modId, storeId, dataVersion, factory);
         }
 
         /// <summary>
@@ -101,18 +102,10 @@ namespace ArcanumLib.Persistence
         /// </summary>
         internal static void LoadAll()
         {
+            var registry = ResolveRegistry();
+            if (registry == null) return;
             var sapi = ResolveSapi();
-            foreach (var store in _stores.Values)
-            {
-                try
-                {
-                    store.Load();
-                }
-                catch (Exception ex)
-                {
-                    sapi?.Logger?.Warning("[ArcanumLib] [ModDataStore] LoadAll failed for {0}: {1}", store.StoreKey, ex.Message);
-                }
-            }
+            registry.LoadAll(sapi);
         }
 
         /// <summary>
@@ -120,18 +113,10 @@ namespace ArcanumLib.Persistence
         /// </summary>
         internal static void SaveAll()
         {
+            var registry = ResolveRegistry();
+            if (registry == null) return;
             var sapi = ResolveSapi();
-            foreach (var store in _stores.Values)
-            {
-                try
-                {
-                    store.Save();
-                }
-                catch (Exception ex)
-                {
-                    sapi?.Logger?.Warning("[ArcanumLib] [ModDataStore] SaveAll failed for {0}: {1}", store.StoreKey, ex.Message);
-                }
-            }
+            registry.SaveAll(sapi);
         }
 
         /// <summary>
@@ -139,7 +124,7 @@ namespace ArcanumLib.Persistence
         /// </summary>
         public static void Clear()
         {
-            _stores.Clear();
+            ResolveRegistry()?.Clear();
         }
     }
 }

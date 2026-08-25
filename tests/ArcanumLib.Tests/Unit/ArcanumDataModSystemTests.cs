@@ -17,13 +17,11 @@ public class ArcanumDataModSystemTests : IDisposable
     public ArcanumDataModSystemTests()
     {
         ArcanumRuntime.Activate();
-        ModDataStore.Clear();
     }
 
     public void Dispose()
     {
         ArcanumRuntime.Current?.Dispose();
-        ModDataStore.Clear();
     }
 
     [Fact]
@@ -44,6 +42,8 @@ public class ArcanumDataModSystemTests : IDisposable
     public void StartServerSide_RegistersServicesAndTrackers()
     {
         var sapi = CreateSapi();
+        // Simulate ArcanumLibModSystem registering the API before data systems start.
+        ArcanumServices.Register<ICoreServerAPI>(sapi, ArcanumServiceScope.Server);
 
         var system = new ArcanumDataModSystem();
         system.StartServerSide(sapi);
@@ -66,12 +66,15 @@ public class ArcanumDataModSystemTests : IDisposable
     public void Dispose_ClearsServicesAndTrackers()
     {
         var sapi = CreateSapi();
+        // Simulate ArcanumLibModSystem registering the API before data systems start.
+        ArcanumServices.Register<ICoreServerAPI>(sapi, ArcanumServiceScope.Server);
 
         var system = new ArcanumDataModSystem();
         system.StartServerSide(sapi);
         system.Dispose();
 
-        Assert.Null(ArcanumServices.Get<ICoreServerAPI>(ArcanumServiceScope.Server));
+        // ICoreServerAPI is owned by ArcanumLibModSystem, not ArcanumDataModSystem.
+        Assert.Same(sapi, ArcanumServices.Get<ICoreServerAPI>(ArcanumServiceScope.Server));
         Assert.Null(ArcanumServices.Get<IActionRegistryService>(ArcanumServiceScope.Server));
         Assert.Null(ArcanumServices.Get<IActionExecutorService>(ArcanumServiceScope.Server));
         Assert.Null(PlaytimeTracker.Current);

@@ -13,13 +13,13 @@ public class ModDataStoreFactoryTests : IDisposable
     public ModDataStoreFactoryTests()
     {
         ArcanumRuntime.Activate();
+        ArcanumServices.Register<ModDataStoreRegistry>(new ModDataStoreRegistry(), ArcanumServiceScope.Server);
         ModDataStore.Clear();
     }
 
     public void Dispose()
     {
         ArcanumRuntime.Current?.Dispose();
-        ModDataStore.Clear();
     }
 
     [Fact]
