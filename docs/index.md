@@ -120,13 +120,13 @@ Helpers that remove boilerplate for common Vintage Story patterns.
 
 | Page | Purpose |
 |------|---------|
-| [ChatFormatUtil]({{ site.baseurl }}{% link ChatFormatUtil.md %}) | Colorize chat and HUD text with `<font>` tags; alert-prefixed messages. |
+
 | [CooldownTracker]({{ site.baseurl }}{% link CooldownTracker.md %}) | Per-entity cooldowns in `WatchedAttributes`. |
-| [DamageHelper]({{ site.baseurl }}{% link DamageHelper.md %}) | Factory for `DamageSource` with common field combinations (Entity/Player/Weather/Internal). |
+
 | [EventScope]({{ site.baseurl }}{% link EventScope.md %}) | Disposable event subscription scope. |
 | [PlaytimeTracker]({{ site.baseurl }}{% link PlaytimeTracker.md %}) | Per-player online time tracking, login streaks, real-time cooldowns, and combat-state checks. |
 | [WatchedAttributes]({{ site.baseurl }}{% link WatchedAttributes.md %}) | Get-or-create and set helpers for `ITreeAttribute`. |
-| [Misc Helpers]({{ site.baseurl }}{% link MiscHelpers.md %}) | Thin sugar: `IsClient`/`IsServer`, `RGBA`, `Pretty`, `Wildcard`, `CollectibleNameResolver`, `EntityHealthExtensions`, `PlayerExtensions`, `ShapeCloner`. |
+
 
 ## Randomization & Geometry
 

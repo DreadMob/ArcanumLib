@@ -265,7 +265,7 @@ Requires:
 
 Full documentation site: **https://dreadmob.github.io/ArcanumLib/**
 
-API documentation also lives in the [`docs/`](docs) folder. See [docs/README.md](docs/README.md) for the complete category index.
+API documentation also lives in the [`docs/`](docs) folder. See [`docs/index.md`](docs/index.md) for the complete category index.
 
 ---
 
