@@ -7,7 +7,7 @@
         "Flajakay"
     ],
     "description": "Shared client/server utility library for Vintage Story mods. Provides icon rendering, color helpers, GUI toolkit, persistence, scheduling, and other reusable helpers.",
-    "version": "1.0.0-rc1",
+    "version": "1.0.0-rc.1",
     "side": "universal",
     "requiredOnClient": true,
     "requiredOnServer": true,
