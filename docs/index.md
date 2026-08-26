@@ -121,6 +121,8 @@ Helpers that remove boilerplate for common Vintage Story patterns.
 | Page | Purpose |
 |------|---------|
 
+| [Misc Helpers]({{ site.baseurl }}{% link MiscHelpers.md %}) | Thin sugar and helper factories: chat formatting, damage sources, side checks, health scaling, player filters. |
+
 | [CooldownTracker]({{ site.baseurl }}{% link CooldownTracker.md %}) | Per-entity cooldowns in `WatchedAttributes`. |
 
 | [EventScope]({{ site.baseurl }}{% link EventScope.md %}) | Disposable event subscription scope. |
