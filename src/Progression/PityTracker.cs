@@ -142,6 +142,12 @@ namespace ArcanumLib.Progression
                 {
                     TryImportLegacyData();
                 }
+
+                if (NormalizeLegacyCounterKeys())
+                {
+                    _store.MarkDirty();
+                    _store.Save();
+                }
             }
         }
 
@@ -377,6 +383,45 @@ namespace ArcanumLib.Progression
                 _store.Data[playerUid] = data;
             }
             return data;
+        }
+
+        private bool NormalizeLegacyCounterKeys()
+        {
+            bool changed = false;
+
+            foreach (var playerEntry in _store.Data)
+            {
+                var counters = playerEntry.Value?.counters;
+                if (counters == null || counters.Count == 0) continue;
+
+                string prefix = playerEntry.Key + "::";
+                foreach (var legacyEntry in counters
+                    .Where(entry => entry.Key.StartsWith(prefix, StringComparison.OrdinalIgnoreCase))
+                    .ToList())
+                {
+                    string definitionId = legacyEntry.Key.Substring(prefix.Length);
+                    if (string.IsNullOrWhiteSpace(definitionId)) continue;
+
+                    if (counters.TryGetValue(definitionId, out var current))
+                    {
+                        current.totalOpens = Math.Max(current.totalOpens, legacyEntry.Value.totalOpens);
+                        foreach (var tierEntry in legacyEntry.Value.opensSinceQuality)
+                        {
+                            current.opensSinceQuality[tierEntry.Key] = Math.Max(
+                                current.opensSinceQuality.GetValueOrDefault(tierEntry.Key), tierEntry.Value);
+                        }
+                    }
+                    else
+                    {
+                        counters[definitionId] = legacyEntry.Value;
+                    }
+
+                    counters.Remove(legacyEntry.Key);
+                    changed = true;
+                }
+            }
+
+            return changed;
         }
 
         private void TryImportLegacyData()
