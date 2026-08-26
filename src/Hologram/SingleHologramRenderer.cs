@@ -101,6 +101,9 @@ public class SingleHologramRenderer : IRenderer, IDisposable
         float posx = (float)screenPos.X - w / 2f;
         float posy = _capi.Render.FrameHeight - (float)screenPos.Y - h;
 
+        if (posx + w < 0 || posx > _capi.Render.FrameWidth || posy + h < 0 || posy > _capi.Render.FrameHeight)
+            return;
+
         _capi.Render.Render2DTexture(_texture.Texture.TextureId, posx, posy, w, h, 20f);
     }
 

@@ -14,30 +14,6 @@ This guide shows the most common ways to use ArcanumLib from a third-party mod.
 2. Add `arcanumlib` to the `dependson` list in your `modinfo.json`.
 3. Make sure ArcanumLib is loaded before your mod (it runs with `ExecuteOrder = -1000`).
 
-## Commands
-
-Register a server command with typed arguments and autocomplete:
-
-```csharp
-using ArcanumLib.Commands;
-
-public override void StartServerSide(ICoreServerAPI sapi)
-{
-    CommandBuilder
-        .Create(sapi, "mymod.givepoints")
-        .WithDescription("Gives points to a player.")
-        .WithPermission("mymod.admin")
-        .Arg<string>("player", autocomplete: (api, player) => api.World.AllOnlinePlayers.Select(p => p.PlayerName).ToArray())
-        .Arg<int>("amount")
-        .OnExecute((api, player, args) =>
-        {
-            var targetName = args.String("player");
-            var amount = args.Int("amount");
-            // ...
-        });
-}
-```
-
 ## Per-save data
 
 Persist data without writing custom JSON files:
@@ -170,7 +146,6 @@ var statEngine = ArcanumServices.Get<IStatCoalescingEngine>();
 ## Next steps
 
 - See [`ModDataStore`](ModDataStore.md) for persistence patterns and migrations.
-- See [`CommandBuilder`](CommandBuilder.md) for command parser details.
 - See [`TypedNetworkChannel`](TypedNetworkChannel.md) for targeted and broadcast networking.
 - See [`DeferredWorkService`](DeferredWork.md) for scheduler patterns.
 - See [`StatusEffects`](StatusEffects.md) for custom effect types.

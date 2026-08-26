@@ -13,9 +13,10 @@ namespace ArcanumLib.Hologram;
 /// </summary>
 public class AreaHologramRenderer : IRenderer, IDisposable
 {
-    private const int CacheRefreshIntervalMs = 1000;
+    private const int CacheRefreshIntervalMs = 2000;
     private const int CacheRefreshMoveThresholdBlocks = 4;
     private const int OcclusionCheckIntervalMs = 1000;
+    private const int MaxTextureRegensPerFrame = 1;
 
     private readonly ICoreClientAPI _capi;
     private readonly System.Func<BlockEntity, IHologramTextSource?> _sourceFactory;
@@ -30,6 +31,7 @@ public class AreaHologramRenderer : IRenderer, IDisposable
     private int _lastCacheRefreshPx;
     private int _lastCacheRefreshPy;
     private int _lastCacheRefreshPz;
+    private int _textureRegenBudget;
 
     /// <summary>Render priority within the Ortho stage.</summary>
     public double RenderOrder => 1.0;
@@ -77,6 +79,7 @@ public class AreaHologramRenderer : IRenderer, IDisposable
 
         long nowMs = _capi.InWorldEllapsedMilliseconds;
         RefreshCacheIfNeeded(px, py, pz, nowMs);
+        _textureRegenBudget = MaxTextureRegensPerFrame;
 
         if (_cache.Count == 0) return;
 
@@ -119,6 +122,9 @@ public class AreaHologramRenderer : IRenderer, IDisposable
             long version = entry.Source.GetHologramVersion();
             if (entry.Texture == null || entry.Texture.Version != version || !entry.Texture.IsValid)
             {
+                if (_textureRegenBudget <= 0) continue;
+                _textureRegenBudget--;
+
                 string? text = entry.Source.GetHologramText();
                 if (string.IsNullOrWhiteSpace(text)) continue;
 
@@ -134,6 +140,9 @@ public class AreaHologramRenderer : IRenderer, IDisposable
             float h = scale * entry.Texture.Height;
             float posx = (float)screenPos.X - w / 2f;
             float posy = rapi.FrameHeight - (float)screenPos.Y - h;
+
+            if (posx + w < 0 || posx > rapi.FrameWidth || posy + h < 0 || posy > rapi.FrameHeight)
+                continue;
 
             rapi.Render2DTexture(entry.Texture.Texture.TextureId, posx, posy, w, h, 20f);
         }

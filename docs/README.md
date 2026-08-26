@@ -49,7 +49,7 @@ This folder contains API documentation for `ArcanumLib` — a shared Vintage Sto
 | Page | What it covers |
 |------|----------------|
 | [EventBus](EventBus.md) | Typed publish/subscribe event bus for cross-mod communication. |
-| [CommandBuilder](CommandBuilder.md) | Fluent command framework with typed arguments, permissions, and autocomplete. |
+
 
 ## Diagnostics
 

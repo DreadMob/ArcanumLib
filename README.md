@@ -20,7 +20,7 @@ The library is built around a few headline features that have no vanilla equival
 - **Holograms** — floating text labels above blocks with `SingleHologramRenderer` and `AreaHologramRenderer`, versioned texture caching, and 3D projection. No vanilla equivalent.
 - **Action Registry** — JSON-declared actions with typed handlers, cooldowns, and permissions. Lets content packs add behaviour without recompiling.
 - **EventBusService** — typed publish/subscribe event bus for cross-mod communication. Mods publish events without knowing who subscribes.
-- **CommandBuilder** — fluent command framework with typed arguments, permissions, and autocomplete. Replaces manual `CmdArgs` parsing.
+
 - **Particle Effect Builder** — fluent builder with named presets (explosions, auras, impacts, shockwaves, ambient). Replaces 20-field `SimpleParticleProperties` setup with one line.
 - **Radial Menu** — Cairo-styled pie menu with pluggable `IRadialMenuStyle` themes. No vanilla equivalent.
 - **ModDataStore** — versioned per-savegame persistence with schema migrations. Replaces raw `StoreData` string dictionaries.
@@ -110,7 +110,7 @@ See [`docs/GettingStarted.md`](docs/GettingStarted.md) for a hands-on introducti
 | Module | Description |
 |--------|-------------|
 | **EventBus** | Typed publish/subscribe event bus for cross-mod communication. Mods publish events without knowing who subscribes. |
-| **CommandBuilder** | Fluent command framework with typed arguments, permission gating, and autocomplete. |
+
 
 ### Persistence & Progression
 
@@ -195,7 +195,7 @@ ArcanumLib/
 │   ├── Caching/               — TimedCache and SimpleLRUCache
 │   ├── Common/                — EventScope, CleanupScope, PlaytimeTracker, PlaytimeCooldownManager
 │   ├── Events/                — EventBusService, IEvent
-│   ├── Commands/              — CommandBuilder
+
 │   ├── Data/                  — TagSet, WatchedAttributes, and CooldownTracker
 │   ├── Validation/            — ValidationResult
 │   ├── Assets/                — ModAssetLoader, ModAssetRegistry

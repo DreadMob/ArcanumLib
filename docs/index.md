@@ -96,7 +96,7 @@ Keep the server/client responsive.
 | Page | Purpose |
 |------|---------|
 | [EventBusService]({{ site.baseurl }}{% link EventBus.md %}) | Typed publish/subscribe event bus for cross-mod communication. |
-| [CommandBuilder]({{ site.baseurl }}{% link CommandBuilder.md %}) | Fluent command framework with typed arguments, permissions, and autocomplete. |
+
 
 ## Diagnostics
 

@@ -8,8 +8,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Added
 
-- Unit test project (`ArcanumLib.Tests`) and Atlas integration test project (`ArcanumLib.AtlasTests`) covering `ArcanumServices`, `CommandArgs`, `EventBus`, `PityTracker`, `PityDefinition`, `WeightedRandom`, `LootTable`, `TimedCache`, `TagMatcher`, `ItemCharge`, `Wildcard`, `ValidationResult`, `ModDataStore`, `WatchedAttributesExtensions`, `EffectResistanceStore`, `StatusEffectService`, `CooldownTracker`, `InventoryFingerprint`, `ChatFormatUtil`, `PlaytimeTracker`, `PlaytimeCooldownManager`, `DamageHelper`, `EntityHealthExtensions`, `EntityControlExtensions`, `CleanupScope`, `EventScope`, `BlockEntitySearchUtils`, `CollectibleNameResolver`, `PositionUtils`, `OnlinePlayerCache`, `CommandBuilder`, and `PlayerProximityTracker`.
-- Atlas headless server scenarios for mod load, `OnlinePlayerCache`, `CooldownTracker`, `TagMatcher`, `CommandBuilder`, and `PlayerProximityTracker`.
+- Unit test project (`ArcanumLib.Tests`) and Atlas integration test project (`ArcanumLib.AtlasTests`) covering `ArcanumServices`, `EventBus`, `PityTracker`, `PityDefinition`, `WeightedRandom`, `LootTable`, `TimedCache`, `TagMatcher`, `ItemCharge`, `Wildcard`, `ValidationResult`, `ModDataStore`, `WatchedAttributesExtensions`, `EffectResistanceStore`, `StatusEffectService`, `CooldownTracker`, `InventoryFingerprint`, `ChatFormatUtil`, `PlaytimeTracker`, `PlaytimeCooldownManager`, `DamageHelper`, `EntityHealthExtensions`, `EntityControlExtensions`, `CleanupScope`, `EventScope`, `BlockEntitySearchUtils`, `CollectibleNameResolver`, `PositionUtils`, `OnlinePlayerCache` and `PlayerProximityTracker`.
+- Atlas headless server scenarios for mod load, `OnlinePlayerCache`, `CooldownTracker`, `TagMatcher` and `PlayerProximityTracker`.
 - Dedicated `ArcanumLib.AtlasFixture` project to author a small fixture world (`fixtures/world.vcdbs`) via `atlas fixture`.
 - `ArcanumServiceScope` for explicit client/server/world service registration in `ArcanumServices`.
 - `ArcanumServices.ScopeFor(ICoreAPI)` helper.
@@ -40,7 +40,6 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - `StatusEffectService` operations are now synchronized with a service-level lock.
 - `ModDataStore` migration now passes `JToken` directly instead of re-serializing.
 - `ItemCharge` legacy suffix handling simplified.
-- `CommandBuilder` now uses Vintage Story argument parsers and supports autocomplete for word arguments.
 
 ## [1.0.0-rc1] - 2025-XX-XX
 
@@ -49,7 +48,6 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - Initial shared library for Vintage Story mods.
 - Status effect system with stacking, refresh, override, and independent modes.
 - `ModDataStore` for versioned per-savegame JSON persistence.
-- `CommandBuilder` for fluent, typed, permission-gated commands.
 - `TypedNetworkChannel` for typed client/server networking.
 - `DeferredWork` for one-shot, coalesced, and end-of-tick scheduling.
 - GUI toolkit (`ArcanumCard`, `ArcanumIcon`, `ArcanumButton`, `ArcanumList<T>`, etc.).
