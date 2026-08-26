@@ -1,8 +1,11 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text;
 using ArcanumLib.Core;
 using ArcanumLib.Persistence;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 using Vintagestory.API.Server;
 
 namespace ArcanumLib.Progression
@@ -107,10 +110,11 @@ namespace ArcanumLib.Progression
 
             _store = sapi != null
                 ? ModDataStore.GetOrCreate<Dictionary<string, PityPlayerData>>(
-                    sapi, "arcanumlib", "pity", 1, factory)
+                    sapi, "arcanumlib", "pity", 2, factory)
                 : new ModDataStoreInstance<Dictionary<string, PityPlayerData>>(
-                    null, "arcanumlib", "pity", 1, factory);
+                    null, "arcanumlib", "pity", 2, factory);
 
+            _store.RegisterMigration(1, NormalizeCounterKeys);
             Initialize();
         }
 
@@ -141,12 +145,6 @@ namespace ArcanumLib.Progression
                 if (_store.Data.Count == 0)
                 {
                     TryImportLegacyData();
-                }
-
-                if (NormalizeLegacyCounterKeys())
-                {
-                    _store.MarkDirty();
-                    _store.Save();
                 }
             }
         }
@@ -385,43 +383,74 @@ namespace ArcanumLib.Progression
             return data;
         }
 
-        private bool NormalizeLegacyCounterKeys()
+        /// <summary>
+        /// ModDataStore migration from schema version 1 to 2.
+        /// Strips <c>playerUid::</c> prefixes from counter dictionary keys and merges any duplicates.
+        /// </summary>
+        /// <param name="token">The version 1 JSON payload.</param>
+        /// <returns>The version 2 JSON payload.</returns>
+        private static JToken NormalizeCounterKeys(JToken token)
         {
-            bool changed = false;
+            if (token is not JObject root)
+                return token;
 
-            foreach (var playerEntry in _store.Data)
+            foreach (var playerProp in root.Properties().ToList())
             {
-                var counters = playerEntry.Value?.counters;
-                if (counters == null || counters.Count == 0) continue;
+                if (playerProp.Value is not JObject playerObj)
+                    continue;
 
-                string prefix = playerEntry.Key + "::";
-                foreach (var legacyEntry in counters
-                    .Where(entry => entry.Key.StartsWith(prefix, StringComparison.OrdinalIgnoreCase))
-                    .ToList())
+                if (playerObj["counters"] is not JObject counters)
+                    continue;
+
+                string prefix = playerProp.Name + "::";
+                foreach (var legacyProp in counters.Properties().ToList())
                 {
-                    string definitionId = legacyEntry.Key.Substring(prefix.Length);
-                    if (string.IsNullOrWhiteSpace(definitionId)) continue;
+                    if (!legacyProp.Name.StartsWith(prefix, StringComparison.OrdinalIgnoreCase))
+                        continue;
 
-                    if (counters.TryGetValue(definitionId, out var current))
+                    string definitionId = legacyProp.Name.Substring(prefix.Length);
+                    if (string.IsNullOrWhiteSpace(definitionId))
+                        continue;
+
+                    var existing = counters.Properties()
+                        .FirstOrDefault(p => string.Equals(p.Name, definitionId, StringComparison.OrdinalIgnoreCase));
+
+                    if (existing != null)
                     {
-                        current.totalOpens = Math.Max(current.totalOpens, legacyEntry.Value.totalOpens);
-                        foreach (var tierEntry in legacyEntry.Value.opensSinceQuality)
+                        if (existing.Value is JObject existingObj && legacyProp.Value is JObject legacyObj)
                         {
-                            current.opensSinceQuality[tierEntry.Key] = Math.Max(
-                                current.opensSinceQuality.GetValueOrDefault(tierEntry.Key), tierEntry.Value);
+                            int existingTotal = existingObj["totalOpens"]?.Value<int>() ?? 0;
+                            int legacyTotal = legacyObj["totalOpens"]?.Value<int>() ?? 0;
+                            existingObj["totalOpens"] = Math.Max(existingTotal, legacyTotal);
+
+                            var existingTiers = existingObj["opensSinceQuality"] as JObject ?? new JObject();
+                            if (legacyObj["opensSinceQuality"] is JObject legacyTiers)
+                            {
+                                foreach (var tier in legacyTiers.Properties().ToList())
+                                {
+                                    int existingVal = existingTiers[tier.Name]?.Value<int>() ?? 0;
+                                    int legacyVal = tier.Value?.Value<int>() ?? 0;
+                                    existingTiers[tier.Name] = Math.Max(existingVal, legacyVal);
+                                }
+                            }
+
+                            existingObj["opensSinceQuality"] = existingTiers;
+                        }
+                        else
+                        {
+                            existing.Value = legacyProp.Value;
                         }
                     }
                     else
                     {
-                        counters[definitionId] = legacyEntry.Value;
+                        counters[definitionId] = legacyProp.Value;
                     }
 
-                    counters.Remove(legacyEntry.Key);
-                    changed = true;
+                    legacyProp.Remove();
                 }
             }
 
-            return changed;
+            return root;
         }
 
         private void TryImportLegacyData()
@@ -435,11 +464,12 @@ namespace ArcanumLib.Progression
                     var legacy = _sapi.WorldManager.SaveGame.GetData<Dictionary<string, PityPlayerData>>(legacyKey);
                     if (legacy == null || legacy.Count == 0) continue;
 
-                    foreach (var kvp in legacy)
-                    {
-                        _store.Data[kvp.Key] = kvp.Value;
-                    }
+                    var payload = JsonConvert.SerializeObject(legacy);
+                    var envelope = new ModDataStoreEnvelope { Version = 1, Payload = payload };
+                    var json = JsonConvert.SerializeObject(envelope);
+                    _sapi.WorldManager.SaveGame.StoreData(_store.StoreKey, Encoding.UTF8.GetBytes(json));
 
+                    _store.Load();
                     _store.MarkDirty();
                     _store.Save();
 

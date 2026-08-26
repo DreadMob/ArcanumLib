@@ -215,6 +215,8 @@ public sealed class EventBusService : IEventBusService
     private int _registrationCounter;
     private readonly List<WeakReference<HandlerEntry>> _allEntries = new();
     private readonly List<string> _publishedTags = new();
+    private int _publishCounter;
+    private const int AllEntriesCleanupInterval = 100;
     private bool _disposed;
 
     // ── Type-only subscriptions (tag = "") — IEvent constrained ──
@@ -319,6 +321,7 @@ public sealed class EventBusService : IEventBusService
         var key = new EventKey(typeof(T), tag);
         lock (_syncLock)
         {
+            TrackPublishAndMaybeCleanup();
             RecordPublishedTag(tag);
             if (!_handlers.TryGetValue(key, out var list) || list.Count == 0)
                 return 0;
@@ -336,6 +339,7 @@ public sealed class EventBusService : IEventBusService
         var key = new EventKey(typeof(T), tag);
         lock (_syncLock)
         {
+            TrackPublishAndMaybeCleanup();
             if (!_handlers.TryGetValue(key, out var list) || list.Count == 0)
                 return 0;
             snapshot = new List<HandlerEntry>(list);
@@ -426,6 +430,7 @@ public sealed class EventBusService : IEventBusService
 
         lock (_syncLock)
         {
+            TrackPublishAndMaybeCleanup();
             RecordPublishedTag(tag);
             var untypedKey = new EventKey(typeof(object), tag);
             if (_handlers.TryGetValue(untypedKey, out var list) && list.Count > 0)
@@ -518,6 +523,18 @@ public sealed class EventBusService : IEventBusService
             _publishedTags.Add(tag);
     }
 
+    private void RemoveDeadAllEntries()
+    {
+        _allEntries.RemoveAll(wr => !wr.TryGetTarget(out _));
+    }
+
+    private void TrackPublishAndMaybeCleanup()
+    {
+        _publishCounter++;
+        if (_publishCounter % AllEntriesCleanupInterval == 0)
+            RemoveDeadAllEntries();
+    }
+
     /// <summary>
     /// Returns a diagnostic snapshot of all known EventBus subscriptions,
     /// including invocation counts, timing, and errors.
@@ -527,7 +544,7 @@ public sealed class EventBusService : IEventBusService
         var result = new List<EventBusSubscriptionInfo>();
         lock (_syncLock)
         {
-            _allEntries.RemoveAll(wr => !wr.TryGetTarget(out _));
+            RemoveDeadAllEntries();
 
             foreach (var wr in _allEntries)
             {
@@ -600,8 +617,16 @@ public sealed class EventBusService : IEventBusService
     /// </summary>
     public void Dispose()
     {
-        if (_disposed) return;
-        _disposed = true;
-        ClearAll();
+        lock (_syncLock)
+        {
+            if (_disposed) return;
+            _disposed = true;
+            RemoveDeadAllEntries();
+            _handlers.Clear();
+            _allEntries.Clear();
+            _publishedTags.Clear();
+            _registrationCounter = 0;
+            _publishCounter = 0;
+        }
     }
 }

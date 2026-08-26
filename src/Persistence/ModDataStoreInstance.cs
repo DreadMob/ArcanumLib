@@ -184,8 +184,9 @@ namespace ArcanumLib.Persistence
 
                 if (envelope.Version > DataVersion)
                 {
-                    _sapi?.Logger?.Warning("[ArcanumLib] [ModDataStore] Stored version {0} is newer than supported version {1} for {2}, using defaults.",
+                    _sapi?.Logger?.Warning("[ArcanumLib] [ModDataStore] Stored version {0} is newer than supported version {1} for {2}; using in-memory defaults without overwriting the original save data.",
                         envelope.Version, DataVersion, StoreKey);
+                    _data = _factory();
                     _isLoaded = true;
                     return;
                 }
@@ -197,7 +198,7 @@ namespace ArcanumLib.Persistence
                     var migrator = _migrations.FirstOrDefault(m => m.fromVersion == version).migration;
                     if (migrator == null)
                     {
-                        _sapi?.Logger?.Warning("[ArcanumLib] [ModDataStore] Missing migration from version {0} for {1}, using defaults.",
+                        _sapi?.Logger?.Warning("[ArcanumLib] [ModDataStore] Missing migration from version {0} for {1}; using in-memory defaults without overwriting the original save data.",
                             version, StoreKey);
                         _data = _factory();
                         _isLoaded = true;
@@ -207,7 +208,7 @@ namespace ArcanumLib.Persistence
                     token = migrator(token);
                     if (token == null)
                     {
-                        _sapi?.Logger?.Warning("[ArcanumLib] [ModDataStore] Migration from version {0} returned null for {1}, using defaults.",
+                        _sapi?.Logger?.Warning("[ArcanumLib] [ModDataStore] Migration from version {0} returned null for {1}; using in-memory defaults without overwriting the original save data.",
                             version, StoreKey);
                         _data = _factory();
                         _isLoaded = true;

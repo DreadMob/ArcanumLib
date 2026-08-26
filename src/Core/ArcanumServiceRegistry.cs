@@ -29,17 +29,23 @@ public sealed class ArcanumServiceRegistry : IDisposable
     {
         if (service == null) throw new ArgumentNullException(nameof(service));
 
+        object? previous = null;
         lock (_syncLock)
         {
             var key = (typeof(T), scope);
-            if (_services.ContainsKey(key))
+            if (_services.TryGetValue(key, out previous) && !ReferenceEquals(previous, service))
             {
                 ArcanumRuntime.Current?.Api?.Logger?.Warning(
-                    "[ArcanumLib] Service {0} in scope {1} is being overwritten; previous instance will be disposed during shutdown.",
+                    "[ArcanumLib] Service {0} in scope {1} is being overwritten; previous instance will be disposed now.",
                     typeof(T).FullName, scope);
             }
 
             _services[key] = service;
+        }
+
+        if (previous != null && !ReferenceEquals(previous, service))
+        {
+            TryDispose(previous);
         }
     }
 
@@ -183,9 +189,14 @@ public sealed class ArcanumServiceRegistry : IDisposable
                 _services.Clear();
             }
         }
+
+        var seen = new HashSet<object>(ReferenceEqualityComparer.Instance);
         foreach (var service in toDispose)
         {
-            TryDispose(service);
+            if (seen.Add(service))
+            {
+                TryDispose(service);
+            }
         }
     }
 

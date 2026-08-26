@@ -538,4 +538,31 @@ public class ModDataStoreMigrationTests
         public int Min { get; set; }
         public int Max { get; set; }
     }
+
+    // ─── Downgrade preserves disk data and does not overwrite ───────
+
+    [Fact]
+    public void Save_AfterDowngrade_DoesNotOverwriteDiskData()
+    {
+        // Stored data is from a newer schema; current code cannot safely load it.
+        var storedV2 = new SchemaV2 { Name = "future", Count = 10, Description = "future desc" };
+        var storeKey = "arcanumlib:md:mod:downgrade-preserve";
+        var saveGame = CreateSaveGameWithStoredData(storeKey, SerializeEnvelope(2, storedV2));
+        var sapi = CreateServerApiWithSaveGame(saveGame);
+
+        var store = new ModDataStoreInstance<SchemaV1>(sapi, "mod", "downgrade-preserve", 1,
+            () => new SchemaV1 { Name = "default" });
+
+        store.Load();
+
+        // Should fall back to factory defaults without marking data dirty.
+        Assert.True(store.IsLoaded);
+        Assert.Equal("default", store.Data.Name);
+        Assert.False(store.IsDirty);
+
+        store.Save();
+
+        // Unmodified data must not overwrite the original disk data.
+        saveGame.DidNotReceive().StoreData(Arg.Any<string>(), Arg.Any<byte[]>());
+    }
 }

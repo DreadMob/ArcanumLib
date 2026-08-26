@@ -72,6 +72,7 @@ public class ArcanumLibModSystem : ModSystem
         RegisterCommonServices(ArcanumServiceScope.Client);
 
         _runtime.Services.Register<ICoreAPI>(capi, ArcanumServiceScope.Client);
+        _runtime.Services.Register<ICoreAPI>(capi, ArcanumServiceScope.Global);
         _runtime.Services.Register<ICoreClientAPI>(capi, ArcanumServiceScope.Client);
         ImageIconCache.Init(capi);
         CustomTabIconRenderer.RegisterGenericIcons();
@@ -95,6 +96,7 @@ public class ArcanumLibModSystem : ModSystem
         RegisterCommonServices(ArcanumServiceScope.Server);
 
         _runtime.Services.Register<ICoreAPI>(sapi, ArcanumServiceScope.Server);
+        _runtime.Services.Register<ICoreAPI>(sapi, ArcanumServiceScope.Global);
         _runtime.Services.Register<ICoreServerAPI>(sapi, ArcanumServiceScope.Server);
         _runtime.Initialize();
     }

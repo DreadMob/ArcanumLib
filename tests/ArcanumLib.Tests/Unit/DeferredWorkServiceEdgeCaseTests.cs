@@ -4,12 +4,14 @@ using System.Linq;
 using ArcanumLib.Core;
 using ArcanumLib.Performance;
 using NSubstitute;
+using Vintagestory.API.Client;
 using Vintagestory.API.Common;
 using Vintagestory.API.Server;
 using Xunit;
 
 namespace ArcanumLib.Tests.Unit;
 
+[Collection("ArcanumServices")]
 public class DeferredWorkServiceEdgeCaseTests
 {
     private readonly DeferredWorkService _service = new();
@@ -384,5 +386,64 @@ public class DeferredWorkServiceEdgeCaseTests
             foreach (var cb in snapshot)
                 cb(0);
         }
+    }
+
+    [Theory]
+    [InlineData(EnumAppSide.Client)]
+    [InlineData(EnumAppSide.Server)]
+    public void Active_UnknownThread_ChoosesCorrectSide(EnumAppSide side)
+    {
+        ArcanumRuntime.Reset();
+        var runtime = ArcanumRuntime.Activate();
+        try
+        {
+            runtime.Side = side;
+            var (sapi, _) = CreateApi();
+            var capi = CreateClientApi();
+
+            // Start each side from a different thread so the test thread is not an owner.
+            var serverThread = new Thread(() => _service.Start(sapi));
+            var clientThread = new Thread(() => _service.Start(capi));
+            serverThread.Start();
+            clientThread.Start();
+            serverThread.Join();
+            clientThread.Join();
+
+            var key = $"active-{side}-test";
+            _service.Schedule(key, () => { }, 10000);
+
+            if (side == EnumAppSide.Client)
+            {
+                Assert.True(_service.Client.IsPending(key));
+                Assert.False(_service.Server.IsPending(key));
+            }
+            else
+            {
+                Assert.False(_service.Client.IsPending(key));
+                Assert.True(_service.Server.IsPending(key));
+            }
+        }
+        finally
+        {
+            _service.Stop();
+            runtime.Dispose();
+        }
+    }
+
+    private static ICoreClientAPI CreateClientApi()
+    {
+        var capi = Substitute.For<ICoreClientAPI>();
+        var clientEvent = Substitute.For<IClientEventAPI>();
+        capi.Event.Returns(clientEvent);
+        ((ICoreAPI)capi).Event.Returns((IEventAPI)clientEvent);
+
+        var clientWorld = Substitute.For<IClientWorldAccessor>();
+        clientWorld.ElapsedMilliseconds.Returns(0L);
+        capi.World.Returns(clientWorld);
+        ((ICoreAPI)capi).World.Returns((IWorldAccessor)clientWorld);
+
+        capi.Logger.Returns(Substitute.For<ILogger>());
+
+        return capi;
     }
 }

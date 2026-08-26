@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Threading;
+using ArcanumLib.Core;
 using Vintagestory.API.Client;
 using Vintagestory.API.Common;
 using Vintagestory.API.Server;
@@ -230,8 +231,22 @@ public sealed class DeferredWorkService : IDeferredWorkService, IDisposable
                 if (_server.OwnerThread == current && _server.IsRunning)
                     return Server;
 
-                if (_server.IsRunning) return Server;
-                if (_client.IsRunning) return Client;
+                if (_client.IsRunning && !_server.IsRunning)
+                    return Client;
+                if (_server.IsRunning && !_client.IsRunning)
+                    return Server;
+
+                if (_client.IsRunning && _server.IsRunning)
+                {
+                    var side = ArcanumRuntime.Current?.Side;
+                    if (side == EnumAppSide.Client)
+                        return Client;
+                    if (side == EnumAppSide.Server)
+                        return Server;
+
+                    _client.Api?.Logger?.Warning("[ArcanumLib] DeferredWork.Active called from an unknown thread while both client and server schedulers are running; defaulting to server.");
+                    return Server;
+                }
 
                 return Server;
             }
