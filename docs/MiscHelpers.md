@@ -13,7 +13,7 @@ Small helpers that remove boilerplate. Some are thin syntactic sugar over existi
 
 ## ApiExtensions
 
-`ArcanumLib.Common.ApiExtensions` Ú¿‘ `IsClient()` / `IsServer()` checks for `ICoreAPI`, `ICoreClientAPI`, `ICoreServerAPI`, and `IWorldAccessor`. Sugar for `api.Side == EnumAppSide.Client`.
+`ArcanumLib.Common.ApiExtensions`  ‚Äî  `IsClient()` / `IsServer()` checks for `ICoreAPI`, `ICoreClientAPI`, `ICoreServerAPI`, and `IWorldAccessor`. Sugar for `api.Side == EnumAppSide.Client`.
 
 ```csharp
 using ArcanumLib.Common;
@@ -28,7 +28,7 @@ All overloads are null-safe and return `false` when the target is `null`.
 
 ## RGBA
 
-`ArcanumLib.Gui.Theme.RGBA` Ú¿‘ immutable color struct normalized to `0..1`, designed for `Cairo.Context`.
+`ArcanumLib.Gui.Theme.RGBA`  ‚Äî  immutable color struct normalized to `0..1`, designed for `Cairo.Context`.
 
 ```csharp
 using ArcanumLib.Gui.Theme;
@@ -45,15 +45,15 @@ Also: `ParseHexColor("#RRGGBB")`, `FromArgb(0xAARRGGBB)`.
 
 ## Pretty
 
-`ArcanumLib.Text.Pretty` Ú¿‘ converts raw asset codes into human-readable strings.
+`ArcanumLib.Text.Pretty`  ‚Äî  converts raw asset codes into human-readable strings.
 
 ```csharp
 using ArcanumLib.Text;
 
-Pretty.Readable("metalbit-uranium");    // Ú∆“ "Metalbit Uranium"
-Pretty.TargetCode("game:flower-*");     // Ú∆“ "Flower"
-Pretty.LastSegment("game:creature:bear"); // Ú∆“ "Bear"
-Pretty.Sanitize("Hello<br>World\n");    // Ú∆“ "Hello World"
+Pretty.Readable("metalbit-uranium");    //  ->  "Metalbit Uranium"
+Pretty.TargetCode("game:flower-*");     //  ->  "Flower"
+Pretty.LastSegment("game:creature:bear"); //  ->  "Bear"
+Pretty.Sanitize("Hello<br>World\n");    //  ->  "Hello World"
 ```
 
 All methods accept `null` and return an empty string.
@@ -62,14 +62,14 @@ All methods accept `null` and return an empty string.
 
 ## Wildcard
 
-`ArcanumLib.Text.Wildcard` Ú¿‘ case-insensitive `*` / `?` matching for asset codes.
+`ArcanumLib.Text.Wildcard`  ‚Äî  case-insensitive `*` / `?` matching for asset codes.
 
 ```csharp
 using ArcanumLib.Text;
 
-Wildcard.Match("game:flower-bluepoppy", "game:flower-*"); // Ú∆“ true
-Wildcard.Match("game:ingot-iron", "game:ingot-???n");     // Ú∆“ true
-Wildcard.IsSimplePrefix("game:flower-*");                  // Ú∆“ true
+Wildcard.Match("game:flower-bluepoppy", "game:flower-*"); //  ->  true
+Wildcard.Match("game:ingot-iron", "game:ingot-???n");     //  ->  true
+Wildcard.IsSimplePrefix("game:flower-*");                  //  ->  true
 ```
 
 Iterative, no allocations. `IsSimplePrefix` is useful for fast-path registry scans where `StartsWith` suffices.
@@ -78,14 +78,14 @@ Iterative, no allocations. `IsSimplePrefix` is useful for fast-path registry sca
 
 ## CollectibleNameResolver
 
-`ArcanumLib.Helpers.CollectibleNameResolver` Ú¿‘ resolves item/block/entity codes to localized display names with wildcard support.
+`ArcanumLib.Helpers.CollectibleNameResolver`  ‚Äî  resolves item/block/entity codes to localized display names with wildcard support.
 
 ```csharp
 using ArcanumLib.Helpers;
 
-CollectibleNameResolver.GetDisplayName(api, "game:ingot-iron");   // Ú∆“ "Iron Ingot"
-CollectibleNameResolver.GetDisplayName(api, "game:flower-*");     // Ú∆“ "Flower"
-CollectibleNameResolver.ResolveIconCode(api, "game:flower-*");    // Ú∆“ "game:flower-bluepoppy"
+CollectibleNameResolver.GetDisplayName(api, "game:ingot-iron");   //  ->  "Iron Ingot"
+CollectibleNameResolver.GetDisplayName(api, "game:flower-*");     //  ->  "Flower"
+CollectibleNameResolver.ResolveIconCode(api, "game:flower-*");    //  ->  "game:flower-bluepoppy"
 ```
 
 Results are cached per language. Call `Clear()` on world unload.
@@ -94,7 +94,7 @@ Results are cached per language. Call `Clear()` on world unload.
 
 ## EntityHealthExtensions
 
-`ArcanumLib.Common.EntityHealthExtensions` Ú¿‘ read and scale entity health through `WatchedAttributes`.
+`ArcanumLib.Common.EntityHealthExtensions`  ‚Äî  read and scale entity health through `WatchedAttributes`.
 
 ```csharp
 using ArcanumLib.Common;
@@ -109,7 +109,7 @@ entity.ScaleHealth(1.5f); // +50% max/current health
 
 ## PlayerExtensions
 
-`ArcanumLib.Common.PlayerExtensions` Ú¿‘ filter online players to those with living, positioned entities.
+`ArcanumLib.Common.PlayerExtensions`  ‚Äî  filter online players to those with living, positioned entities.
 
 ```csharp
 using ArcanumLib.Common;
@@ -128,7 +128,7 @@ Lazily evaluated. Players are skipped when their entity is `null`, not alive, or
 
 ## ShapeCloner
 
-`ArcanumLib.Geometry.ShapeCloner` Ú¿‘ deep-clones `Shape` objects so they can be safely modified without sharing mutable state with the cached original.
+`ArcanumLib.Geometry.ShapeCloner`  ‚Äî  deep-clones `Shape` objects so they can be safely modified without sharing mutable state with the cached original.
 
 ```csharp
 using ArcanumLib.Geometry;
