@@ -6,6 +6,7 @@ using ArcanumLib.Helpers;
 using ArcanumLib.Logging;
 using ArcanumLib.Persistence;
 using ArcanumLib.Performance;
+using ArcanumLib.Rendering;
 using Vintagestory.API.Client;
 using Vintagestory.API.Common;
 using Vintagestory.API.Server;
@@ -45,6 +46,7 @@ public class ArcanumLibModSystem : ModSystem
     {
         if (_runtime != null) return;
 
+        api.RegisterCollectibleBehaviorClass("ArcanumCullFaces", typeof(CollectibleBehaviorCullFaces));
         _runtime = ArcanumRuntime.Activate();
         _runtime.Api = api;
 
@@ -76,6 +78,7 @@ public class ArcanumLibModSystem : ModSystem
         _runtime.Services.Register<ICoreClientAPI>(capi, ArcanumServiceScope.Client);
         ImageIconCache.Init(capi);
         CustomTabIconRenderer.RegisterGenericIcons();
+        GroundStorageCullFacesPatch.Apply();
         _runtime.Initialize();
     }
 
@@ -148,6 +151,7 @@ public class ArcanumLibModSystem : ModSystem
     /// </summary>
     public override void Dispose()
     {
+        GroundStorageCullFacesPatch.Dispose();
         _runtime?.Dispose();
         _runtime = null;
         _lifecycleRegistered = false;
