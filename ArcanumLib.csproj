@@ -59,7 +59,7 @@
         <Copy SourceFiles="$(ProjectDir)resources\modinfo.json" DestinationFiles="$(OutputPath)modinfo.json" />
     </Target>
 
-    <Target Name="CreateModZip" AfterTargets="Build">
+    <Target Name="CreateModZip" AfterTargets="Build" Condition="'$(CreateReleasePackages)' == 'true'">
         <PropertyGroup>
             <ZipOutputPath>$(ModReleaseDir)\ArcanumLib.zip</ZipOutputPath>
         </PropertyGroup>
