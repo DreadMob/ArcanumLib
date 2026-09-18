@@ -1,4 +1,5 @@
 using System;
+using ArcanumLib.Diagnostics;
 using ArcanumLib.Gui.Theme;
 using Cairo;
 using Vintagestory.API.Client;
@@ -75,6 +76,7 @@ public class ArcanumButton : GuiElement
         this.style = style;
         this.customStyle = false;
         cachedTexture = new LoadedTexture(capi);
+        GuiTextureTracker.Register(nameof(ArcanumButton));
     }
 
     /// <summary>
@@ -98,6 +100,7 @@ public class ArcanumButton : GuiElement
         this.customFont = font;
         this.customBgColor = bgColor;
         cachedTexture = new LoadedTexture(capi);
+        GuiTextureTracker.Register(nameof(ArcanumButton));
     }
 
     /// <summary>Skips composition; the button texture is generated on first render.</summary>
@@ -197,6 +200,7 @@ public class ArcanumButton : GuiElement
             ctx.ShowText(text);
 
             generateTexture(surface, ref cachedTexture);
+            GuiTextureTracker.Regen(nameof(ArcanumButton));
         }
         catch (Exception ex)
         {
@@ -321,6 +325,7 @@ public class ArcanumButton : GuiElement
     public override void Dispose()
     {
         cachedTexture?.Dispose();
+        GuiTextureTracker.Unregister(nameof(ArcanumButton));
         base.Dispose();
     }
 }

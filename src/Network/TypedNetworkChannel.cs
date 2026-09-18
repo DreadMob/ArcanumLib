@@ -92,6 +92,9 @@ namespace ArcanumLib.Network
         /// <summary>
         /// Sends a packet from the current side. On the client the packet is sent to the server.
         /// On the server the packet is broadcast to all currently connected players (no-op if none are connected).
+        /// When both channels exist (singleplayer embeds both sides) only the server broadcast is
+        /// used — its loopback already reaches the local client handler, so also sending on the
+        /// client channel would double-deliver the packet.
         /// </summary>
         /// <typeparam name="T">The packet type.</typeparam>
         /// <param name="message">The packet to send.</param>
@@ -103,6 +106,7 @@ namespace ArcanumLib.Network
                 {
                     _serverChannel.SendPacket(message);
                 }
+                return;
             }
 
             _clientChannel?.SendPacket(message);

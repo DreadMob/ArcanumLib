@@ -17,6 +17,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - `IDeferredWork` interface and `DeferredWork.Client`/`DeferredWork.Server` scopes.
 - `docs/GettingStarted.md` with copy-paste examples for third-party mods.
 - `CHANGELOG.md`.
+- `PaletteScope` and `ArcanumGuiTheme.WithPalette(...)` for scoped, restore-on-dispose palette overrides.
+- `ArcanumHotkeyService` (`ArcanumHotkeyService.For(api)`) — shared per-side hotkey registry wrapping `RegisterHotKey`/`SetHotKeyHandler` with key-combination parsing and clean unregistration.
+- `ArcanumChannelHub` — shared `TypedNetworkChannel` registry keyed by (side, channel name) so mods share one channel registration.
+- `ArcanumTexturePool` — shared `LoadedTexture` pool keyed by caller-supplied string, so identical baked surfaces are uploaded once.
 
 ### Changed
 

@@ -11,80 +11,99 @@ namespace ArcanumLib.Gui.Theme
     public static class ArcanumGuiTheme
     {
         // --------------------------------------------------------------------
+        // Palette slot - swap to retheme the whole toolkit.
+        // All color accessors read through <see cref="Palette" />; controls keep
+        // working unchanged. Mods assign once at client startup (or snapshot it
+        // for per-dialog themes via <see cref="ArcanumGuiDialog" /> overloads).
+        // --------------------------------------------------------------------
+        /// <summary>The active palette. Defaults to the vanilla-brown look.</summary>
+        public static GuiThemePalette Palette = GuiThemePalette.Vanilla;
+
+        /// <summary>
+        /// Temporarily installs <paramref name="palette" /> as the active palette until the
+        /// returned <see cref="PaletteScope" /> is disposed. Intended for
+        /// <c>using (ArcanumGuiTheme.WithPalette(p)) { ... }</c> blocks around composer
+        /// or dialog construction. Scopes nest and restore in LIFO order.
+        /// </summary>
+        /// <param name="palette">The palette to make active.</param>
+        /// <returns>A scope that restores the previous palette on dispose.</returns>
+        public static PaletteScope WithPalette(GuiThemePalette palette) => new(palette);
+
+        // --------------------------------------------------------------------
         // Surface palette - vanilla brown with a slightly warmer parchment feel
         // so the toolkit reads as part of the base game, not a different mod.
         // --------------------------------------------------------------------
         /// <summary>The surface deepest value.</summary>
-        public static readonly RGBA SurfaceDeepest    = RGBA.From(0x1F, 0x18, 0x10, 0.96);
+        public static RGBA SurfaceDeepest    => Palette.SurfaceDeepest;
         /// <summary>The surface base value.</summary>
-        public static readonly RGBA SurfaceBase       = RGBA.From(0x2E, 0x24, 0x19, 0.95);
+        public static RGBA SurfaceBase       => Palette.SurfaceBase;
         /// <summary>The surface elevated value.</summary>
-        public static readonly RGBA SurfaceElevated   = RGBA.From(0x40, 0x35, 0x29, 0.98);
+        public static RGBA SurfaceElevated   => Palette.SurfaceElevated;
         /// <summary>The surface card value.</summary>
-        public static readonly RGBA SurfaceCard       = RGBA.From(0x4A, 0x3C, 0x2C, 0.92);
+        public static RGBA SurfaceCard       => Palette.SurfaceCard;
         /// <summary>The surface card hover value.</summary>
-        public static readonly RGBA SurfaceCardHover  = RGBA.From(0x5A, 0x47, 0x32, 0.96);
+        public static RGBA SurfaceCardHover  => Palette.SurfaceCardHover;
         /// <summary>The surface card active value.</summary>
-        public static readonly RGBA SurfaceCardActive = RGBA.From(0x6E, 0x57, 0x3C, 0.98);
+        public static RGBA SurfaceCardActive => Palette.SurfaceCardActive;
 
         // --------------------------------------------------------------------
         // Border / divider palette.  We layer a dark inner shadow + a silvered
         // outer rim - same recipe vanilla uses on every dialog.
         // --------------------------------------------------------------------
         /// <summary>The border shadow value.</summary>
-        public static readonly RGBA BorderShadow     = RGBA.From(0x12, 0x0C, 0x07, 0.65);
+        public static RGBA BorderShadow       => Palette.BorderShadow;
         /// <summary>The border subtle value.</summary>
-        public static readonly RGBA BorderSubtle     = RGBA.From(0xE9, 0xDD, 0xCE, 0.10);
+        public static RGBA BorderSubtle       => Palette.BorderSubtle;
         /// <summary>The border default value.</summary>
-        public static readonly RGBA BorderDefault    = RGBA.From(0xE9, 0xDD, 0xCE, 0.18);
+        public static RGBA BorderDefault      => Palette.BorderDefault;
         /// <summary>The border strong value.</summary>
-        public static readonly RGBA BorderStrong     = RGBA.From(0xE9, 0xDD, 0xCE, 0.35);
+        public static RGBA BorderStrong       => Palette.BorderStrong;
         /// <summary>The border silver value.</summary>
-        public static readonly RGBA BorderSilver     = RGBA.From(0xC9, 0xB7, 0x8F, 0.55);
+        public static RGBA BorderSilver       => Palette.BorderSilver;
         /// <summary>The border silver bright value.</summary>
-        public static readonly RGBA BorderSilverBright = RGBA.From(0xE9, 0xDD, 0xCE, 0.85);
+        public static RGBA BorderSilverBright => Palette.BorderSilverBright;
 
         // --------------------------------------------------------------------
         // Accent (vanilla "active button" copper) and a warm highlight.
         // --------------------------------------------------------------------
         /// <summary>Full-opacity copper accent used for active buttons and emphasis.</summary>
-        public static readonly RGBA Accent           = RGBA.From(0xC5, 0x89, 0x48, 1.00);
+        public static RGBA Accent       => Palette.Accent;
         /// <summary>Soft copper accent at 40% opacity for subtle highlights.</summary>
-        public static readonly RGBA AccentSoft       = RGBA.From(0xC5, 0x89, 0x48, 0.40);
+        public static RGBA AccentSoft   => Palette.AccentSoft;
         /// <summary>Dim copper accent at 18% opacity for backgrounds and hovers.</summary>
-        public static readonly RGBA AccentDim        = RGBA.From(0xC5, 0x89, 0x48, 0.18);
+        public static RGBA AccentDim    => Palette.AccentDim;
         /// <summary>Brightened copper accent for hover and focus states.</summary>
-        public static readonly RGBA AccentBright     = RGBA.From(0xE3, 0xA8, 0x6A, 1.00);
+        public static RGBA AccentBright => Palette.AccentBright;
         /// <summary>Warm parchment highlight used for separators and subtle borders.</summary>
-        public static readonly RGBA Highlight        = RGBA.From(0xA8, 0x8B, 0x6C, 1.00);
+        public static RGBA Highlight    => Palette.Highlight;
 
         // --------------------------------------------------------------------
         // Status palette - tuned to read against the brown surface.
         // --------------------------------------------------------------------
         /// <summary>Copper status color for available actions.</summary>
-        public static readonly RGBA StatusAvailable  = RGBA.From(0xC5, 0x89, 0x48, 1.00); // copper
+        public static RGBA StatusAvailable => Palette.StatusAvailable;
         /// <summary>Pale steel-blue status color for active or in-progress states.</summary>
-        public static readonly RGBA StatusActive     = RGBA.From(0x9B, 0xC5, 0xE6, 1.00); // pale steel blue
+        public static RGBA StatusActive    => Palette.StatusActive;
         /// <summary>Muted leaf-green status color for completed states.</summary>
-        public static readonly RGBA StatusComplete   = RGBA.From(0x9F, 0xCB, 0x6E, 1.00); // muted leaf green
+        public static RGBA StatusComplete  => Palette.StatusComplete;
         /// <summary>Dim parchment status color for locked states.</summary>
-        public static readonly RGBA StatusLocked     = RGBA.From(0x8A, 0x7C, 0x68, 1.00); // dim parchment
+        public static RGBA StatusLocked    => Palette.StatusLocked;
         /// <summary>Gray parchment status color for cooldown states.</summary>
-        public static readonly RGBA StatusCooldown   = RGBA.From(0x8A, 0x7C, 0x68, 1.00); // gray parchment
+        public static RGBA StatusCooldown  => Palette.StatusCooldown;
         /// <summary>Muted iron-rust status color for failed states.</summary>
-        public static readonly RGBA StatusFailed     = RGBA.From(0xCD, 0x66, 0x5C, 1.00); // muted iron-rust
+        public static RGBA StatusFailed    => Palette.StatusFailed;
 
         // --------------------------------------------------------------------
         // Text palette - vanilla parchment cream as the base.
         // --------------------------------------------------------------------
         /// <summary>Primary text color, high-contrast parchment cream.</summary>
-        public static readonly RGBA TextPrimary      = RGBA.From(0xE9, 0xDD, 0xCE, 1.00);
+        public static RGBA TextPrimary   => Palette.TextPrimary;
         /// <summary>Secondary text color for labels and supporting text.</summary>
-        public static readonly RGBA TextSecondary    = RGBA.From(0xC9, 0xB7, 0x9C, 1.00);
+        public static RGBA TextSecondary => Palette.TextSecondary;
         /// <summary>Muted text color for hints and tertiary information.</summary>
-        public static readonly RGBA TextMuted        = RGBA.From(0x8F, 0x80, 0x6A, 1.00);
+        public static RGBA TextMuted     => Palette.TextMuted;
         /// <summary>Disabled text color for unavailable controls.</summary>
-        public static readonly RGBA TextDisabled     = RGBA.From(0x55, 0x47, 0x36, 1.00);
+        public static RGBA TextDisabled  => Palette.TextDisabled;
 
         // --------------------------------------------------------------------
         // Sizing tokens (already wrapped in GuiElement.scaled where used).
@@ -537,6 +556,149 @@ namespace ArcanumLib.Gui.Theme
             ctx.LineTo(cx - s, y);
             ctx.ClosePath();
             ctx.Fill();
+        }
+
+        // ====================================================================
+        //  Rivets / fasteners — used by ornate (steampunk) decorations.
+        // ====================================================================
+
+        /// <summary>
+        /// Draws a single dome rivet: dark base circle, lighter dome, tiny
+        /// specular dot at top-left. Reads as a screw/bolt head.
+        /// </summary>
+        /// <param name="ctx">The ctx value.</param>
+        /// <param name="cx">Center X.</param>
+        /// <param name="cy">Center Y.</param>
+        /// <param name="r">Rivet radius.</param>
+        /// <param name="metal">Metal base color.</param>
+        public static void DrawRivet(Context ctx, double cx, double cy, double r, RGBA metal)
+        {
+            // Outer dark ring.
+            FillCircle(ctx, cx, cy, r, metal.WithAlpha(metal.A * 0.55).Lerp(new RGBA(0, 0, 0, 1), 0.55));
+            // Dome.
+            FillCircle(ctx, cx, cy, r * 0.72, metal);
+            // Specular glint top-left.
+            FillCircle(ctx, cx - r * 0.24, cy - r * 0.26, r * 0.24,
+                metal.Lerp(new RGBA(1, 1, 1, 1), 0.55).WithAlpha(metal.A));
+        }
+
+        /// <summary>
+        /// Draws rivets along a horizontal strip (e.g. a frame edge).
+        /// </summary>
+        /// <param name="ctx">The ctx value.</param>
+        /// <param name="x">Left edge.</param>
+        /// <param name="y">Center Y of the rivet row.</param>
+        /// <param name="w">Strip width.</param>
+        /// <param name="r">Rivet radius.</param>
+        /// <param name="spacing">Gap between rivet centers; 0 → evenly distribute.</param>
+        /// <param name="metal">Metal base color.</param>
+        public static void DrawRivetRow(Context ctx, double x, double y, double w, double r, double spacing, RGBA metal)
+        {
+            if (w < r * 2) return;
+            int count = spacing > 0 ? (int)(w / spacing) + 1 : Math.Max(2, (int)(w / (r * 5)));
+            if (count < 2) count = 2;
+            double step = w / (count - 1);
+            for (int i = 0; i < count; i++) DrawRivet(ctx, x + i * step, y, r, metal);
+        }
+
+        /// <summary>
+        /// Draws rivets in all four corners of a rect — the classic frame fastener look.
+        /// </summary>
+        /// <param name="ctx">The ctx value.</param>
+        /// <param name="x">The x value.</param>
+        /// <param name="y">The y value.</param>
+        /// <param name="w">The w value.</param>
+        /// <param name="h">The h value.</param>
+        /// <param name="inset">Distance of rivet centers from the rect edge.</param>
+        /// <param name="r">Rivet radius.</param>
+        /// <param name="metal">Metal base color.</param>
+        public static void DrawCornerRivets(Context ctx, double x, double y, double w, double h, double inset, double r, RGBA metal)
+        {
+            DrawRivet(ctx, x + inset,     y + inset,     r, metal);
+            DrawRivet(ctx, x + w - inset, y + inset,     r, metal);
+            DrawRivet(ctx, x + inset,     y + h - inset, r, metal);
+            DrawRivet(ctx, x + w - inset, y + h - inset, r, metal);
+        }
+
+        /// <summary>
+        /// Draws an analog dial gauge centered at (cx, cy): brass bezel, ticked
+        /// 270°-sweep arc, needle at <paramref name="value" /> (0..1), caption
+        /// under the hub. <paramref name="uiScale" /> multiplies all thickness/offset
+        /// tokens so callers can render at any resolution.
+        /// </summary>
+        public static void DrawDialGauge(Context ctx, double cx, double cy, double r, double value, string caption, double uiScale, RGBA? needleColor = null)
+        {
+            var p = Palette;
+            double s(double v) => v * uiScale;
+            value = Math.Clamp(value, 0, 1);
+
+            // Bezel: brass ring + dark face.
+            FillCircle(ctx, cx, cy, r, p.AccentSoft);
+            FillCircle(ctx, cx, cy, r - s(2.5), p.SurfaceDeepest);
+            StrokeCircle(ctx, cx, cy, r - s(2.5), p.BorderSilver.WithAlpha(0.5), s(0.8));
+
+            // Tick arc: 270° sweep from bottom-left to bottom-right.
+            double a0 = Math.PI * 0.75, a1 = Math.PI * 2.25;
+            for (int i = 0; i <= 10; i++)
+            {
+                double a = a0 + (a1 - a0) * i / 10.0;
+                double ri = r - s(5.5), ro = r - s(3.0);
+                ctx.SetSourceRGBA(p.TextSecondary.R, p.TextSecondary.G, p.TextSecondary.B, 0.8);
+                ctx.LineWidth = i % 5 == 0 ? s(1.4) : s(0.7);
+                ctx.MoveTo(cx + Math.Cos(a) * ri, cy + Math.Sin(a) * ri);
+                ctx.LineTo(cx + Math.Cos(a) * ro, cy + Math.Sin(a) * ro);
+                ctx.Stroke();
+            }
+
+            // Needle.
+            double na = a0 + (a1 - a0) * value;
+            var nc = needleColor ?? p.Accent;
+            ctx.SetSourceRGBA(nc.R, nc.G, nc.B, nc.A);
+            ctx.LineWidth = s(1.6);
+            ctx.LineCap = LineCap.Round;
+            ctx.MoveTo(cx, cy);
+            ctx.LineTo(cx + Math.Cos(na) * (r - s(6)), cy + Math.Sin(na) * (r - s(6)));
+            ctx.Stroke();
+            FillCircle(ctx, cx, cy, s(2.2), p.Accent);
+
+            // Caption under center.
+            if (!string.IsNullOrEmpty(caption))
+            {
+                ctx.SelectFontFace("Sans", FontSlant.Normal, FontWeight.Normal);
+                ctx.SetFontSize(s(7.5));
+                var ext = ctx.TextExtents(caption);
+                ctx.MoveTo(cx - ext.Width / 2 - ext.XBearing, cy + r * 0.55);
+                ctx.SetSourceRGBA(p.TextMuted.R, p.TextMuted.G, p.TextMuted.B, 0.9);
+                ctx.ShowText(caption);
+            }
+        }
+
+        /// <summary>
+        /// Draws a lever-style toggle plate: recessed slot + sliding brass knob.
+        /// </summary>
+        public static void DrawTogglePlate(Context ctx, double x, double y, double w, double h, bool isOn, double uiScale)
+        {
+            var p = Palette;
+            double s(double v) => v * uiScale;
+            double r = h / 2;
+
+            FillRoundedRectVerticalGradient(ctx, x, y, w, h, r, p.SurfaceDeepest, p.SurfaceBase);
+            StrokeRoundedRect(ctx, x + 0.5, y + 0.5, w - 1, h - 1, r, p.BorderDefault, s(1));
+
+            if (isOn)
+            {
+                ctx.Save();
+                RoundedRectPath(ctx, x + w / 2, y, w / 2, h, r);
+                ctx.Clip();
+                FillRoundedRect(ctx, x, y, w, h, r, p.Accent.WithAlpha(0.35));
+                ctx.Restore();
+            }
+
+            double kr = h / 2 - s(2.5);
+            double kx = isOn ? x + w - h / 2 : x + h / 2;
+            FillCircle(ctx, kx, y + h / 2, kr, p.Accent);
+            StrokeCircle(ctx, kx, y + h / 2, kr, p.BorderShadow, s(1));
+            FillCircle(ctx, kx - kr * 0.25, y + h / 2 - kr * 0.3, kr * 0.28, p.AccentBright.WithAlpha(0.9));
         }
     }
 

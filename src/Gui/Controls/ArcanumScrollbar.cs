@@ -1,4 +1,5 @@
 using System;
+using ArcanumLib.Diagnostics;
 using ArcanumLib.Gui.Theme;
 using Cairo;
 using Vintagestory.API.Client;
@@ -55,6 +56,7 @@ public class ArcanumScrollbar : GuiElement
         totalHeight = visibleHeight;
         trackTexture = new LoadedTexture(capi);
         handleTexture = new LoadedTexture(capi);
+        GuiTextureTracker.Register(nameof(ArcanumScrollbar));
     }
 
     // --------------------------------------------------------------
@@ -190,6 +192,7 @@ public class ArcanumScrollbar : GuiElement
             try
             {
                 generateTexture(surface, ref trackTexture);
+                GuiTextureTracker.Regen(nameof(ArcanumScrollbar));
             }
             catch (Exception ex)
             {
@@ -235,6 +238,7 @@ public class ArcanumScrollbar : GuiElement
             try
             {
                 generateTexture(surface, ref handleTexture);
+                GuiTextureTracker.Regen(nameof(ArcanumScrollbar));
             }
             catch (Exception ex)
             {
@@ -348,6 +352,7 @@ public class ArcanumScrollbar : GuiElement
         handleTexture?.Dispose();
         trackTexture = null;
         handleTexture = null;
+        GuiTextureTracker.Unregister(nameof(ArcanumScrollbar));
         base.Dispose();
     }
 }

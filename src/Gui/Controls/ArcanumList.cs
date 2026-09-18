@@ -27,6 +27,10 @@ public class ArcanumList<T> : GuiElement
     private double _dragStartMouseY;
     private float _dragStartScroll;
 
+    private bool _virtualized;
+    private int _overscanRows = 2;
+    private int _maxRenderedRows;
+
     /// <summary>
     /// Creates a new Arcanum list with the given row factory and selection callback.
     /// </summary>
@@ -83,6 +87,57 @@ public class ArcanumList<T> : GuiElement
     }
 
     /// <summary>
+    /// Opt-in viewport virtualization. When true, the renderer keeps the card/chrome
+    /// and scrollbar in their own cached textures and bakes rows into a buffer that
+    /// covers only the visible window plus <see cref="OverscanRows" /> extra rows on
+    /// each side (label selectors are only evaluated for buffered rows). While the
+    /// buffer still covers the viewport it is redrawn shifted by the scroll offset,
+    /// so smooth scrolling no longer re-bakes a texture on every pixel. Default false
+    /// to keep the legacy single-texture behaviour.
+    /// </summary>
+    public bool Virtualized
+    {
+        get => _virtualized;
+        set { if (_virtualized != value) { _virtualized = value; MarkDirty(); } }
+    }
+
+    /// <summary>
+    /// Extra rows baked beyond each edge of the viewport while <see cref="Virtualized" />
+    /// is on. Larger values widen the scroll band that needs no texture rebake.
+    /// Default 2.
+    /// </summary>
+    public int OverscanRows
+    {
+        get => _overscanRows;
+        set { int v = Math.Max(0, value); if (_overscanRows != v) { _overscanRows = v; MarkDirty(); } }
+    }
+
+    /// <summary>
+    /// Explicit row-buffer size while <see cref="Virtualized" /> is on. 0 (default)
+    /// sizes the buffer to the viewport plus overscan. Positive values override the
+    /// buffer size (never below what the viewport needs, hard-capped for texture
+    /// limits) — larger buffers reduce rebakes during long scrolls.
+    /// </summary>
+    public int MaxRenderedRows
+    {
+        get => _maxRenderedRows;
+        set { int v = Math.Max(0, value); if (_maxRenderedRows != v) { _maxRenderedRows = v; MarkDirty(); } }
+    }
+
+    /// <summary>Fluent helper enabling virtualization with optional overscan/buffer tuning.</summary>
+    /// <param name="enabled">Whether to enable virtualization.</param>
+    /// <param name="overscanRows">Extra rows baked beyond each viewport edge.</param>
+    /// <param name="maxRenderedRows">Optional explicit row-buffer size; 0 = auto.</param>
+    /// <returns>This list, for chaining.</returns>
+    public ArcanumList<T> WithVirtualization(bool enabled = true, int overscanRows = 2, int maxRenderedRows = 0)
+    {
+        Virtualized = enabled;
+        OverscanRows = overscanRows;
+        MaxRenderedRows = maxRenderedRows;
+        return this;
+    }
+
+    /// <summary>
     /// Selects an item by index.
     /// </summary>
     /// <param name="index">The zero-based index.</param>
@@ -116,8 +171,9 @@ public class ArcanumList<T> : GuiElement
         if (Bounds.OuterWidth <= 0 || Bounds.OuterHeight <= 0) return;
 
         UpdateHover();
-        _renderer.Render(api, BuildRenderState());
-        _renderer.Draw(api, Bounds);
+        var state = BuildRenderState();
+        _renderer.Render(api, state);
+        _renderer.Draw(api, state);
     }
 
     private void UpdateHover()
@@ -176,7 +232,10 @@ public class ArcanumList<T> : GuiElement
         TotalHeight,
         VisibleHeight,
         MaxScroll,
-        ScrollNeeded);
+        ScrollNeeded,
+        _virtualized,
+        _overscanRows,
+        _maxRenderedRows);
 
     private void GenerateTextureImpl(ImageSurface surface, ref LoadedTexture texture) =>
         generateTexture(surface, ref texture);

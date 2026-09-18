@@ -20,6 +20,16 @@ public abstract class ArcanumGuiDialog : GuiDialog
     protected ArcanumGuiDialog(ICoreClientAPI capi) : base(capi) { }
 
     /// <summary>
+    /// Optional per-dialog theme. When non-null it is installed via
+    /// <see cref="ArcanumGuiTheme.WithPalette"/> for the duration of each
+    /// compose (<see cref="Recompose"/>) and render (<see cref="OnRenderGUI"/>)
+    /// call — controls read the palette during BOTH passes, so a compose-only
+    /// scope is not enough. The scope never outlives a single call, so close
+    /// order and nested dialogs can never leave a foreign palette installed.
+    /// </summary>
+    protected virtual GuiThemePalette? DialogPalette => null;
+
+    /// <summary>
     /// Triggers a recompose on the main thread. Safe to call from background threads.
     /// </summary>
     protected void RequestRecompose()
@@ -39,10 +49,25 @@ public abstract class ArcanumGuiDialog : GuiDialog
     /// </summary>
     protected void Recompose()
     {
+        if (DialogPalette is { } palette)
+            using (ArcanumGuiTheme.WithPalette(palette)) RecomposeCore();
+        else RecomposeCore();
+    }
+
+    private void RecomposeCore()
+    {
         SingleComposer?.Dispose();
         Composers.Remove("single");
         BuildComposer();
         SingleComposer?.Compose();
+    }
+
+    /// <inheritdoc />
+    public override void OnRenderGUI(float deltaTime)
+    {
+        if (DialogPalette is { } palette)
+            using (ArcanumGuiTheme.WithPalette(palette)) { base.OnRenderGUI(deltaTime); }
+        else base.OnRenderGUI(deltaTime);
     }
 
     /// <summary>

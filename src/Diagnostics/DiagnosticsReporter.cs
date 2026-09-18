@@ -234,7 +234,22 @@ internal sealed class DiagnosticsReporter
         }
         report.AppendLine();
 
-        // 9. Summary
+        // 9. GUI textures (client-side controls; reflects this process only —
+        //    a dedicated server never creates GUI textures and always shows empty)
+        report.AppendLine("-- GUI Textures --");
+        var guiTextureDump = GuiTextureTracker.Dump(onlyAlive: true);
+        if (guiTextureDump.Length > 0)
+        {
+            foreach (var line in guiTextureDump.Split('\n', StringSplitOptions.RemoveEmptyEntries))
+                report.AppendLine($"  [INFO] {line.Trim()}");
+        }
+        else
+        {
+            report.AppendLine("  (no live tracked GUI textures in this process)");
+        }
+        report.AppendLine();
+
+        // 10. Summary
         report.AppendLine("-- Summary --");
         report.AppendLine($"  Errors:   {errors}");
         report.AppendLine($"  Warnings: {warnings}");

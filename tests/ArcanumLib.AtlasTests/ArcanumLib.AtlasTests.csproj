@@ -5,6 +5,7 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <IsPackable>false</IsPackable>
+    <VINTAGE_STORY Condition="'$(VINTAGE_STORY)' == '' AND Exists('$(MSBuildThisFileDirectory)..\..\..\vintagestory\VintagestoryAPI.dll')">$(MSBuildThisFileDirectory)..\..\..\vintagestory</VINTAGE_STORY>
   </PropertyGroup>
 
   <ItemGroup>
@@ -49,7 +50,12 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Content Include="$(VINTAGE_STORY)\Lib\libSkiaSharp.dll">
+    <!-- Native Skia is libSkiaSharp.dll on Windows, libSkiaSharp.so on Linux. -->
+    <Content Include="$(VINTAGE_STORY)\Lib\libSkiaSharp.dll" Condition="Exists('$(VINTAGE_STORY)\Lib\libSkiaSharp.dll')">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <Visible>false</Visible>
+    </Content>
+    <Content Include="$(VINTAGE_STORY)\Lib\libSkiaSharp.so" Condition="Exists('$(VINTAGE_STORY)\Lib\libSkiaSharp.so')">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <Visible>false</Visible>
     </Content>

@@ -1,4 +1,5 @@
 using System;
+using ArcanumLib.Diagnostics;
 using ArcanumLib.Gui.Theme;
 using Cairo;
 using Vintagestory.API.Client;
@@ -34,6 +35,12 @@ internal readonly struct ArcanumListRenderState<T>
     public readonly float VisibleHeight;
     public readonly float MaxScroll;
     public readonly bool ScrollNeeded;
+    /// <summary>When true, rows are baked into a scrollable buffer texture (viewport + overscan) instead of a fixed viewport texture.</summary>
+    public readonly bool Virtualized;
+    /// <summary>Extra rows baked beyond each edge of the viewport in virtualized mode.</summary>
+    public readonly int OverscanRows;
+    /// <summary>Optional override for the row-buffer size in virtualized mode; 0 = size to viewport + overscan.</summary>
+    public readonly int MaxRenderedRows;
 
     public ArcanumListRenderState(
         IReadOnlyList<T> items,
@@ -46,7 +53,10 @@ internal readonly struct ArcanumListRenderState<T>
         float totalHeight,
         float visibleHeight,
         float maxScroll,
-        bool scrollNeeded)
+        bool scrollNeeded,
+        bool virtualized = false,
+        int overscanRows = 2,
+        int maxRenderedRows = 0)
     {
         Items = items;
         Bounds = bounds;
@@ -59,6 +69,9 @@ internal readonly struct ArcanumListRenderState<T>
         VisibleHeight = visibleHeight;
         MaxScroll = maxScroll;
         ScrollNeeded = scrollNeeded;
+        Virtualized = virtualized;
+        OverscanRows = overscanRows;
+        MaxRenderedRows = maxRenderedRows;
     }
 }
 
@@ -86,6 +99,29 @@ internal sealed class ArcanumListRenderer<T> : IDisposable
     private string? _textureKey;
     private bool _dirty = true;
 
+    // --- Virtualized mode ---------------------------------------------------
+    // Instead of one viewport-sized texture rebaked on every scroll pixel, the
+    // list is split into three cached textures:
+    //   _chromeTexture : viewport-sized card + scrollbar track (re-baked only on resize)
+    //   _rowsTexture   : (visibleRows + 2*overscan)-sized row buffer, drawn offset
+    //                    by (bufferTop - scrollY) under a scissor clip. While the
+    //                    buffer still covers the viewport it is reused as-is, so
+    //                    scrolling costs zero Cairo rebakes until the overscan
+    //                    band is crossed.
+    //   _handleTexture : scrollbar handle, drawn at a computed offset (re-baked
+    //                    only when its size/color state changes).
+    private LoadedTexture _chromeTexture;
+    private string? _chromeKey;
+    private LoadedTexture _rowsTexture;
+    private string? _rowsKey;
+    private int _bufFirstRow = -1;
+    private double _bufTop;         // content-space Y of the rows texture top edge
+    private double _bufBottom = -1; // content-space Y of the rows texture bottom edge
+    private int _bufWidth;          // texture width the buffer was baked at
+    private double _bufRowH;        // row height the buffer was baked at
+    private LoadedTexture _handleTexture;
+    private string? _handleKey;
+
     /// <summary>
     /// Creates a renderer bound to the given label selector, font and scaling/texture hooks.
     /// </summary>
@@ -112,6 +148,10 @@ internal sealed class ArcanumListRenderer<T> : IDisposable
         _scaled = scaled;
         _generateTexture = generateTexture;
         _texture = new LoadedTexture(capi);
+        _chromeTexture = new LoadedTexture(capi);
+        _rowsTexture = new LoadedTexture(capi);
+        _handleTexture = new LoadedTexture(capi);
+        GuiTextureTracker.Register(nameof(ArcanumListRenderer<T>));
     }
 
     /// <summary>Marks the cached texture as stale so it is regenerated on the next render.</summary>
@@ -119,19 +159,58 @@ internal sealed class ArcanumListRenderer<T> : IDisposable
     {
         _dirty = true;
         _textureKey = null;
+        _chromeKey = null;
+        _rowsKey = null;
+        _handleKey = null;
     }
 
     /// <summary>
-    /// Draws the cached texture at the list's screen position. Call this every frame
+    /// Draws the cached texture(s) at the list's screen position. Call this every frame
     /// regardless of whether the texture was regenerated.
     /// </summary>
     /// <param name="api">The client API used to access the 2D renderer.</param>
-    /// <param name="bounds">The list bounds providing the screen origin.</param>
-    public void Draw(ICoreClientAPI api, ElementBounds bounds)
+    /// <param name="state">The current dynamic render state (same snapshot passed to <see cref="Render" />).</param>
+    public void Draw(ICoreClientAPI api, in ArcanumListRenderState<T> state)
     {
-        if (_texture.TextureId > 0)
+        if (api?.Render == null || state.Bounds == null) return;
+
+        if (!state.Virtualized)
         {
-            api?.Render?.Render2DLoadedTexture(_texture, (float)bounds.absX, (float)bounds.absY);
+            if (_texture.TextureId > 0)
+            {
+                api.Render.Render2DLoadedTexture(_texture, (float)state.Bounds.absX, (float)state.Bounds.absY);
+            }
+            return;
+        }
+
+        double ax = state.Bounds.absX;
+        double ay = state.Bounds.absY;
+
+        if (_chromeTexture.TextureId > 0)
+        {
+            api.Render.Render2DLoadedTexture(_chromeTexture, (float)ax, (float)ay);
+        }
+
+        if (_rowsTexture.TextureId > 0)
+        {
+            // The rows buffer starts at content-Y _bufTop; shift it by the current
+            // scroll offset and clip to the viewport so the overscan band is hidden.
+            float rowsY = (float)(ay + _bufTop - state.ScrollY);
+            api.Render.PushScissor(state.Bounds, true);
+            try
+            {
+                api.Render.Render2DLoadedTexture(_rowsTexture, (float)ax, rowsY);
+            }
+            finally
+            {
+                api.Render.PopScissor();
+            }
+        }
+
+        if (state.ScrollNeeded && _handleTexture.TextureId > 0)
+        {
+            var (hX, hY, _, _) = ScrollbarHandleRect(state);
+            api.Render.Render2DLoadedTexture(_handleTexture, (float)(ax + hX), (float)(ay + hY));
         }
     }
 
@@ -145,6 +224,27 @@ internal sealed class ArcanumListRenderer<T> : IDisposable
     {
         if (state.Bounds == null || api?.Render == null) return;
 
+        if (state.Virtualized)
+        {
+            // Capture and clear the global dirty flag up front; each Ensure* uses it
+            // as "force regen" and re-arms _dirty itself when its bake fails.
+            bool wasDirty = _dirty;
+            _dirty = false;
+            RenderVirtualized(api, state, wasDirty);
+            return;
+        }
+
+        ReleaseVirtualizedTextures(api);
+        RenderLegacy(api, state);
+    }
+
+    /// <summary>
+    /// Legacy (non-virtualized) path: one viewport-sized texture containing card,
+    /// rows and scrollbar. Re-baked whenever the key changes (scroll pixel, hover,
+    /// selection, resize, item count).
+    /// </summary>
+    private void RenderLegacy(ICoreClientAPI api, in ArcanumListRenderState<T> state)
+    {
         int width = Math.Max(4, (int)state.Bounds.OuterWidth);
         int height = Math.Max(4, (int)state.Bounds.OuterHeight);
 
@@ -270,11 +370,325 @@ internal sealed class ArcanumListRenderer<T> : IDisposable
             }
 
             _generateTexture(surface, ref _texture);
+            GuiTextureTracker.Regen(nameof(ArcanumListRenderer<T>));
         }
         catch (Exception ex)
         {
             api?.Logger?.Warning("[ArcanumList] Failed to generate texture: {0}", ex);
             _textureKey = null;
+            _dirty = true;
+        }
+        finally
+        {
+            ctx?.Dispose();
+            surface?.Dispose();
+        }
+    }
+
+    // ====================================================================
+    //  Virtualized rendering path
+    // ====================================================================
+
+    /// <summary>
+    /// Virtualized path: maintains a chrome texture (card + scrollbar track), a
+    /// scrollable rows buffer (viewport + overscan rows) and a handle texture.
+    /// While the rows buffer still covers the viewport it is drawn offset-only,
+    /// so scrolling re-bakes nothing until the overscan band is crossed.
+    /// </summary>
+    private void RenderVirtualized(ICoreClientAPI api, in ArcanumListRenderState<T> state, bool wasDirty)
+    {
+        // Free the legacy texture if we just switched into virtualized mode.
+        if (_texture.TextureId > 0)
+        {
+            _texture.Dispose();
+            _texture = new LoadedTexture(api);
+            _textureKey = null;
+        }
+
+        int width = Math.Max(4, (int)state.Bounds.OuterWidth);
+        int vh = Math.Max(4, (int)state.Bounds.OuterHeight);
+        double rowH = Math.Max(1.0, state.ScaledRowHeight);
+        int count = state.Items.Count;
+
+        EnsureChrome(api, state, width, vh, wasDirty);
+        EnsureRows(api, state, width, vh, rowH, count, wasDirty);
+        EnsureHandle(api, state, wasDirty);
+    }
+
+    /// <summary>Disposes virtualized-mode textures; called when leaving virtualized mode.</summary>
+    private void ReleaseVirtualizedTextures(ICoreClientAPI api)
+    {
+        if (_chromeTexture.TextureId > 0) { _chromeTexture.Dispose(); _chromeTexture = new LoadedTexture(api); }
+        if (_rowsTexture.TextureId > 0) { _rowsTexture.Dispose(); _rowsTexture = new LoadedTexture(api); }
+        if (_handleTexture.TextureId > 0) { _handleTexture.Dispose(); _handleTexture = new LoadedTexture(api); }
+        _chromeKey = _rowsKey = _handleKey = null;
+        _bufFirstRow = -1;
+        _bufTop = 0;
+        _bufBottom = -1;
+    }
+
+    /// <summary>View-size card background + scrollbar track. Only re-baked on resize or scroll-need change.</summary>
+    private void EnsureChrome(ICoreClientAPI api, in ArcanumListRenderState<T> state, int width, int vh, bool wasDirty)
+    {
+        string key = $"{width}|{vh}|{state.ScrollNeeded}|{GuiElement.scaled(1.0):F2}";
+        if (!wasDirty && string.Equals(_chromeKey, key, StringComparison.Ordinal) && _chromeTexture.TextureId > 0)
+            return;
+        _chromeKey = key;
+
+        ImageSurface? surface = null;
+        Context? ctx = null;
+        try
+        {
+            _chromeTexture.Dispose();
+            _chromeTexture = new LoadedTexture(api);
+
+            surface = new ImageSurface(Format.Argb32, width, vh);
+            ctx = new Context(surface);
+            ctx.SetSourceRGBA(0, 0, 0, 0);
+            ctx.Paint();
+
+            ArcanumGuiTheme.FillRoundedRect(
+                ctx, 0, 0, width, vh,
+                GuiElement.scaled(ArcanumGuiTheme.Radius.Medium),
+                ArcanumGuiTheme.SurfaceDeepest.WithAlpha(0.65));
+            ArcanumGuiTheme.StrokeRoundedRect(
+                ctx, 0, 0, width, vh,
+                GuiElement.scaled(ArcanumGuiTheme.Radius.Medium),
+                ArcanumGuiTheme.BorderSubtle, GuiElement.scaled(1.0));
+
+            if (state.ScrollNeeded)
+            {
+                double trackX = state.Bounds.OuterWidth - _scaled(ScrollbarWidth) - _scaled(ScrollbarPadding);
+                ArcanumGuiTheme.FillRoundedRect(
+                    ctx, trackX, 0, _scaled(ScrollbarWidth), vh,
+                    _scaled(ScrollbarWidth / 2.0),
+                    ArcanumGuiTheme.SurfaceDeepest.WithAlpha(0.85));
+                ArcanumGuiTheme.StrokeRoundedRect(
+                    ctx, trackX, 0, _scaled(ScrollbarWidth), vh,
+                    _scaled(ScrollbarWidth / 2.0),
+                    ArcanumGuiTheme.BorderSubtle, GuiElement.scaled(1.0));
+            }
+
+            _generateTexture(surface, ref _chromeTexture);
+            GuiTextureTracker.Regen(nameof(ArcanumListRenderer<T>));
+        }
+        catch (Exception ex)
+        {
+            api?.Logger?.Warning("[ArcanumList] Failed to generate chrome texture: {0}", ex);
+            _chromeKey = null;
+            _dirty = true;
+        }
+        finally
+        {
+            ctx?.Dispose();
+            surface?.Dispose();
+        }
+    }
+
+    /// <summary>
+    /// Row buffer covering <c>bufferRows</c> starting at <c>_bufFirstRow</c>. Re-baked
+    /// when the buffer no longer covers the viewport, or when hover/selection/items
+    /// change — but NOT on every scroll pixel.
+    /// </summary>
+    private void EnsureRows(ICoreClientAPI api, in ArcanumListRenderState<T> state, int width, int vh, double rowH, int count, bool wasDirty)
+    {
+        if (count <= 0)
+        {
+            if (_rowsTexture.TextureId > 0)
+            {
+                _rowsTexture.Dispose();
+                _rowsTexture = new LoadedTexture(api);
+            }
+            _rowsKey = null;
+            _bufFirstRow = -1;
+            _bufTop = 0;
+            _bufBottom = -1;
+            return;
+        }
+
+        int overscan = Math.Max(0, state.OverscanRows);
+
+        // Rows needed to fill the viewport, incl. the partially visible bottom row.
+        int minNeeded = (int)Math.Ceiling(vh / rowH) + 1;
+
+        int bufferRows = Math.Min(count, minNeeded + 2 * overscan);
+        if (state.MaxRenderedRows > 0)
+        {
+            // Explicit buffer-size override; never allowed to under-fill the viewport.
+            bufferRows = Math.Min(count, Math.Max(state.MaxRenderedRows, minNeeded));
+        }
+        // Texture safety cap (~32k px Cairo surface limit; ~24 px floor per row).
+        bufferRows = Math.Min(bufferRows, Math.Max(minNeeded, (int)(30000.0 / rowH)));
+        bufferRows = Math.Max(1, bufferRows);
+
+        // Does the current buffer still cover the viewport? If so keep _bufFirstRow
+        // so the texture key stays stable and the buffer is reused offset-only.
+        // Width/rowH must match too — a resize invalidates the coverage math.
+        bool covered = _rowsTexture.TextureId > 0
+            && _bufWidth == width
+            && Math.Abs(_bufRowH - rowH) < 0.001
+            && _bufTop <= state.ScrollY + 0.5
+            && _bufBottom >= state.ScrollY + vh - 0.5;
+
+        int firstRow;
+        if (covered)
+        {
+            firstRow = _bufFirstRow;
+        }
+        else
+        {
+            int firstVisible = Math.Max(0, (int)(state.ScrollY / rowH));
+            firstRow = Math.Max(0, Math.Min(firstVisible - overscan, count - bufferRows));
+
+            // Bottom-coverage guard for tight buffers: slide the window down if needed.
+            int needTop = Math.Max(0, (int)Math.Ceiling((state.ScrollY + vh) / rowH) - bufferRows);
+            if (firstRow < needTop)
+            {
+                firstRow = Math.Min(needTop, Math.Max(0, count - bufferRows));
+            }
+        }
+
+        string key = $"{width}|{bufferRows}|{firstRow}|{state.HoveredIndex}|{state.SelectedIndex}|{count}|{rowH:F2}";
+        if (!wasDirty && covered && string.Equals(_rowsKey, key, StringComparison.Ordinal))
+            return;
+        _rowsKey = key;
+
+        int bufCount = Math.Max(0, Math.Min(bufferRows, count - firstRow));
+        int texH = Math.Max(4, (int)Math.Ceiling(bufCount * rowH));
+        _bufFirstRow = firstRow;
+        _bufTop = firstRow * rowH;
+        _bufBottom = (firstRow + bufCount) * rowH;
+        _bufWidth = width;
+        _bufRowH = rowH;
+
+        double contentW = state.ScrollNeeded
+            ? width - _scaled(ScrollbarWidth) - _scaled(ScrollbarPadding) * 2.0
+            : width;
+
+        ImageSurface? surface = null;
+        Context? ctx = null;
+        try
+        {
+            _rowsTexture.Dispose();
+            _rowsTexture = new LoadedTexture(api);
+
+            surface = new ImageSurface(Format.Argb32, width, texH);
+            ctx = new Context(surface);
+            ctx.SetSourceRGBA(0, 0, 0, 0);
+            ctx.Paint();
+
+            for (int i = firstRow; i < firstRow + bufCount; i++)
+            {
+                double rowY = (i - firstRow) * rowH;
+
+                // Row background
+                RGBA bgColor;
+                if (i == state.SelectedIndex)
+                {
+                    bgColor = ArcanumGuiTheme.StatusActive.WithAlpha(0.85);
+                }
+                else if (i == state.HoveredIndex)
+                {
+                    bgColor = ArcanumGuiTheme.SurfaceCardHover;
+                }
+                else if (_drawZebra && i % 2 == 1)
+                {
+                    bgColor = ArcanumGuiTheme.SurfaceCard.WithAlpha(0.18);
+                }
+                else
+                {
+                    bgColor = default;
+                }
+
+                if (bgColor.A > 0.001)
+                {
+                    ctx.Rectangle(0, rowY, contentW, rowH);
+                    bgColor.Apply(ctx);
+                    ctx.Fill();
+                }
+
+                // Row text
+                string? label = _label(state.Items[i]) ?? "";
+                if (string.IsNullOrWhiteSpace(label)) continue;
+
+                _font.SetupContext(ctx);
+
+                RGBA textColor = i == state.SelectedIndex || i == state.HoveredIndex
+                    ? ArcanumGuiTheme.TextPrimary
+                    : ArcanumGuiTheme.TextSecondary;
+                textColor.Apply(ctx);
+
+                var ext = ctx.TextExtents(label);
+                double x = _scaled(_textPadding) - ext.XBearing;
+                double y = rowY + (rowH - ext.Height) / 2.0 - ext.YBearing;
+
+                ctx.MoveTo(x, y);
+                ctx.ShowText(label);
+            }
+
+            _generateTexture(surface, ref _rowsTexture);
+            GuiTextureTracker.Regen(nameof(ArcanumListRenderer<T>));
+        }
+        catch (Exception ex)
+        {
+            api?.Logger?.Warning("[ArcanumList] Failed to generate rows texture: {0}", ex);
+            _rowsKey = null;
+            _dirty = true;
+        }
+        finally
+        {
+            ctx?.Dispose();
+            surface?.Dispose();
+        }
+    }
+
+    /// <summary>Scrollbar handle as its own small texture; re-baked only when size or color state changes.</summary>
+    private void EnsureHandle(ICoreClientAPI api, in ArcanumListRenderState<T> state, bool wasDirty)
+    {
+        if (!state.ScrollNeeded)
+        {
+            if (_handleTexture.TextureId > 0)
+            {
+                _handleTexture.Dispose();
+                _handleTexture = new LoadedTexture(api);
+            }
+            _handleKey = null;
+            return;
+        }
+
+        var (_, _, hW, hH) = ScrollbarHandleRect(state);
+        int w = Math.Max(2, (int)Math.Ceiling(hW));
+        int h = Math.Max(2, (int)Math.Ceiling(hH));
+
+        string key = $"{w}|{h}|{state.Dragging}|{state.HoveredIndex == -2}";
+        if (!wasDirty && string.Equals(_handleKey, key, StringComparison.Ordinal) && _handleTexture.TextureId > 0)
+            return;
+        _handleKey = key;
+
+        ImageSurface? surface = null;
+        Context? ctx = null;
+        try
+        {
+            _handleTexture.Dispose();
+            _handleTexture = new LoadedTexture(api);
+
+            surface = new ImageSurface(Format.Argb32, w, h);
+            ctx = new Context(surface);
+            ctx.SetSourceRGBA(0, 0, 0, 0);
+            ctx.Paint();
+
+            RGBA handleColor = state.Dragging || state.HoveredIndex == -2
+                ? ArcanumGuiTheme.Accent.WithAlpha(0.95)
+                : ArcanumGuiTheme.AccentDim.Lerp(ArcanumGuiTheme.Accent, 0.55);
+            ArcanumGuiTheme.FillRoundedRect(ctx, 0, 0, w, h, w / 2.0, handleColor);
+
+            _generateTexture(surface, ref _handleTexture);
+            GuiTextureTracker.Regen(nameof(ArcanumListRenderer<T>));
+        }
+        catch (Exception ex)
+        {
+            api?.Logger?.Warning("[ArcanumList] Failed to generate handle texture: {0}", ex);
+            _handleKey = null;
             _dirty = true;
         }
         finally
@@ -319,9 +733,13 @@ internal sealed class ArcanumListRenderer<T> : IDisposable
         return (trackX, handleY, _scaled(ScrollbarWidth), handleH);
     }
 
-    /// <summary>Releases the cached list texture.</summary>
+    /// <summary>Releases the cached list textures.</summary>
     public void Dispose()
     {
         _texture?.Dispose();
+        _chromeTexture?.Dispose();
+        _rowsTexture?.Dispose();
+        _handleTexture?.Dispose();
+        GuiTextureTracker.Unregister(nameof(ArcanumListRenderer<T>));
     }
 }

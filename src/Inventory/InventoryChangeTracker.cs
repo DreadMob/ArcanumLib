@@ -52,7 +52,7 @@ public class InventoryChangeTracker : IDisposable
         _stackHash = stackHash ?? InventoryFingerprint.GetStableStackHash;
         _slotFilter = slotFilter ?? IsWearableSlot;
 
-        if (_api is ICoreServerAPI sapi)
+        if (_api is ICoreServerAPI sapi && sapi.Event != null)
         {
             sapi.Event.PlayerDisconnect += OnPlayerDisconnect;
         }
@@ -69,7 +69,7 @@ public class InventoryChangeTracker : IDisposable
         if (player?.Player?.InventoryManager == null) return false;
 
         long entityId = player.EntityId;
-        long now = _api.World.ElapsedMilliseconds;
+        long now = _api.World?.ElapsedMilliseconds ?? 0;
 
         var inv = player.Player.InventoryManager.GetOwnInventory(_inventoryCode);
         if (inv == null) return false;

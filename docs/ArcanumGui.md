@@ -196,6 +196,43 @@ list.Select(3);
 - `SetItems`, `ScrollTo`, and `Select` methods for dynamic content.
 - Optional selection callback with `(T item, int index)`.
 
+#### Virtualization
+
+For large item sets, opt into viewport virtualization. The renderer then keeps the
+card and scrollbar in separate cached textures and bakes only the visible rows plus
+an overscan band into a scrollable buffer — scrolling inside the band costs no
+texture rebake at all:
+
+```csharp
+list.WithVirtualization();                 // enabled, overscan = 2 rows
+// or fine-tune:
+list.WithVirtualization(overscanRows: 4, maxRenderedRows: 100);
+
+// Equivalent property setters:
+list.Virtualized = true;
+list.OverscanRows = 2;
+list.MaxRenderedRows = 0;                  // 0 = buffer auto-sized to viewport + overscan
+```
+
+`MaxRenderedRows` never goes below what the viewport needs, so the cap can't leave
+blank space under normal use.
+
+### Tooltips
+
+`GuiElementTooltip` is an invisible, non-interactive hover-tracker element. Wrap it
+around another control's bounds; after the cursor rests inside for 500 ms it draws a
+themed tooltip card (`SurfaceCard` fill, brass border, `TextPrimary` text) near the
+cursor, clamped to the window. Text supports `\n` and word-wraps at ~40 chars/line.
+
+```csharp
+composer.AddTooltip(buttonBounds.FlatCopy(), "Harvests moss.\nBest used on rainy days.");
+// or target an existing element:
+composer.AddTooltip(myElement, "Tooltip text", key: "myTip");
+
+// Update later by key:
+ArcanumTooltip.Set(SingleComposer, "myTip", "New text");
+```
+
 ## Notes
 
 - `ArcanumComposer` is a convenience wrapper, not a full layout engine. Complex absolute-positioned or overlapping dialogs may still need direct `GuiComposer` calls.
