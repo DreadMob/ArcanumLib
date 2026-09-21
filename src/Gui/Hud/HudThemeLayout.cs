@@ -46,6 +46,8 @@ public class HudThemeLayout
     public double? timerGap;
     /// <summary>Row height for a single challenge-list entry (px). Falls back to lineHeight.</summary>
     public double? challengeRowHeight;
+    /// <summary>Max columns for the bottom player board — extra players wrap to new rows so the panel grows in height instead of stretching wide.</summary>
+    public int? playerBoardMaxColumns;
 
     /// <summary>Factory that returns the base layout dimensions for a generic HUD.</summary>
     public static HudThemeLayout Default => new()
@@ -57,7 +59,8 @@ public class HudThemeLayout
         tierLabelHeight = 16, tierLabelGap = 4,
         titleLineHeight = 16, titleGap = 4,
         timerLineHeight = 22, timerGap = 2,
-        challengeRowHeight = 18
+        challengeRowHeight = 18,
+        playerBoardMaxColumns = 2
     };
 
     /// <summary>Merges the other spacing values over this instance, returning a new layout.</summary>
@@ -87,7 +90,8 @@ public class HudThemeLayout
             titleGap = other.titleGap ?? titleGap ?? d.titleGap,
             timerLineHeight = other.timerLineHeight ?? timerLineHeight ?? d.timerLineHeight,
             timerGap = other.timerGap ?? timerGap ?? d.timerGap,
-            challengeRowHeight = other.challengeRowHeight ?? challengeRowHeight ?? d.challengeRowHeight
+            challengeRowHeight = other.challengeRowHeight ?? challengeRowHeight ?? d.challengeRowHeight,
+            playerBoardMaxColumns = other.playerBoardMaxColumns ?? playerBoardMaxColumns ?? d.playerBoardMaxColumns
         };
     }
 }

@@ -5,6 +5,16 @@ using Vintagestory.API.MathTools;
 namespace ArcanumLib.Common
 {
     /// <summary>
+    /// Marker subclass for damage produced by scripted ability/effect logic (as opposed to
+    /// a plain AI melee attack). DamageSource has no extensible flag fields and a vanilla
+    /// melee hit is field-identical to ability damage, so consumers that must tell them
+    /// apart (e.g. "no boss bite taken" challenges) check for this type.
+    /// </summary>
+    public class AbilityDamageSource : DamageSource
+    {
+    }
+
+    /// <summary>
     /// Focused factory for <see cref="DamageSource" /> instances with the most common
     /// field combinations used across combat abilities, effects, and projectiles.
     /// </summary>
@@ -33,7 +43,7 @@ namespace ArcanumLib.Common
         /// <returns>The value.</returns>
         public static DamageSource Create(Entity source, EnumDamageType type, bool ignoreInvFrames = true)
         {
-            return new DamageSource
+            return new AbilityDamageSource
             {
                 Source = EnumDamageSource.Entity,
                 SourceEntity = source,
@@ -50,7 +60,7 @@ namespace ArcanumLib.Common
         /// <returns>The value.</returns>
         public static DamageSource Create(Entity source, Entity cause, EnumDamageType type, bool ignoreInvFrames = true)
         {
-            return new DamageSource
+            return new AbilityDamageSource
             {
                 Source = EnumDamageSource.Entity,
                 SourceEntity = source,
@@ -68,7 +78,7 @@ namespace ArcanumLib.Common
         /// <returns>The value.</returns>
         public static DamageSource Create(Entity source, EnumDamageType type, int damageTier, bool ignoreInvFrames = true)
         {
-            return new DamageSource
+            return new AbilityDamageSource
             {
                 Source = EnumDamageSource.Entity,
                 SourceEntity = source,
@@ -105,7 +115,7 @@ namespace ArcanumLib.Common
         /// <returns>The value.</returns>
         public static DamageSource Create(Entity source, Entity cause, EnumDamageType type, int damageTier, bool ignoreInvFrames = true)
         {
-            return new DamageSource
+            return new AbilityDamageSource
             {
                 Source = EnumDamageSource.Entity,
                 SourceEntity = source,
@@ -235,7 +245,7 @@ namespace ArcanumLib.Common
         /// <returns>The value.</returns>
         public static DamageSource Create(Entity source, EnumDamageType type, int damageTier, float knockbackStrength, bool ignoreInvFrames = true)
         {
-            return new DamageSource
+            return new AbilityDamageSource
             {
                 Source = EnumDamageSource.Entity,
                 SourceEntity = source,
@@ -254,7 +264,7 @@ namespace ArcanumLib.Common
         /// <returns>The value.</returns>
         public static DamageSource Create(Entity source, EnumDamageType type, float knockbackStrength, bool ignoreInvFrames = true)
         {
-            return new DamageSource
+            return new AbilityDamageSource
             {
                 Source = EnumDamageSource.Entity,
                 SourceEntity = source,
@@ -274,7 +284,7 @@ namespace ArcanumLib.Common
         /// <returns>The value.</returns>
         public static DamageSource Create(Entity source, Entity cause, EnumDamageType type, int damageTier, float knockbackStrength, bool ignoreInvFrames = true)
         {
-            return new DamageSource
+            return new AbilityDamageSource
             {
                 Source = EnumDamageSource.Entity,
                 SourceEntity = source,
@@ -295,7 +305,7 @@ namespace ArcanumLib.Common
         /// <returns>The value.</returns>
         public static DamageSource Create(Entity source, Entity cause, EnumDamageType type, float knockbackStrength, bool ignoreInvFrames = true)
         {
-            return new DamageSource
+            return new AbilityDamageSource
             {
                 Source = EnumDamageSource.Entity,
                 SourceEntity = source,
@@ -329,7 +339,7 @@ namespace ArcanumLib.Common
         /// <returns>The value.</returns>
         public static DamageSource Create(Entity source, Entity cause, EnumDamageType type, int damageTier, Vec3d sourcePos, Vec3d hitPosition, bool ignoreInvFrames = true)
         {
-            return new DamageSource
+            return new AbilityDamageSource
             {
                 Source = EnumDamageSource.Entity,
                 SourceEntity = source,

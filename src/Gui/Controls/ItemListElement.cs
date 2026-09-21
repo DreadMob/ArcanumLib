@@ -626,7 +626,21 @@ namespace ArcanumLib.Gui.Controls
             if (iconStacks.TryGetValue(iconKey, out var cached)) return cached;
 
             ItemStack? stack = null;
-            var loc = new AssetLocation(row.IconItemCode);
+
+            // Icon codes may carry stack attributes as a query suffix:
+            // "game:clutteredbookshelf?variant=half&type=bookshelves/bookshelf-case".
+            // Needed for attribute-shaped blocks (clutter/bookshelves) whose look
+            // is driven by stack attrs rather than the block code.
+            string code = row.IconItemCode;
+            string? attrPart = null;
+            int q = code.IndexOf('?');
+            if (q >= 0)
+            {
+                attrPart = code.Substring(q + 1);
+                code = code.Substring(0, q);
+            }
+
+            var loc = new AssetLocation(code);
             var item = api.World.GetItem(loc);
             if (item != null)
             {
@@ -644,6 +658,22 @@ namespace ArcanumLib.Gui.Controls
                     try { stack = IconStackFallbackResolver(api, row.IconItemCode); }
                     catch (Exception ex) { api?.Logger?.Warning("[ItemListElement] Icon stack fallback resolver failed: {0}", ex.Message); }
                 }
+            }
+
+            if (stack != null && !string.IsNullOrEmpty(attrPart))
+            {
+                try
+                {
+                    foreach (var pair in attrPart.Split('&'))
+                    {
+                        int eq = pair.IndexOf('=');
+                        if (eq > 0)
+                        {
+                            stack.Attributes.SetString(pair.Substring(0, eq), pair.Substring(eq + 1));
+                        }
+                    }
+                }
+                catch (Exception ex) { api?.Logger?.Warning("[ItemListElement] Failed to apply icon stack attributes: {0}", ex.Message); }
             }
 
             if (stack != null && !string.IsNullOrWhiteSpace(row.IconUcontents))

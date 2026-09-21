@@ -52,10 +52,12 @@ public abstract class HudPanel<TSnapshot, THudDefinition, TTheme> : GuiElement, 
     /// <param name="theme">The theme value.</param>
     public virtual void Update(TSnapshot? snapshot, THudDefinition? definition, TTheme? theme)
     {
+        bool layoutChanged = !ReferenceEquals(_definition, definition) || !ReferenceEquals(_theme, theme);
         _snapshot = snapshot;
         _definition = definition;
         _theme = theme;
-        OnSnapshotReceived(api?.World?.ElapsedMilliseconds ?? 0);
+        _snapshotReceivedMs = api?.World?.ElapsedMilliseconds ?? 0;
+        if (layoutChanged) _cacheKey = null;
     }
 
     /// <summary>
