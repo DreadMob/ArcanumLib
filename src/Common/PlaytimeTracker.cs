@@ -46,6 +46,19 @@ namespace ArcanumLib.Common
         void SetTotalMs(string playerUid, long totalMs);
 
         /// <summary>
+        /// Playtime in milliseconds accumulated since the given UTC timestamp.
+        /// Day-granular: the bucket of the day containing <paramref name="sinceUtcMs"/> is counted in full.
+        /// The currently running session is included, clamped to <paramref name="sinceUtcMs"/>.
+        /// </summary>
+        long GetPlaytimeMsSince(string playerUid, long sinceUtcMs);
+
+        /// <summary>
+        /// All players' playtime in hours since the given UTC timestamp (day-granular).
+        /// Includes the currently running sessions.
+        /// </summary>
+        Dictionary<string, float> GetPlaytimeHoursSince(long sinceUtcMs);
+
+        /// <summary>
         /// Bulk import playtime from a map of playerUid -&gt; totalMs.
         /// </summary>
         int ImportFromDictionary(Dictionary<string, long> playtimes);
@@ -150,6 +163,7 @@ namespace ArcanumLib.Common
                 long sessionMs = now - startMs;
                 var data = GetOrCreateData(uid);
                 data.TotalMs += sessionMs;
+                AccumulateDaily(data, startMs, now);
                 data.LastOnlineMs = now;
                 _playerSessionStartMs.Remove(uid);
                 SaveData();
@@ -208,6 +222,81 @@ namespace ArcanumLib.Common
             }
             return result;
         }
+
+        /// <summary>Playtime in ms accumulated since the given UTC timestamp (day-granular).</summary>
+        /// <param name="playerUid">The unique player identifier.</param>
+        /// <param name="sinceUtcMs">The lower bound timestamp in UTC ms.</param>
+        public long GetPlaytimeMsSince(string playerUid, long sinceUtcMs)
+        {
+            var data = PlayerData.GetValueOrDefault(playerUid);
+            string sinceKey = DayKey(ToDayStartMs(sinceUtcMs));
+            long ms = 0;
+            if (data?.DailyMs != null)
+            {
+                foreach (var kv in data.DailyMs)
+                    if (string.CompareOrdinal(kv.Key, sinceKey) >= 0) ms += kv.Value;
+            }
+            if (_playerSessionStartMs.TryGetValue(playerUid, out long startMs))
+            {
+                long now = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+                ms += Math.Max(0, now - Math.Max(startMs, sinceUtcMs));
+            }
+            return ms;
+        }
+
+        /// <summary>All players' playtime in hours since the given UTC timestamp (day-granular).</summary>
+        /// <param name="sinceUtcMs">The lower bound timestamp in UTC ms.</param>
+        public Dictionary<string, float> GetPlaytimeHoursSince(long sinceUtcMs)
+        {
+            var result = new Dictionary<string, float>(StringComparer.OrdinalIgnoreCase);
+            string sinceKey = DayKey(ToDayStartMs(sinceUtcMs));
+            long now = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+            foreach (var kv in PlayerData)
+            {
+                long ms = 0;
+                if (kv.Value?.DailyMs != null)
+                    foreach (var day in kv.Value.DailyMs)
+                        if (string.CompareOrdinal(day.Key, sinceKey) >= 0) ms += day.Value;
+                if (_playerSessionStartMs.TryGetValue(kv.Key, out long startMs))
+                    ms += Math.Max(0, now - Math.Max(startMs, sinceUtcMs));
+                if (ms > 0) result[kv.Key] = ms / 3600000f;
+            }
+            return result;
+        }
+
+        /// <summary>Splits a session interval into per-UTC-day buckets and prunes stale ones.</summary>
+        private static void AccumulateDaily(PlayerPlaytimeData data, long startMs, long endMs)
+        {
+            if (endMs <= startMs) return;
+            data.DailyMs ??= new Dictionary<string, long>(StringComparer.Ordinal);
+
+            long cursor = startMs;
+            while (cursor < endMs)
+            {
+                long dayStart = ToDayStartMs(cursor);
+                long nextDay = dayStart + 86400000L;
+                long chunk = Math.Min(endMs, nextDay) - cursor;
+                if (chunk > 0)
+                {
+                    string key = DayKey(dayStart);
+                    data.DailyMs[key] = data.DailyMs.TryGetValue(key, out long cur) ? cur + chunk : chunk;
+                }
+                cursor = nextDay;
+            }
+
+            if (data.DailyMs.Count > 40)
+            {
+                string cutoff = DayKey(ToDayStartMs(endMs - 35L * 86400000L));
+                List<string>? stale = null;
+                foreach (var k in data.DailyMs.Keys)
+                    if (string.CompareOrdinal(k, cutoff) < 0) (stale ??= new List<string>()).Add(k);
+                if (stale != null)
+                    foreach (var k in stale) data.DailyMs.Remove(k);
+            }
+        }
+
+        private static string DayKey(long dayStartMs)
+            => DateTimeOffset.FromUnixTimeMilliseconds(dayStartMs).ToString("yyyy-MM-dd");
 
         /// <summary>First join timestamp in UTC milliseconds, or null if unknown.</summary>
         /// <param name="playerUid">The unique player identifier.</param>
@@ -344,7 +433,10 @@ namespace ArcanumLib.Common
                 foreach (var uid in activeUids)
                 {
                     if (PlayerData.TryGetValue(uid, out var data))
+                    {
                         data.TotalMs += now - _playerSessionStartMs[uid];
+                        AccumulateDaily(data, _playerSessionStartMs[uid], now);
+                    }
                     _playerSessionStartMs[uid] = now;
                 }
 

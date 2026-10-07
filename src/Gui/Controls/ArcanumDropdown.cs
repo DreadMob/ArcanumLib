@@ -30,6 +30,7 @@ public class ArcanumDropdown : GuiElement
     /// parent's palette, so the spawned menu matches the dialog that owns the
     /// dropdown instead of reading whatever the ambient palette happens to be.</summary>
     private readonly GuiThemePalette? palette;
+    private GuiDialogArcanumDropdown? openMenu;
 
     /// <param name="capi">The client API.</param>
     /// <param name="bounds">Control bounds.</param>
@@ -96,8 +97,8 @@ public class ArcanumDropdown : GuiElement
         api.Gui.PlaySound("menubutton_press", false, 0.2f);
 
         Bounds.CalcWorldBounds();
-        double x = Bounds.renderX;
-        double y = Bounds.renderY + Bounds.OuterHeight + scaled(2);
+        double x = Bounds.absX;
+        double y = Bounds.absY + Bounds.OuterHeight + scaled(2);
         var menu = new GuiDialogArcanumDropdown(api, x, y,
             Math.Max(Bounds.OuterWidth, scaled(140)), names, selectedIndex, i =>
             {
@@ -106,6 +107,7 @@ public class ArcanumDropdown : GuiElement
                 if (i >= 0 && i < values.Length)
                     onSelected?.Invoke(values[i], true);
             }, palette);
+        openMenu = menu;
         menu.TryOpen();
     }
 
@@ -149,17 +151,17 @@ public class ArcanumDropdown : GuiElement
             string label = selectedIndex >= 0 && selectedIndex < names.Length ? names[selectedIndex] : "—";
             ctx.SelectFontFace("Sans", FontSlant.Normal, FontWeight.Normal);
             ctx.SetFontSize(scaled(11));
-            var ext = ctx.TextExtents(label);
+            var ext = ArcanumLib.Gui.Theme.GlyphText.Extents(ctx, label);
             double maxW = w - scaled(30);
             while (ext.Width > maxW && label.Length > 4)
             {
                 label = label[..^2];
-                ext = ctx.TextExtents(label + "…");
+                ext = ArcanumLib.Gui.Theme.GlyphText.Extents(ctx, label + "…");
             }
             if (ext.Width > maxW) label += "…";
             ctx.SetSourceRGBA(p.TextPrimary.R, p.TextPrimary.G, p.TextPrimary.B, enabled ? 0.95 : 0.45);
             ctx.MoveTo(scaled(9), (h - ext.Height) / 2 - ext.YBearing);
-            ctx.ShowText(label);
+            ArcanumLib.Gui.Theme.GlyphText.Show(ctx, label);
 
             // Chevron.
             double cx = w - scaled(16), cy = h / 2;
@@ -185,7 +187,13 @@ public class ArcanumDropdown : GuiElement
     }
 
     /// <inheritdoc />
-    public override void Dispose() { tex?.Dispose(); GuiTextureTracker.Unregister(nameof(ArcanumDropdown)); base.Dispose(); }
+    public override void Dispose()
+    {
+        // The floating menu is a separate dialog: without this it outlives the dialog that owned the field.
+        if (openMenu?.IsOpened() == true) openMenu.TryClose();
+        openMenu = null;
+        tex?.Dispose(); GuiTextureTracker.Unregister(nameof(ArcanumDropdown)); base.Dispose();
+    }
 }
 
 /// <summary>
@@ -203,6 +211,19 @@ public class GuiDialogArcanumDropdown : GuiDialog
     /// null keeps the ambient <see cref="ArcanumGuiTheme.Palette"/> behavior.</summary>
     private readonly GuiThemePalette? palette;
     private ElementBounds? menuBounds;
+
+    /// <summary>The dropdown menu currently on screen, if any (only one can be open at a time).</summary>
+    public static GuiDialogArcanumDropdown? Current { get; private set; }
+
+    /// <summary>Close the open dropdown menu. Returns true when one was open — owners that
+    /// intercept Escape themselves call this first so Escape closes the list, not the window.</summary>
+    public static bool CloseCurrent()
+    {
+        var m = Current;
+        if (m == null || !m.IsOpened()) { Current = null; return false; }
+        m.TryClose();
+        return true;
+    }
 
     /// <inheritdoc />
     public override string ToggleKeyCombinationCode => null!;
@@ -228,14 +249,22 @@ public class GuiDialogArcanumDropdown : GuiDialog
     public override void OnGuiOpened()
     {
         base.OnGuiOpened();
+        if (Current != null && Current != this && Current.IsOpened()) Current.TryClose();
+        Current = this;
         using var scope = palette != null ? ArcanumGuiTheme.WithPalette(palette) : null;
-        double rowH = GuiElement.scaled(24);
-        double h = Math.Min(items.Length, 8) * rowH + GuiElement.scaled(8);
-        menuBounds = ElementBounds.Fixed(EnumDialogArea.LeftTop, x, y, w, h);
+        // x/y/w arrive in screen (scaled) px; ElementBounds.Fixed wants unscaled units and scales them itself.
+        double sc = Vintagestory.API.Config.RuntimeEnv.GUIScale;
+        double ux = x / sc, uy = y / sc, uw = w / sc;
+        const double rowH = 24;
+        double h = Math.Min(items.Length, 8) * rowH + 8;
+        var win = capi.Gui.WindowBounds;
+        win.CalcWorldBounds();
+        if ((uy + h) * sc > win.OuterHeight) uy = Math.Max(0, win.OuterHeight / sc - h);
+        menuBounds = ElementBounds.Fixed(EnumDialogArea.LeftTop, ux, uy, uw, h);
         SingleComposer = capi.Gui.CreateCompo("arcanum-dropdown-menu", menuBounds)
             .AddStaticElement(new ArcanumCard(capi, ElementBounds.Fill))
-            .AddArcanumList(items, ElementBounds.Fixed(4, 4, w - 8, h - 8),
-                s => s, rowH, OnPicked, key: "opts")
+            .AddArcanumList(items, ElementBounds.Fixed(4, 4, uw - 8, h - 8),
+                s => s, rowH, OnPicked, CairoFont.WhiteSmallText().WithFontSize(11), key: "opts")   // same size as the closed field
             .Compose();
         SingleComposer.GetArcanumList<string>("opts")?.Select(selected);
     }
@@ -274,6 +303,13 @@ public class GuiDialogArcanumDropdown : GuiDialog
     {
         if (args.KeyCode == (int)GlKeys.Escape) { args.Handled = true; TryClose(); return; }
         base.OnKeyDown(args);
+    }
+
+    /// <inheritdoc />
+    public override void OnGuiClosed()
+    {
+        base.OnGuiClosed();
+        if (Current == this) Current = null;
     }
 
     /// <inheritdoc />

@@ -265,6 +265,18 @@ public sealed class ArcanumHotkeyService : IDisposable
                     continue;
             }
 
+            if (key == GlKeys.Unknown && token switch
+                {
+                    "[" => GlKeys.LBracket, "]" => GlKeys.RBracket, ";" => GlKeys.Semicolon,
+                    "'" => GlKeys.Quote, "," => GlKeys.Comma, "." => GlKeys.Period, "/" => GlKeys.Slash,
+                    "\\" => GlKeys.BackSlash, "-" => GlKeys.Minus, "=" => GlKeys.Plus, "`" => GlKeys.Tilde,
+                    _ => GlKeys.Unknown
+                } is var sym && sym != GlKeys.Unknown)
+            {
+                key = sym;
+                continue;
+            }
+
             if (key == GlKeys.Unknown
                 && Enum.TryParse(token, ignoreCase: true, out GlKeys parsed)
                 && parsed != GlKeys.Unknown)

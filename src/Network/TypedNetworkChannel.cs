@@ -132,14 +132,15 @@ namespace ArcanumLib.Network
         /// <param name="players">The target players.</param>
         public void SendToPlayers<T>(T message, IEnumerable<IServerPlayer> players)
         {
-            if (players == null) return;
+            if (players == null || _serverChannel == null) return;
+            var targets = new List<IServerPlayer>();
             foreach (var player in players)
             {
-                if (player != null)
-                {
-                    _serverChannel?.SendPacket(message, player);
-                }
+                if (player != null) targets.Add(player);
             }
+
+            if (targets.Count > 0)
+                _serverChannel.SendPacket(message, targets.ToArray());
         }
 
         /// <summary>
@@ -155,13 +156,16 @@ namespace ArcanumLib.Network
             var exceptUid = exceptPlayer?.PlayerUID;
             var cache = ArcanumServices.Get<IOnlinePlayerCache>();
             var players = cache?.All ?? Array.Empty<IServerPlayer>();
+            if (_serverChannel == null) return;
+            var targets = new List<IServerPlayer>(players.Count);
             foreach (var player in players)
             {
                 if (player.PlayerUID != null && player.PlayerUID != exceptUid)
-                {
-                    _serverChannel?.SendPacket(message, player);
-                }
+                    targets.Add(player);
             }
+
+            if (targets.Count > 0)
+                _serverChannel.SendPacket(message, targets.ToArray());
         }
 
         private void EnsureChannel()

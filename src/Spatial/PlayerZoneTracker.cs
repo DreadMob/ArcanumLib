@@ -393,15 +393,22 @@ public class PlayerZoneTracker : ModSystem
                 (int)Math.Floor(pos.Z / cs),
                 dim);
 
-            var current = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+            HashSet<string>? current = null;
             if (_chunkIndex.TryGetValue(chunk, out var candidates))
             {
                 foreach (var zoneId in candidates)
                 {
                     if (!_zones.TryGetValue(zoneId, out var zone)) continue;
                     if (zone.Shape.Contains(pos))
-                        current.Add(zoneId);
+                        (current ??= new HashSet<string>(StringComparer.OrdinalIgnoreCase)).Add(zoneId);
                 }
+            }
+
+            // Nothing now and nothing before: no allocation and no callbacks.
+            if (current == null)
+            {
+                if (!_lastZonesByPlayer.ContainsKey(sp.PlayerUID)) continue;
+                current = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
             }
 
             UpdatePlayer(sp, current);
@@ -445,13 +452,6 @@ public class PlayerZoneTracker : ModSystem
 
             zone.OnExit?.Invoke(player);
             PlayerExited?.Invoke(zoneId, player);
-        }
-
-        foreach (var zoneId in current)
-        {
-            if (!last.Contains(zoneId)) continue;
-            if (!_zones.TryGetValue(zoneId, out var zone)) continue;
-            zone.OnStayed?.Invoke(player);
         }
 
         if (current.Count > 0)

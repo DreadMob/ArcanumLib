@@ -335,12 +335,12 @@ internal sealed class ArcanumListRenderer<T> : IDisposable
                         : ArcanumGuiTheme.TextSecondary;
                     textColor.Apply(ctx);
 
-                    var ext = ctx.TextExtents(label);
+                    var ext = ArcanumLib.Gui.Theme.GlyphText.Extents(ctx, label);
                     double x = _scaled(_textPadding) - ext.XBearing;
                     double y = rowY + (state.ScaledRowHeight - ext.Height) / 2.0 - ext.YBearing;
 
                     ctx.MoveTo(x, y);
-                    ctx.ShowText(label);
+                    ArcanumLib.Gui.Theme.GlyphText.Show(ctx, label);
                 }
             }
 
@@ -618,12 +618,12 @@ internal sealed class ArcanumListRenderer<T> : IDisposable
                     : ArcanumGuiTheme.TextSecondary;
                 textColor.Apply(ctx);
 
-                var ext = ctx.TextExtents(label);
+                var ext = ArcanumLib.Gui.Theme.GlyphText.Extents(ctx, label);
                 double x = _scaled(_textPadding) - ext.XBearing;
                 double y = rowY + (rowH - ext.Height) / 2.0 - ext.YBearing;
 
                 ctx.MoveTo(x, y);
-                ctx.ShowText(label);
+                ArcanumLib.Gui.Theme.GlyphText.Show(ctx, label);
             }
 
             _generateTexture(surface, ref _rowsTexture);

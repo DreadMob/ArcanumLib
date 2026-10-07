@@ -212,6 +212,16 @@ public class StatCoalescingEngine : IStatCoalescingEngine, IDisposable
 
         category ??= DefaultCategory;
 
+        if (!IsEnabled)
+        {
+            if (stats != null)
+            {
+                foreach (var stat in stats)
+                    player.Stats.Set(stat.Key, category, stat.Value, true);
+            }
+            return;
+        }
+
         long entityId = player.EntityId;
         int addedCount = stats?.Count ?? 0;
 
@@ -368,8 +378,7 @@ public class StatCoalescingEngine : IStatCoalescingEngine, IDisposable
         {
             var kv = stats[i];
             (string category, string statName) = ParseStatKey(kv.Key);
-            bool isLast = i == stats.Count - 1;
-            entity.Stats.Set(statName, category, kv.Value, isLast);
+            entity.Stats.Set(statName, category, kv.Value, true);
         }
 
         if (!string.IsNullOrEmpty(MarkDirtyAttributePath))
@@ -396,7 +405,21 @@ public class StatCoalescingEngine : IStatCoalescingEngine, IDisposable
 
     private void OnPlayerDisconnect(IServerPlayer player)
     {
-        long entityId = player.Entity.EntityId;
+        if (player?.Entity == null) return;
+        OnPlayerDisconnect(player.Entity.EntityId);
+    }
+
+    /// <summary>Flush or drop pending updates for a disconnecting entity.</summary>
+    internal void OnPlayerDisconnect(long entityId)
+    {
+        // Flush pending stats instead of dropping them — coalesced updates that are
+        // cancelled here would never reach the entity, while callers may already
+        // have recorded them as applied.
+        if (IsEnabled && _sapi != null)
+        {
+            ForceFlush(_sapi, entityId);
+            return;
+        }
 
         ArcanumServices.Get<IDeferredWorkService>()?.Cancel(StatKey(entityId));
         lock (_syncLock)

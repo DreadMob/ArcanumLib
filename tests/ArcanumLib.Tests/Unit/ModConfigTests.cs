@@ -78,7 +78,10 @@ public class ModConfigTests
         var result = config.Save();
 
         Assert.Equal(ConfigResultKind.Success, result.Kind);
-        api.Received().StoreModConfig("test.json", Arg.Is<string>(s => s.Contains("\"Value\": 7") && s.Contains("\"save\"")));
+        // data first, file name second (the old call had them swapped and wrote nothing)
+        api.Received().StoreModConfig(
+            Arg.Is<Vintagestory.API.Datastructures.JsonObject>(j => j["Value"].AsInt(0) == 7 && j["Name"].AsString(null) == "save"),
+            "test.json");
     }
 
     [Fact]

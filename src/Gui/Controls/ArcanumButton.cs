@@ -195,9 +195,9 @@ public class ArcanumButton : GuiElement
             ctx.SetSourceRGBA(textColor.R, textColor.G, textColor.B, enabled ? 1.0 : 0.45);
             ctx.SelectFontFace("Sans", FontSlant.Normal, FontWeight.Bold);
             ctx.SetFontSize(scaled(14.5));
-            var ext = ctx.TextExtents(text);
+            var ext = ArcanumLib.Gui.Theme.GlyphText.Extents(ctx, text);
             ctx.MoveTo((width - ext.Width) / 2.0 - ext.XBearing, (height - ext.Height) / 2.0 - ext.YBearing);
-            ctx.ShowText(text);
+            ArcanumLib.Gui.Theme.GlyphText.Show(ctx, text);
 
             generateTexture(surface, ref cachedTexture);
             GuiTextureTracker.Regen(nameof(ArcanumButton));

@@ -132,7 +132,7 @@ public class InventoryChangeTracker : IDisposable
     /// </summary>
     public void Dispose()
     {
-        if (_api is ICoreServerAPI sapi)
+        if (_api is ICoreServerAPI sapi && sapi.Event != null)
         {
             sapi.Event.PlayerDisconnect -= OnPlayerDisconnect;
         }

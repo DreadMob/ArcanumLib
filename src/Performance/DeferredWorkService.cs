@@ -300,35 +300,44 @@ public sealed class DeferredWorkService : IDeferredWorkService, IDisposable
         if (api?.World is null) return;
 
         long now = api.World.ElapsedMilliseconds;
-        var toRun = new List<ScheduledTask>(scheduler.Tasks.Count);
-        var toRemove = new List<string>(scheduler.Tasks.Count);
+        List<ScheduledTask>? toRun = null;
+        List<string>? toRemove = null;
 
+        // This runs every frame: stay allocation-free while there is nothing due.
         lock (_syncLock)
         {
+            if (scheduler.Tasks.Count == 0 && scheduler.EndOfTickQueue.Count == 0) return;
+
             foreach (var kvp in scheduler.Tasks)
             {
                 var task = kvp.Value;
                 if (now >= task.DueTimeMs ||
                     (task.MaxDelayMs.HasValue && now >= task.MaxDelayMs.Value))
                 {
-                    toRun.Add(task);
-                    toRemove.Add(kvp.Key);
+                    (toRun ??= new List<ScheduledTask>()).Add(task);
+                    (toRemove ??= new List<string>()).Add(kvp.Key);
                 }
             }
 
-            foreach (var key in toRemove)
-                scheduler.Tasks.Remove(key);
+            if (toRemove != null)
+            {
+                foreach (var key in toRemove)
+                    scheduler.Tasks.Remove(key);
+            }
         }
 
+        if (toRun != null)
         foreach (var task in toRun)
         {
             try { task.Action(); }
             catch (Exception ex) { api.Logger?.Warning("[ArcanumLib] Deferred task '{0}' failed: {1}", task.Key, ex.Message); }
         }
 
-        var endOfTickBatch = new List<Action>();
+        List<Action>? endOfTickBatch = null;
         lock (_syncLock)
         {
+            if (scheduler.EndOfTickQueue.Count == 0) return;
+            endOfTickBatch = new List<Action>();
             int safety = 0;
             while (scheduler.EndOfTickQueue.Count > 0 && safety < 100)
             {

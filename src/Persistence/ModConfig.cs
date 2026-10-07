@@ -171,7 +171,8 @@ public sealed class ModConfig<T> where T : class, new()
         try
         {
             string json = JsonConvert.SerializeObject(Current, _serializerSettings);
-            _api.StoreModConfig(_filename, json);
+            // (data, filename) — the arguments used to be swapped, which wrote nothing
+            _api.StoreModConfig(new Vintagestory.API.Datastructures.JsonObject(Newtonsoft.Json.Linq.JToken.Parse(json)), _filename);
             return ConfigResult.Success();
         }
         catch (Exception ex)

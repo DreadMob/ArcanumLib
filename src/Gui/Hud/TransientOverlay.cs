@@ -111,6 +111,11 @@ public abstract class TransientOverlay<TModel> : GuiDialog
     /// <returns>true if the operation should redraw; otherwise, false.</returns>
     protected virtual bool ShouldRedraw(float elapsed) => true;
 
+    /// <summary>Minimum time between redraws in ms (default ≈ 30 fps).</summary>
+    protected virtual int MinRedrawIntervalMs => 33;
+
+    private long _lastRedrawMs;
+
     /// <summary>Updates elapsed time, redraws and closes the overlay when the duration expires.</summary>
     /// <param name="deltaTime">The delta time value.</param>
     public override void OnRenderGUI(float deltaTime)
@@ -125,8 +130,15 @@ public abstract class TransientOverlay<TModel> : GuiDialog
             return;
         }
 
+        // Cairo redraws re-upload the whole surface: cap them instead of redrawing every frame.
+        long now = Environment.TickCount64;
+        if (now - _lastRedrawMs < MinRedrawIntervalMs) return;
+
         if (ShouldRedraw(_elapsed))
+        {
+            _lastRedrawMs = now;
             SingleComposer?.GetCustomDraw(DrawKey)?.Redraw();
+        }
     }
 
     /// <summary>Resets data and closes.</summary>

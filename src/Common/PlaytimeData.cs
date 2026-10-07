@@ -32,5 +32,12 @@ namespace ArcanumLib.Common
 
         /// <summary>Start of the last login day in UTC milliseconds.</summary>
         public long LastLoginDayMs { get; set; }
+
+        /// <summary>
+        /// Playtime per UTC day ("yyyy-MM-dd" → milliseconds). Buckets older than
+        /// ~35 days are pruned, so this supports recent-week reports without
+        /// unbounded growth.
+        /// </summary>
+        public Dictionary<string, long>? DailyMs { get; set; }
     }
 }

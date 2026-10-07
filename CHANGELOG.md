@@ -8,6 +8,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Added
 
+- `GlyphText` — draws symbols the GUI fonts lack (★ ⚙ ● ○ ∞ ✓ ✕ −) as Cairo shapes inline with text; `ArcanumList`, `ArcanumDropdown` and `ArcanumButton` labels use it.
+- `ArcanumLib.Gui.Map`: `ChunkTerrainSource` (client terrain thumbnails per chunk — vanilla world-map cache DB + live chunks, vanilla colour table) and `GuiElementChunkGrid` (`AddChunkGrid`) — zoomable/pannable chunk map with selection, overlay painters and a player marker.
 - Unit test project (`ArcanumLib.Tests`) and Atlas integration test project (`ArcanumLib.AtlasTests`) covering `ArcanumServices`, `EventBus`, `PityTracker`, `PityDefinition`, `WeightedRandom`, `LootTable`, `TimedCache`, `TagMatcher`, `ItemCharge`, `Wildcard`, `ValidationResult`, `ModDataStore`, `WatchedAttributesExtensions`, `EffectResistanceStore`, `StatusEffectService`, `CooldownTracker`, `InventoryFingerprint`, `ChatFormatUtil`, `PlaytimeTracker`, `PlaytimeCooldownManager`, `DamageHelper`, `EntityHealthExtensions`, `EntityControlExtensions`, `CleanupScope`, `EventScope`, `BlockEntitySearchUtils`, `CollectibleNameResolver`, `PositionUtils`, `OnlinePlayerCache` and `PlayerProximityTracker`.
 - Atlas headless server scenarios for mod load, `OnlinePlayerCache`, `CooldownTracker`, `TagMatcher` and `PlayerProximityTracker`.
 - Dedicated `ArcanumLib.AtlasFixture` project to author a small fixture world (`fixtures/world.vcdbs`) via `atlas fixture`.
@@ -35,6 +37,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Fixed
 
+- `ArcanumCheckbox` ignored every click: `OnMouseUp` cleared the pressed flag before the base call routed to `OnMouseUpOnElement`, which needs it.
+- `ArcanumDropdown` menu opened at the wrong spot and oversized at GUI scale ≠ 1 (screen px were passed to `ElementBounds.Fixed` and scaled twice).
+- `ModConfig.Save()` passed `StoreModConfig` arguments in the wrong order and never wrote the config file.
 - `OnlinePlayerCache` now also removes players on `PlayerDisconnect` (kicks and timeouts), not just `PlayerLeave`.
 - `LootTable.Roll` now returns `default` when total effective weight is zero, matching its documented contract.
 - `PlayerProximityTracker` null-warning for `Position.dimension` resolved.

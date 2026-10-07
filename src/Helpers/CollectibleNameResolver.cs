@@ -183,7 +183,9 @@ public static class CollectibleNameResolver
             try
             {
                 string name = new ItemStack(obj).GetName();
-                if (!string.IsNullOrWhiteSpace(name) &&
+                // An unresolved lang lookup comes back as the key itself ("game:block-lantern-large-up-").
+                bool looksLikeKey = name != null && name.StartsWith($"{domain}:{type}-", StringComparison.OrdinalIgnoreCase);
+                if (!string.IsNullOrWhiteSpace(name) && !looksLikeKey &&
                     !name.Equals(code, StringComparison.OrdinalIgnoreCase) &&
                     !name.Equals(path, StringComparison.OrdinalIgnoreCase))
                 {
@@ -400,11 +402,14 @@ public static class CollectibleNameResolver
                     if (index.TryGetValue(trimmed, out var shorter))
                     {
                         // Filter to only those that actually start with the full prefix.
-                        return shorter.Where(c => c.StartsWith(prefix, StringComparison.OrdinalIgnoreCase));
+                        var hits = shorter.Where(c => c.StartsWith(prefix, StringComparison.OrdinalIgnoreCase)).ToList();
+                        if (hits.Count > 0) return hits;
                     }
                 }
 
-                return Enumerable.Empty<string>();
+                // The index only stores dash-separated prefixes, so a wildcard whose
+                // stem has no dash boundary (e.g. "game:snow*" matching "game:snowblock")
+                // would miss every real code — fall through to the full scan below.
             }
         }
 

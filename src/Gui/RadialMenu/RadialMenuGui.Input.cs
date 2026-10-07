@@ -414,6 +414,9 @@ namespace ArcanumLib.Gui.RadialMenu
             {
                 var item = _items[_hoveredIndex];
 
+                // Locked sector: no action, no submenu — keep the wheel open.
+                if (item.Disabled) return;
+
                 if (item.SubItems?.Count > 0)
                 {
                     TryClose();
@@ -461,7 +464,7 @@ namespace ArcanumLib.Gui.RadialMenu
                 if (_hoveredIndex >= 0 && _hoveredIndex < _items.Count)
                 {
                     var item = _items[_hoveredIndex];
-                    if (item.Action != null)
+                    if (!item.Disabled && item.Action != null)
                         try { item.Action(); }
                         catch (Exception ex)
                         {

@@ -27,14 +27,19 @@ public static class ServerBroadcaster
     {
         if (sapi == null || channel == null) return;
 
-        var players = sapi.World?.AllOnlinePlayers?.ToList();
-        if (players == null || players.Count == 0) return;
+        var players = sapi.World?.AllOnlinePlayers;
+        if (players == null || players.Length == 0) return;
 
-        for (int i = 0; i < players.Count; i++)
+        // One call for all recipients: the packet is serialized once, not once per player.
+        var targets = new List<IServerPlayer>(players.Length);
+        for (int i = 0; i < players.Length; i++)
         {
             if (players[i] is IServerPlayer sp)
-                channel.SendPacket(packet, sp);
+                targets.Add(sp);
         }
+
+        if (targets.Count > 0)
+            channel.SendPacket(packet, targets.ToArray());
     }
 
     /// <summary>
@@ -53,14 +58,18 @@ public static class ServerBroadcaster
     {
         if (sapi == null || channel == null || predicate == null) return;
 
-        var players = sapi.World?.AllOnlinePlayers?.ToList();
-        if (players == null || players.Count == 0) return;
+        var players = sapi.World?.AllOnlinePlayers;
+        if (players == null || players.Length == 0) return;
 
-        for (int i = 0; i < players.Count; i++)
+        var targets = new List<IServerPlayer>(players.Length);
+        for (int i = 0; i < players.Length; i++)
         {
             if (players[i] is IServerPlayer sp && predicate(sp))
-                channel.SendPacket(packet, sp);
+                targets.Add(sp);
         }
+
+        if (targets.Count > 0)
+            channel.SendPacket(packet, targets.ToArray());
     }
 
     /// <summary>

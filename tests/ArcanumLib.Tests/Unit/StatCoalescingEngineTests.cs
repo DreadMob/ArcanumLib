@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Linq;
 using ArcanumLib.Core;
 using ArcanumLib.Performance;
 using NSubstitute;
@@ -199,6 +200,54 @@ public class StatCoalescingEngineTests : IDisposable
         _engine.IsEnabled = false;
         var ex = Record.Exception(() => _engine.ForceFlush(_sapi, 42));
         Assert.Null(ex);
+    }
+
+    [Fact]
+    public void ForceFlush_Applies_All_Stats_As_Persistent()
+    {
+        _engine.Start(_sapi);
+        var player = CreatePlayer(42);
+        _world.GetEntityById(42L).Returns(player);
+
+        _engine.QueueStatUpdates(_sapi, player, new Dictionary<string, float>
+        {
+            ["walkspeed"] = -0.1f,
+            ["hungerrate"] = -0.2f,
+            ["healingeffectivness"] = 0.15f,
+        }, "vsquestmod");
+
+        _engine.ForceFlush(_sapi, 42);
+
+        Assert.Equal(0, _engine.GetPendingUpdateCount());
+
+        // Every stat in the batch must land AND be persistent — previously only the
+        // last entry in a batch was passed persistent=true, so the rest could be
+        // dropped from disk saves.
+        var stats = player.Stats.ToDictionary(kv => kv.Key, kv => kv.Value);
+        foreach (var statName in new[] { "walkspeed", "hungerrate", "healingeffectivness" })
+        {
+            Assert.True(stats.TryGetValue(statName, out var floatStats), $"missing stat {statName}");
+            Assert.True(floatStats.ValuesByKey.TryGetValue("vsquestmod", out var entry), $"missing vsquestmod on {statName}");
+            Assert.True(entry!.Persistent, $"vsquestmod on {statName} is not persistent");
+        }
+    }
+
+    [Fact]
+    public void PlayerDisconnect_Flushes_Pending_Stats_Instead_Of_Dropping()
+    {
+        _engine.Start(_sapi);
+        var player = CreatePlayer(43);
+        _world.GetEntityById(43L).Returns(player);
+
+        _engine.QueueStatUpdate(_sapi, player, "hungerrate", -0.3f, "vsquestmod");
+
+        // IServerPlayer cannot be proxied (internal members), so invoke the
+        // entity-id overload the event handler delegates to.
+        _engine.OnPlayerDisconnect(43);
+
+        Assert.False(_engine.HasPendingUpdates(43));
+        // 1 (base) + (-0.3)
+        Assert.Equal(0.7, player.Stats.GetBlended("hungerrate"), 4);
     }
 
     private static EntityPlayer CreatePlayer(long entityId)

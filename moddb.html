@@ -1,0 +1,108 @@
+<!--
+  Arcanum Lib — описание для mods.vintagestory.at (текущий текст страницы + блок ссылок на моды Alegacy).
+  Ссылки ALEGACY_ATTIRE_URL / ALEGACY_CLAIMS_URL — заглушки: заменить после публикации модов на ModDB.
+-->
+<div style="background: #0f0e0d; border: 1px solid #2d2621; border-left: 3px solid #7e6b4d; padding: 18px 20px; border-radius: 0 4px 4px 0; margin-bottom: 20px; color: #e3dac6; line-height: 1.75; font-size: 0.95em;">
+<p style="margin: 0;"><strong style="color: #bfa77a;">Note.</strong> ArcanumLib is a utility library, not a standalone mod. Useful functions are available for any Vintage Story mod, but the API is driven by the Alegacy project set.</p>
+</div>
+<div style="background: #0f0e0d; border: 1px solid #2d2621; border-left: 3px solid #7e6b4d; padding: 18px 20px; border-radius: 0 4px 4px 0; margin-bottom: 20px; color: #e3dac6; line-height: 1.75; font-size: 0.95em;">
+<p style="margin: 0 0 12px; color: #bfa77a; font-weight: bold; font-size: 1.05em;">What it is</p>
+<p style="margin: 0 0 12px;">ArcanumLib is a low-level, instance-based shared layer for Vintage Story. Its strongest parts are the HUD/GUI, hologram, status-effect and particle systems — but it also covers persistence, events, actions, scheduling, networking and small utilities. It is the common ground under the Alegacy mods.</p>
+<p style="margin: 0;">Arcanum Lib will keep expanding with new helpers and systems. If you have an idea, a missing utility, or a whole subsystem in mind, suggest it in our <a style="color: #bfa77a; text-decoration: none; font-weight: bold;" href="https://discord.gg/uvybdcAdV8">Discord</a> — we will implement it.</p>
+</div>
+<div style="background: #0f0e0d; border: 1px solid #2d2621; border-left: 3px solid #7e6b4d; padding: 18px 20px; border-radius: 0 4px 4px 0; margin-bottom: 20px; color: #e3dac6; line-height: 1.75; font-size: 0.95em;">
+<p style="margin: 0 0 12px; color: #bfa77a; font-weight: bold; font-size: 1.05em;">What it is not</p>
+<ul style="margin: 0; padding-left: 18px;">
+<li>It does not add blocks, items, creatures, or gameplay on its own.</li>
+<li>It is not a high-level framework that writes a mod for you.</li>
+<li>It is not a guaranteed-stable public SDK.</li>
+</ul>
+</div>
+<div style="background: #0f0e0d; border: 1px solid #2d2621; border-left: 3px solid #7e6b4d; padding: 18px 20px; border-radius: 0 4px 4px 0; margin-bottom: 20px; color: #e3dac6; line-height: 1.75; font-size: 0.95em;">
+<p style="margin: 0 0 12px; color: #bfa77a; font-weight: bold; font-size: 1.05em;">Capabilities</p>
+<div style="display: flex; gap: 12px; flex-wrap: wrap;">
+<div style="flex: 1 1 200px; background: #0c0b0a; border: 1px solid #2d2621; border-radius: 4px; padding: 12px 14px;">
+<p style="margin: 0 0 8px; color: #4aa8d8; font-weight: bold; font-size: 0.9em;">GUI &amp; HUD</p>
+<p style="margin: 0; color: #a8a095; font-size: 0.82em; line-height: 1.55;">HudPanel, HudDialog, PacketIconHud, TransientOverlay</p>
+</div>
+<div style="flex: 1 1 200px; background: #0c0b0a; border: 1px solid #2d2621; border-radius: 4px; padding: 12px 14px;">
+<p style="margin: 0 0 8px; color: #3bc98c; font-weight: bold; font-size: 0.9em;">Map &amp; chunk grid</p>
+<p style="margin: 0; color: #a8a095; font-size: 0.82em; line-height: 1.55;">ChunkTerrainSource, GuiElementChunkGrid</p>
+</div>
+<div style="flex: 1 1 200px; background: #0c0b0a; border: 1px solid #2d2621; border-radius: 4px; padding: 12px 14px;">
+<p style="margin: 0 0 8px; color: #7c6bd2; font-weight: bold; font-size: 0.9em;">Holograms</p>
+<p style="margin: 0; color: #a8a095; font-size: 0.82em; line-height: 1.55;">SingleHologramRenderer, AreaHologramRenderer</p>
+</div>
+<div style="flex: 1 1 200px; background: #0c0b0a; border: 1px solid #2d2621; border-radius: 4px; padding: 12px 14px;">
+<p style="margin: 0 0 8px; color: #34c3d4; font-weight: bold; font-size: 0.9em;">Particles</p>
+<p style="margin: 0; color: #a8a095; font-size: 0.82em; line-height: 1.55;">ParticleEffectBuilder, ParticleUtils.Colors</p>
+</div>
+<div style="flex: 1 1 200px; background: #0c0b0a; border: 1px solid #2d2621; border-radius: 4px; padding: 12px 14px;">
+<p style="margin: 0 0 8px; color: #c95454; font-weight: bold; font-size: 0.9em;">Status &amp; Effects</p>
+<p style="margin: 0; color: #a8a095; font-size: 0.82em; line-height: 1.55;">StatusEffectService, IStatusEffect, StatModifierEffect</p>
+</div>
+<div style="flex: 1 1 200px; background: #0c0b0a; border: 1px solid #2d2621; border-radius: 4px; padding: 12px 14px;">
+<p style="margin: 0 0 8px; color: #4aa8d8; font-weight: bold; font-size: 0.9em;">Persistence</p>
+<p style="margin: 0; color: #a8a095; font-size: 0.82em; line-height: 1.55;">ModDataStore, IModDataStore&lt;T&gt;, versioned JSON, migrations</p>
+</div>
+<div style="flex: 1 1 200px; background: #0c0b0a; border: 1px solid #2d2621; border-radius: 4px; padding: 12px 14px;">
+<p style="margin: 0 0 8px; color: #3bc98c; font-weight: bold; font-size: 0.9em;">Events &amp; Actions</p>
+<p style="margin: 0; color: #a8a095; font-size: 0.82em; line-height: 1.55;">EventBusService, ActionRegistryService, ActionExecutorService</p>
+</div>
+<div style="flex: 1 1 200px; background: #0c0b0a; border: 1px solid #2d2621; border-radius: 4px; padding: 12px 14px;">
+<p style="margin: 0 0 8px; color: #d69e34; font-weight: bold; font-size: 0.9em;">Scheduling</p>
+<p style="margin: 0; color: #a8a095; font-size: 0.82em; line-height: 1.55;">DeferredWorkService, GameTimeScheduler</p>
+</div>
+<div style="flex: 1 1 200px; background: #0c0b0a; border: 1px solid #2d2621; border-radius: 4px; padding: 12px 14px;">
+<p style="margin: 0 0 8px; color: #34c3d4; font-weight: bold; font-size: 0.9em;">Network</p>
+<p style="margin: 0; color: #a8a095; font-size: 0.82em; line-height: 1.55;">TypedNetworkChannel, ServerBroadcaster</p>
+</div>
+<div style="flex: 1 1 200px; background: #0c0b0a; border: 1px solid #2d2621; border-radius: 4px; padding: 12px 14px;">
+<p style="margin: 0 0 8px; color: #bfa77a; font-weight: bold; font-size: 0.9em;">Helpers</p>
+<p style="margin: 0; color: #a8a095; font-size: 0.82em; line-height: 1.55;">ApiExtensions, PositionUtils, CollectibleNameResolver, DamageHelper</p>
+</div>
+<div style="flex: 1 1 200px; background: #0c0b0a; border: 1px solid #2d2621; border-radius: 4px; padding: 12px 14px;">
+<p style="margin: 0 0 8px; color: #4aa8d8; font-weight: bold; font-size: 0.9em;">Lifecycle</p>
+<p style="margin: 0; color: #a8a095; font-size: 0.82em; line-height: 1.55;">ArcanumRuntime, ArcanumServices, ArcanumLibModSystem</p>
+</div>
+</div>
+</div>
+<div style="background: #0f0e0d; border: 1px solid #2d2621; border-left: 3px solid #7e6b4d; padding: 18px 20px; border-radius: 0 4px 4px 0; margin-bottom: 20px; color: #e3dac6; line-height: 1.75; font-size: 0.95em;">
+<p style="margin: 0 0 12px; color: #bfa77a; font-weight: bold; font-size: 1.05em;">Who should use it</p>
+<p style="margin: 0;">Useful for any Vintage Story mod that needs the listed systems. The defaults and examples are oriented toward the Alegacy mods, so expect the API to move as those projects evolve.</p>
+</div>
+<div style="background: #0f0e0d; border: 1px solid #2d2621; border-left: 3px solid #7e6b4d; padding: 18px 20px; border-radius: 0 4px 4px 0; margin-bottom: 20px; color: #e3dac6; line-height: 1.75; font-size: 0.95em;">
+<p style="margin: 0 0 12px; color: #bfa77a; font-weight: bold; font-size: 1.05em;">Quick examples</p>
+<div style="display: flex; gap: 12px; flex-wrap: wrap;">
+<div style="flex: 1 1 280px; background: #0c0b0a; border: 1px solid #2d2621; border-radius: 4px; padding: 14px; color: #d4c9b8; font-family: 'Courier New', monospace; font-size: 0.85em; line-height: 1.6;">using ArcanumLib.Persistence;<br><br>var store = ModDataStore.GetOrCreate&lt;MySaveData&gt;(sapi, "mymod", "state", 1);<br>store.Data.Counter++;<br>store.MarkDirty();</div>
+<div style="flex: 1 1 280px; background: #0c0b0a; border: 1px solid #2d2621; border-radius: 4px; padding: 14px; color: #d4c9b8; font-family: 'Courier New', monospace; font-size: 0.85em; line-height: 1.6;">using ArcanumLib.Effects;<br><br>var svc = ArcanumServices.Get&lt;StatusEffectService&gt;()!;<br>var effect = new StatModifierEffect("mymod:swiftness", "walkspeed", 1.5f);<br>svc.Apply(entity, effect, durationMs: 10000, data: null);</div>
+<div style="flex: 1 1 280px; background: #0c0b0a; border: 1px solid #2d2621; border-radius: 4px; padding: 14px; color: #d4c9b8; font-family: 'Courier New', monospace; font-size: 0.85em; line-height: 1.6;">using ArcanumLib.Particles;<br><br>var p = new ParticleEffectBuilder()<br>&nbsp;&nbsp;.Count(8, 16)<br>&nbsp;&nbsp;.Color(ParticleUtils.Colors.Fire)<br>&nbsp;&nbsp;.Position(pos, 0.5f)<br>&nbsp;&nbsp;.VelocityUp(0.2f, 0.6f)<br>&nbsp;&nbsp;.Life(0.8f)<br>&nbsp;&nbsp;.Gravity(-0.02f)<br>&nbsp;&nbsp;.Size(0.25f, 0.1f)<br>&nbsp;&nbsp;.Quad()<br>&nbsp;&nbsp;.Build();<br>capi.World.SpawnParticles(p);</div>
+</div>
+</div>
+<div style="background: #0f0e0d; border: 1px solid #2d2621; border-left: 3px solid #7e6b4d; padding: 18px 20px; border-radius: 0 4px 4px 0; margin-bottom: 20px; color: #e3dac6; line-height: 1.75; font-size: 0.95em;">
+<p style="margin: 0 0 12px; color: #bfa77a; font-weight: bold; font-size: 1.05em;">How to reference</p>
+<p style="margin: 0;">Add <code style="background: #1a1917; padding: 1px 5px; border-radius: 3px; color: #d4c9b8;">ArcanumLib.dll</code> as a dependency. Ensure <code style="background: #1a1917; padding: 1px 5px; border-radius: 3px; color: #d4c9b8;">ArcanumLibModSystem</code> loads before your mod system, then resolve services through <code style="background: #1a1917; padding: 1px 5px; border-radius: 3px; color: #d4c9b8;">ArcanumServices.Get&lt;T&gt;()</code> or <code style="background: #1a1917; padding: 1px 5px; border-radius: 3px; color: #d4c9b8;">ArcanumRuntime.Current.Services</code>.</p>
+</div>
+<div style="background: #0f0e0d; border: 1px solid #2d2621; border-left: 3px solid #7e6b4d; padding: 18px 20px; border-radius: 0 4px 4px 0; margin-bottom: 20px; color: #e3dac6; line-height: 1.75; font-size: 0.95em;">
+<p style="margin: 0 0 12px; color: #bfa77a; font-weight: bold; font-size: 1.05em;">More from Alegacy</p>
+<p style="margin: 0 0 14px;">Made for and used on the <a style="color: #bfa77a; text-decoration: none; font-weight: bold;" href="https://alegacy.online/">Alegacy server</a>.</p>
+<div style="display: flex; gap: 12px; flex-wrap: wrap;">
+<div style="flex: 1 1 200px; background: #0c0b0a; border: 1px solid #2d2621; border-radius: 4px; padding: 12px 14px;">
+<p style="margin: 0 0 8px; color: #bfa77a; font-weight: bold; font-size: 0.9em;"><a style="color: #bfa77a; text-decoration: none;" href="https://mods.vintagestory.at/alegacyquestframework">Alegacy Quest Framework</a></p>
+<p style="margin: 0; color: #a8a095; font-size: 0.82em; line-height: 1.55;">Quests, NPC dialogue, encounters and bosses.</p>
+</div>
+<div style="flex: 1 1 200px; background: #0c0b0a; border: 1px solid #2d2621; border-radius: 4px; padding: 12px 14px;">
+<p style="margin: 0 0 8px; color: #c95454; font-weight: bold; font-size: 0.9em;"><a style="color: #c95454; text-decoration: none;" href="ALEGACY_ATTIRE_URL">Alegacy Attire</a></p>
+<p style="margin: 0; color: #a8a095; font-size: 0.82em; line-height: 1.55;">Over a hundred clothing sets, sewn on a tailoring loom from patterns.</p>
+</div>
+<div style="flex: 1 1 200px; background: #0c0b0a; border: 1px solid #2d2621; border-radius: 4px; padding: 12px 14px;">
+<p style="margin: 0 0 8px; color: #3bc98c; font-weight: bold; font-size: 0.9em;"><a style="color: #3bc98c; text-decoration: none;" href="ALEGACY_CLAIMS_URL">Alegacy Claims</a></p>
+<p style="margin: 0; color: #a8a095; font-size: 0.82em; line-height: 1.55;">Chunk land claims managed through a window with a map.</p>
+</div>
+</div>
+<p style="margin: 14px 0 0;"><a style="display: inline-block; background: #7e6b4d; color: #0c0b0a; padding: 10px 18px; border-radius: 4px; text-decoration: none; font-weight: bold; font-size: 0.95em; margin: 0 8px 8px 0;" href="https://alegacy.online/">Alegacy Server</a> <a style="display: inline-block; background: #bfa77a; color: #0c0b0a; padding: 10px 18px; border-radius: 4px; text-decoration: none; font-weight: bold; font-size: 0.95em; margin: 0 8px 8px 0;" href="https://mods.vintagestory.at/alegacyquestframework">Alegacy Quest Framework</a> <a style="display: inline-block; background: #c95454; color: #0c0b0a; padding: 10px 18px; border-radius: 4px; text-decoration: none; font-weight: bold; font-size: 0.95em; margin: 0 8px 8px 0;" href="ALEGACY_ATTIRE_URL">Alegacy Attire</a> <a style="display: inline-block; background: #3bc98c; color: #0c0b0a; padding: 10px 18px; border-radius: 4px; text-decoration: none; font-weight: bold; font-size: 0.95em; margin: 0 8px 8px 0;" href="ALEGACY_CLAIMS_URL">Alegacy Claims</a></p>
+</div>
+<div style="background: #0f0e0d; border: 1px solid #2d2621; border-left: 3px solid #7e6b4d; padding: 18px 20px; border-radius: 0 4px 4px 0; margin-bottom: 20px; color: #e3dac6; line-height: 1.75; font-size: 0.95em;">
+<p style="margin: 0 0 12px; color: #bfa77a; font-weight: bold; font-size: 1.05em;">Documentation</p>
+<p style="margin: 0;">API docs are in the release archive and online at <a style="color: #bfa77a; text-decoration: none;" href="https://dreadmob.github.io/ArcanumLib/">dreadmob.github.io/ArcanumLib</a>.</p>
+</div>

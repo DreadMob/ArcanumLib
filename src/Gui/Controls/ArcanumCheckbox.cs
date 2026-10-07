@@ -89,8 +89,10 @@ public class ArcanumCheckbox : GuiElement
     /// <inheritdoc />
     public override void OnMouseUp(ICoreClientAPI api, MouseEvent args)
     {
-        if (pressed) { pressed = false; cacheKey = null; }
+        // base first: it routes to OnMouseUpOnElement, which needs `pressed` to still be set —
+        // clearing it beforehand swallowed every click
         base.OnMouseUp(api, args);
+        if (pressed) { pressed = false; cacheKey = null; }
     }
 
     /// <inheritdoc />
