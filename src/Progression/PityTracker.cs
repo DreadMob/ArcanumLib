@@ -116,12 +116,49 @@ namespace ArcanumLib.Progression
 
             _store.RegisterMigration(1, NormalizeCounterKeys);
             Initialize();
+
+            if (sapi != null)
+            {
+                ArcanumLib.PlayerTransfer.PlayerDataTransfer.Register("pity", ctx =>
+                {
+                    lock (_syncLock)
+                    {
+                        if (ArcanumLib.PlayerTransfer.PlayerDataMerge.MoveEntry(_store.Data, ctx.FromUid, ctx.ToUid, MergePity))
+                        {
+                            _store.MarkDirty();
+                            ctx.Note("pity", "counters merged");
+                        }
+                    }
+                });
+            }
         }
 
         /// <summary>
         /// Registers an additional legacy savegame key to check during initialization.
         /// </summary>
         /// <param name="key">The key to look up.</param>
+        /// <summary>Total opens add up; progress towards each quality keeps the larger, so merging never hands out a free guarantee.</summary>
+        private static PityPlayerData MergePity(PityPlayerData target, PityPlayerData source)
+        {
+            target ??= new PityPlayerData();
+            if (source?.counters == null) return target;
+            target.counters ??= new Dictionary<string, PityCounters>(StringComparer.OrdinalIgnoreCase);
+            foreach (var kv in source.counters)
+            {
+                if (kv.Value == null) continue;
+                if (!target.counters.TryGetValue(kv.Key, out var t) || t == null)
+                {
+                    target.counters[kv.Key] = kv.Value;
+                    continue;
+                }
+                t.totalOpens += kv.Value.totalOpens;
+                t.opensSinceQuality ??= new Dictionary<int, int>();
+                foreach (var q in kv.Value.opensSinceQuality ?? new Dictionary<int, int>())
+                    t.opensSinceQuality[q.Key] = t.opensSinceQuality.TryGetValue(q.Key, out int cur) ? Math.Max(cur, q.Value) : q.Value;
+            }
+            return target;
+        }
+
         public void AddLegacyFallbackKey(string key)
         {
             if (string.IsNullOrWhiteSpace(key)) return;

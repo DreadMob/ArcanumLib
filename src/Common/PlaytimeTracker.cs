@@ -104,6 +104,29 @@ namespace ArcanumLib.Common
             _ = _store.Data; // force load
             MigrateFromLegacyFile();
 
+            // Account transfer: total and per-day time add up, first join keeps the earlier date.
+            ArcanumLib.PlayerTransfer.PlayerDataTransfer.Register("playtime", ctx =>
+            {
+                var players = _store.Data.Players;
+
+                // The source's running session is not in its total yet: bank it first, then let the
+                // session restart now so nothing played before the transfer stays behind.
+                long now = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+                if (_playerSessionStartMs.TryGetValue(ctx.FromUid, out long startMs))
+                {
+                    var src = GetOrCreateData(ctx.FromUid);
+                    src.TotalMs += now - startMs;
+                    AccumulateDaily(src, startMs, now);
+                    _playerSessionStartMs[ctx.FromUid] = now;
+                }
+
+                if (ArcanumLib.PlayerTransfer.PlayerDataMerge.MoveEntry(players, ctx.FromUid, ctx.ToUid))
+                {
+                    _store.MarkDirty();
+                    ctx.Note("playtime", $"{GetPlaytimeHours(ctx.ToUid):0.#} h total now");
+                }
+            });
+
             _events = sapi.CreateEventScope()
                 .Add(() => sapi.Event.PlayerJoin += OnPlayerJoin, () => sapi.Event.PlayerJoin -= OnPlayerJoin)
                 .Add(() => sapi.Event.PlayerLeave += OnPlayerLeave, () => sapi.Event.PlayerLeave -= OnPlayerLeave)
