@@ -162,7 +162,8 @@ namespace ArcanumLib.Gui.RadialMenu
                 y += (float)ext.Height + LineSpacing;
             }
 
-            if (!string.IsNullOrWhiteSpace(item.Description))
+            // a description that only repeats the label is noise — show it only when it says something more
+            if (!string.IsNullOrWhiteSpace(item.Description) && !string.Equals(item.Description.Trim(), item.Label?.Trim(), StringComparison.OrdinalIgnoreCase))
             {
                 ctx.SelectFontFace("sans-serif", FontSlant.Normal, FontWeight.Normal);
                 ctx.SetFontSize(DescriptionFontSize * radiusScale);

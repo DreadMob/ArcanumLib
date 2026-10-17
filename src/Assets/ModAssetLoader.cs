@@ -109,9 +109,11 @@ public static class ModAssetLoader
         var mods = api.ModLoader?.Mods;
         if (mods == null) yield break;
 
+        var modIds = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
         foreach (var mod in mods)
         {
             if (mod?.Info?.ModID == null) continue;
+            modIds.Add(mod.Info.ModID);
             if (sourceModId != null && !string.Equals(mod.Info.ModID, sourceModId, StringComparison.OrdinalIgnoreCase)) continue;
 
             IReadOnlyDictionary<AssetLocation, T>? assets;
@@ -133,6 +135,58 @@ public static class ModAssetLoader
                 yield return new ModAsset<T>(kvp.Value, kvp.Key, mod.Info.ModID);
             }
         }
+
+        // A mod may ship extra asset domains (albase -> assets/alegacyevents/). They match no
+        // mod id, so scan them separately; the domain stands in for the source mod id.
+        foreach (string domain in ExtraDomains(api, assetPath, modIds))
+        {
+            if (sourceModId != null && !string.Equals(domain, sourceModId, StringComparison.OrdinalIgnoreCase)) continue;
+
+            IReadOnlyDictionary<AssetLocation, T>? assets;
+            try
+            {
+                assets = api.Assets.GetMany<T>(api.Logger, assetPath, domain);
+            }
+            catch (Exception ex)
+            {
+                api.Logger?.Warning("[ArcanumLib] Failed to scan '{0}' from domain '{1}': {2}", assetPath, domain, ex.Message);
+                continue;
+            }
+
+            if (assets == null) continue;
+
+            foreach (var kvp in assets)
+            {
+                if (kvp.Value is null) continue;
+                yield return new ModAsset<T>(kvp.Value, kvp.Key, domain);
+            }
+        }
+    }
+
+    private static List<string> ExtraDomains(ICoreAPI api, string assetPath, HashSet<string> modIds)
+    {
+        var result = new List<string>();
+        List<IAsset>? all;
+        try
+        {
+            all = api.Assets.GetMany(assetPath, null, loadAsset: false);
+        }
+        catch
+        {
+            return result;
+        }
+
+        if (all == null) return result;
+
+        foreach (var asset in all)
+        {
+            string? domain = asset?.Location?.Domain;
+            if (string.IsNullOrEmpty(domain) || modIds.Contains(domain) || result.Contains(domain, StringComparer.OrdinalIgnoreCase)) continue;
+            result.Add(domain);
+        }
+
+        result.Sort(StringComparer.OrdinalIgnoreCase);
+        return result;
     }
 
     /// <summary>
