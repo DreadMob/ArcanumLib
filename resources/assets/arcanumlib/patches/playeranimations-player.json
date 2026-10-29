@@ -1,0 +1,10 @@
+[
+  {
+    "op": "addmerge",
+    "file": "game:entities/humanoid/player.json",
+    "path": "/client/behaviors",
+    "value": [
+      { "code": "alegacyplayeranimations" }
+    ]
+  }
+]
