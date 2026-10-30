@@ -207,9 +207,15 @@ public class ArcanumTextInput : GuiElement
                     }
                     break;
                 }
-            default:
+            case GlKeys.Tab when !multiline:
+            case GlKeys.Escape:
                 base.OnKeyDown(api, args);
                 return;
+            default:
+                // Like vanilla text inputs: while typing, every other key
+                // stays in the field — otherwise WASD/Space also walk and
+                // jump the player.
+                break;
         }
         args.Handled = true;
     }

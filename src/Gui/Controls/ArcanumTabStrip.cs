@@ -203,8 +203,11 @@ public class ArcanumTabStrip : GuiElement
                 var ext = ctx.TextExtents(names[i]);
                 var tc = active ? p.TextPrimary : hov ? p.TextPrimary : p.TextSecondary;
                 ctx.SetSourceRGBA(tc.R, tc.G, tc.B, tc.A * dim);
+                // Baseline from the font, not each label's ink: centring by ink
+                // put labels with and without descenders at different heights.
+                var fe = ctx.FontExtents;
                 ctx.MoveTo(tx + (tw - ext.Width) / 2.0 - ext.XBearing,
-                           (h - ext.Height) / 2.0 - ext.YBearing);
+                           (h + fe.Ascent - fe.Descent) / 2.0);
                 ctx.ShowText(names[i]);
                 ctx.Restore();
             }
