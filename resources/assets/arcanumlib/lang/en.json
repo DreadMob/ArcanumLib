@@ -1,0 +1,6 @@
+{
+ "clock-settings-title": "Clock Chime Hours",
+ "clock-settings-hint": "Click a clock hand to toggle the chime hour.",
+ "clock-hour-active": "active",
+ "clock-hour-inactive": "inactive"
+}
