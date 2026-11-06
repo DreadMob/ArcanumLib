@@ -69,6 +69,21 @@ public static class ImageIconCache
     }
 
     /// <summary>
+    /// Drops one cached surface. For large images (book pages, full-screen art) that would otherwise stay in
+    /// memory for the whole session — call it when the image goes off screen.
+    /// </summary>
+    /// <param name="assetPath">The asset path value.</param>
+    public static void Evict(string assetPath)
+    {
+        if (string.IsNullOrWhiteSpace(assetPath)) return;
+        if (_surfaces.TryRemove(assetPath, out var s))
+        {
+            try { s?.Dispose(); }
+            catch (Exception ex) { _capi?.Logger.Warning("[ImageIconCache] surface dispose error: {0}", ex.Message); }
+        }
+    }
+
+    /// <summary>
     /// Pre-loads an icon surface so the first paint does not stall the render thread.
     /// </summary>
     /// <param name="assetPath">The asset path value.</param>

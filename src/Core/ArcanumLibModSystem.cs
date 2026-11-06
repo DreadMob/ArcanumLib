@@ -7,6 +7,7 @@ using ArcanumLib.Logging;
 using ArcanumLib.Persistence;
 using ArcanumLib.Performance;
 using ArcanumLib.Rendering;
+using ArcanumLib.Rendering.Glass;
 using Vintagestory.API.Client;
 using Vintagestory.API.Common;
 using Vintagestory.API.Server;
@@ -76,6 +77,7 @@ public class ArcanumLibModSystem : ModSystem
         _runtime.Services.Register<ICoreAPI>(capi, ArcanumServiceScope.Client);
         _runtime.Services.Register<ICoreAPI>(capi, ArcanumServiceScope.Global);
         _runtime.Services.Register<ICoreClientAPI>(capi, ArcanumServiceScope.Client);
+        capi.RegisterEntityRendererClass(GlassEntityShapeRenderer.ClassName, typeof(GlassEntityShapeRenderer));
         ImageIconCache.Init(capi);
         CustomTabIconRenderer.RegisterGenericIcons();
         GroundStorageCullFacesPatch.Apply();

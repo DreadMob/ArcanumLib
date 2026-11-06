@@ -75,6 +75,16 @@ public class ArcanumTextInput : GuiElement
         cacheKey = null;
     }
 
+    /// <summary>Set text without firing the change callback; <paramref name="caretToEnd"/> puts the caret after
+    /// the last character (restoring a field after its dialog was recomposed mid-typing).</summary>
+    public void SetValue(string newText, bool caretToEnd)
+    {
+        SetValue(newText);
+        if (!caretToEnd) return;
+        caret = text.Length;
+        selStart = selEnd = caret;
+    }
+
     /// <inheritdoc />
     public override void ComposeElements(Context ctxStatic, ImageSurface surfaceStatic) { }
 

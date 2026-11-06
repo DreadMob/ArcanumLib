@@ -38,6 +38,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Fixed
 
+- Drivable step-up: the hop keeps a minimum forward speed and does not brake for its whole duration, so slow-accelerating vehicles clear the step instead of falling back.
 - `ArcanumCheckbox` ignored every click: `OnMouseUp` cleared the pressed flag before the base call routed to `OnMouseUpOnElement`, which needs it.
 - `ArcanumDropdown` menu opened at the wrong spot and oversized at GUI scale ≠ 1 (screen px were passed to `ElementBounds.Fixed` and scaled twice).
 - `ModConfig.Save()` passed `StoreModConfig` arguments in the wrong order and never wrote the config file.

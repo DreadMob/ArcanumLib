@@ -485,13 +485,31 @@ internal sealed class DiagnosticsReporter
         {
             string instPre = installed.Substring(installed.IndexOf('-') + 1);
             string reqPre = required.Substring(required.IndexOf('-') + 1);
-            return string.Compare(instPre, reqPre, StringComparison.OrdinalIgnoreCase) >= 0;
+            return ComparePreRelease(instPre, reqPre) >= 0;
         }
         // If required is release and installed is pre-release, installed is lower → not satisfied
         if (!requiredPre && installedPre) return false;
 
         // Both are release, equal versions → satisfied
         return true;
+    }
+
+    /// <summary>Semver pre-release order: dot-separated identifiers, numeric ones compared as numbers (rc.10 > rc.7).</summary>
+    private static int ComparePreRelease(string a, string b)
+    {
+        var aParts = a.Split('.');
+        var bParts = b.Split('.');
+        for (int i = 0; i < Math.Min(aParts.Length, bParts.Length); i++)
+        {
+            bool aNum = int.TryParse(aParts[i], out var aVal);
+            bool bNum = int.TryParse(bParts[i], out var bVal);
+            int cmp = aNum && bNum ? aVal.CompareTo(bVal)
+                : aNum ? -1
+                : bNum ? 1
+                : string.Compare(aParts[i], bParts[i], StringComparison.OrdinalIgnoreCase);
+            if (cmp != 0) return cmp;
+        }
+        return aParts.Length.CompareTo(bParts.Length);
     }
 
     private static bool TryParseVersion(string s, out int major, out int minor, out int patch)

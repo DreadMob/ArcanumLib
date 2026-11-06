@@ -31,9 +31,9 @@ public class GuiElementSlotWell : GuiElement
 }
 
 /// <summary>
-/// One interactive slot that renders its stack fitted INTO the cell —
-/// normalizes by the item's own guiTransform scale, so the huge vehicle-part
-/// models (scale ≈2.8) and the tiny vanilla ones render the same size.
+/// One interactive slot that renders its stack fitted INTO the cell by the
+/// size of its real model (<see cref="GuiItemFit"/>), so multi-block machines
+/// and flat plates both fill the cell and nothing spills out of it.
 /// Can carry a "ghost" stack: while the slot is empty the required part is
 /// drawn as a dimmed blueprint-line icon.
 /// </summary>
@@ -49,6 +49,9 @@ public class GuiElementFittedSlot : GuiElement
     private readonly ItemStack? _ghost;
     private ItemSlot? _ghostSlot;
     private readonly double _iconFrac;
+    private readonly int _quota;
+    private LoadedTexture? _countTex;
+    private string _countText = "";
 
     /// <param name="inv">Session inventory the slot lives in.</param>
     /// <param name="slotId">Slot index inside <paramref name="inv"/>.</param>
@@ -56,10 +59,12 @@ public class GuiElementFittedSlot : GuiElement
     /// <param name="ghost">Stack drawn dimmed while the slot is empty (the
     /// recipe's required component), or null for a plain slot.</param>
     /// <param name="iconFrac">Icon size as a fraction of the cell (0..1).</param>
+    /// <param name="quota">How many the recipe wants here: the count reads "have/quota". 0 = plain count.</param>
     public GuiElementFittedSlot(ICoreClientAPI capi, ElementBounds bounds,
         InventoryBase inv, int slotId, Action<object> sendPacket,
-        ItemStack? ghost = null, double iconFrac = 0.62) : base(capi, bounds)
+        ItemStack? ghost = null, double iconFrac = 0.62, int quota = 0) : base(capi, bounds)
     {
+        _quota = quota;
         _inv = inv;
         _slotId = slotId;
         _sendPacket = sendPacket;
@@ -67,24 +72,10 @@ public class GuiElementFittedSlot : GuiElement
         _iconFrac = iconFrac;
     }
 
-    /// <summary>Pixels the icon should occupy, normalized for the item's own
-    /// guiTransform scale — RenderItemstackToGui multiplies size by it, so we
-    /// divide it back out (worst axis wins).</summary>
-    private static float FitSize(ItemStack stack, double targetPx)
-    {
-        var sc = stack.Collectible?.GuiTransform?.ScaleXYZ;
-        float m = Math.Max(sc?.X ?? 1f, sc?.Y ?? 1f);
-        return (float)(targetPx / Math.Max(0.01f, m));
-    }
-
     public override void RenderInteractiveElements(float deltaTime)
     {
         var slot = _inv[_slotId];
         Bounds.CalcWorldBounds();
-        double cx = Bounds.absX + Bounds.OuterWidth / 2.0;
-        double cy = Bounds.absY + Bounds.OuterHeight / 2.0;
-        double target = Bounds.OuterWidth * _iconFrac;
-
         // Hover highlight, like vanilla slot grids.
         if (_hover)
             api.Render.RenderRectangle((float)Bounds.absX, (float)Bounds.absY, 50,
@@ -92,15 +83,41 @@ public class GuiElementFittedSlot : GuiElement
 
         if (slot.Itemstack != null)
         {
-            api.Render.RenderItemstackToGui(slot, cx, cy, 90,
-                FitSize(slot.Itemstack, target), -1, deltaTime);
+            GuiItemFit.Render(api, slot, Bounds, _iconFrac, -1, deltaTime, showStackSize: false);
         }
         else if (_ghost?.Collectible != null)
         {
             _ghostSlot ??= new DummySlot(_ghost);
-            api.Render.RenderItemstackToGui(_ghostSlot, cx, cy, 90,
-                FitSize(_ghost, target), GhostTint, false, false, false);
+            GuiItemFit.Render(api, _ghostSlot, Bounds, _iconFrac, GhostTint, deltaTime, shading: false, showStackSize: false);
         }
+        RenderCount(slot.Itemstack?.StackSize ?? 0);
+    }
+
+    /// <summary>The count sits in the cell's own corner: the game's stack number follows the fitted icon and
+    /// falls outside the clip of a small well.</summary>
+    private void RenderCount(int have)
+    {
+        if (GuiOccluders.Covers(Bounds)) return;
+        string text = _quota > 0 ? $"{have}/{_quota}" : have > 1 ? have.ToString() : "";
+        if (text.Length == 0) return;
+        if (text != _countText || _countTex == null)
+        {
+            _countTex?.Dispose();
+            var font = CairoFont.WhiteSmallText().WithWeight(Cairo.FontWeight.Bold);
+            if (_quota > 0 && have < _quota) font = font.WithColor(new[] { 0.95, 0.72, 0.45, 1.0 });
+            _countTex = api.Gui.TextTexture.GenUnscaledTextTexture(text, font);
+            _countText = text;
+        }
+        api.Render.Render2DLoadedTexture(_countTex,
+            (float)(Bounds.absX + Bounds.OuterWidth - _countTex.Width - scaled(2)),
+            (float)(Bounds.absY + Bounds.OuterHeight - _countTex.Height), 400);
+    }
+
+    public override void Dispose()
+    {
+        base.Dispose();
+        _countTex?.Dispose();
+        _countTex = null;
     }
 
     private static readonly int HoverTint = ColorUtil.ColorFromRgba(255, 255, 255, 50);

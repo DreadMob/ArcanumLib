@@ -92,6 +92,8 @@ public class GuiElementChunkGrid : GuiElement
     private bool dirty = true;
     private int bakedTerrainVersion = -1;
     private long lastBakeMs;
+    /// <summary>Full Cairo rebake while terrain tiles stream in — each bake repaints the whole map, so keep it rare.</summary>
+    private const int TerrainRebakeMs = 1000;
     private long lastRequestMs;
     private Vec2i? hover;
     private int hoverTexCell = -1;
@@ -282,7 +284,7 @@ public class GuiElementChunkGrid : GuiElement
                 if (MarkerPos?.Invoke() is { } mp && (Math.Abs(mp.X - markerBakedX) > 8 || Math.Abs(mp.Z - markerBakedZ) > 8)) dirty = true;
             }
             Terrain.Process(8);
-            if (Terrain.Version != bakedTerrainVersion && now - lastBakeMs > 200) dirty = true;
+            if (Terrain.Version != bakedTerrainVersion && now - lastBakeMs > TerrainRebakeMs) dirty = true;
         }
 
         if (dirty) { dirty = false; lastBakeMs = now; Bake(); }

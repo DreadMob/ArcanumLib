@@ -50,6 +50,8 @@ public class EntityBehaviorDrivable : EntityBehavior
 
     /// <summary>Minimum interval in seconds between two step-up assists.</summary>
     private const float StepUpCooldownSeconds = 0.25f;
+    /// <summary>Forward speed (blocks/s) a step-up hop starts with at least.</summary>
+    private const float StepCarrySpeed = 2.5f;
 
     /// <summary>Watched-attribute key holding <see cref="CurrentSpeed" />.</summary>
     private const string SpeedAttributeKey = "drivableSpeed";
@@ -295,14 +297,18 @@ public class EntityBehaviorDrivable : EntityBehavior
             }
         }
 
+        if (mountable is EntityBehaviorSeatable seatable)
+        {
+            // The seats alone decide: Controller is this behavior's own mirror, and reading it back kept a driver
+            // who left in control. The server skips physics and position packets for a player controller, so the
+            // machine froze where it stood, in mid-air too, with its wheels still turning.
+            if (!ReferenceEquals(seatable.Controller, controller)) seatable.Controller = controller;
+            return;
+        }
+
         // Custom IMountable implementations may expose a controller without seats.
         controller ??= mountable.Controller;
         controls ??= mountable.ControllingControls;
-
-        if (mountable is EntityBehaviorSeatable seatable && !ReferenceEquals(seatable.Controller, controller))
-        {
-            seatable.Controller = controller;
-        }
     }
 
     /// <summary>
@@ -443,7 +449,8 @@ public class EntityBehaviorDrivable : EntityBehavior
         // Skipped while a step-up arc is in flight - pressing the face mid-air is what
         // carries the vehicle over the lip.
         _climbTimer = Math.Max(0f, _climbTimer - dt);
-        bool climbing = _climbTimer > 0f && pos.Motion.Y > 0.005f;
+        // the whole hop counts — braking at the apex (Motion.Y ~ 0) dropped heavy vehicles back off the lip
+        bool climbing = _climbTimer > 0f;
         if (entity.CollidedHorizontally && !climbing)
         {
             _currentSpeed *= MathF.Pow(0.001f, dt);
@@ -478,8 +485,12 @@ public class EntityBehaviorDrivable : EntityBehavior
                 // Motion units: gravity is GravityPerSecond/60 per frame^2, so the
                 // impulse reaching height h is sqrt(2*g*h); a small margin clears
                 // the lip of the obstacle.
-                double impulse = Math.Sqrt(2.0 * GlobalConstants.GravityPerSecond / 60.0 * (lift + 0.12));
+                double impulse = Math.Sqrt(2.0 * GlobalConstants.GravityPerSecond / 60.0 * (lift + 0.25));
                 if (pos.Motion.Y < impulse) pos.Motion.Y = impulse;
+                // Pressing the face bled the drive speed to ~0; a slow-accelerating vehicle (steam tractor) then
+                // rose and fell back in place. Carry it over the lip with a minimum forward speed.
+                float carry = MathF.Min(StepCarrySpeed, _params.MaxSpeed * _maxSpeedFactor) * MathF.Sign(_throttleInput);
+                if (MathF.Abs(_currentSpeed) < MathF.Abs(carry)) _currentSpeed = carry;
                 _stepUpCooldown = StepUpCooldownSeconds;
                 _climbTimer = 0.6f;
             }
@@ -521,18 +532,41 @@ public class EntityBehaviorDrivable : EntityBehavior
     {
         var tester = entity.World.CollisionTester;
         var accessor = entity.World.BlockAccessor;
-        var box = entity.CollisionBox;
+        // Multibox vehicles collide with their own (long) boxes; entity.CollisionBox is a square
+        // hitboxSize.x footprint, so on a long vehicle heading along Z its front face sat short of
+        // the real one, never touched the step and the hop never fired.
+        var boxes = MultiBoxCollisionBoxes() ?? new[] { entity.CollisionBox };
         double ahead = 0.2 * MathF.Sign(_currentSpeed == 0f ? 1f : _currentSpeed);
         double dirX = GameMath.Sin(pos.Yaw) * ahead;
         double dirZ = GameMath.Cos(pos.Yaw) * ahead;
         var frontPos = new Vec3d(pos.X + dirX, pos.InternalY, pos.Z + dirZ);
-        if (!tester.IsColliding(accessor, box, frontPos, false)) return 0;
+        if (!AnyColliding(tester, accessor, boxes, frontPos)) return 0;
         for (double lift = 0.25; lift <= _params.StepUpMax + 0.001; lift += 0.25)
         {
             var testPos = new Vec3d(frontPos.X, frontPos.Y + lift, frontPos.Z);
-            if (!tester.IsColliding(accessor, box, testPos, false)) return lift;
+            if (!AnyColliding(tester, accessor, boxes, testPos)) return lift;
         }
         return 0;
+    }
+
+    private static bool AnyColliding(CollisionTester tester, IBlockAccessor accessor, Cuboidf[] boxes, Vec3d pos)
+    {
+        foreach (var box in boxes)
+        {
+            if (box != null && tester.IsColliding(accessor, box, pos, false)) return true;
+        }
+        return false;
+    }
+
+    private static readonly System.Reflection.FieldInfo? MultiBoxBoxesField =
+        typeof(EntityBehaviorPassivePhysicsMultiBox).GetField("CollisionBoxes",
+            System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Public);
+
+    /// <summary>The yaw-adjusted boxes the multibox physics actually collides with, or null.</summary>
+    private Cuboidf[]? MultiBoxCollisionBoxes()
+    {
+        if (_multiBoxPhysics == null) return null;
+        return MultiBoxBoxesField?.GetValue(_multiBoxPhysics) is Cuboidf[] { Length: > 0 } boxes ? boxes : null;
     }
 
     /// <summary>

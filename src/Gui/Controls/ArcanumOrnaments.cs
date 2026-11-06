@@ -82,6 +82,7 @@ public class GuiElementDialGauge : GuiElement
 {
     private readonly string caption;
     private readonly RGBA? needleColor;
+    private readonly RGBA? liquidColor;
     private double value;
 
     /// <summary>Current needle position, 0..1.</summary>
@@ -92,12 +93,15 @@ public class GuiElementDialGauge : GuiElement
     /// <param name="value">Initial needle position, 0..1.</param>
     /// <param name="caption">Small caption drawn under the dial center.</param>
     /// <param name="needleColor">Needle color override; default = palette accent.</param>
-    public GuiElementDialGauge(ICoreClientAPI capi, ElementBounds bounds, double value = 0, string caption = "", RGBA? needleColor = null)
+    /// <param name="liquidColor">Tank dials: fill the face from the bottom up to <paramref name="value"/> in this color.</param>
+    public GuiElementDialGauge(ICoreClientAPI capi, ElementBounds bounds, double value = 0, string caption = "", RGBA? needleColor = null,
+        RGBA? liquidColor = null)
         : base(capi, bounds)
     {
         this.value = Math.Clamp(value, 0, 1);
         this.caption = caption;
         this.needleColor = needleColor;
+        this.liquidColor = liquidColor;
     }
 
     /// <summary>Updates the needle position; takes effect on next recompose.</summary>
@@ -112,7 +116,7 @@ public class GuiElementDialGauge : GuiElement
         double w = Bounds.OuterWidth, h = Bounds.OuterHeight;
         double r = Math.Min(w, h) / 2 - scaled(2);
         double sc = scaled(1.0); // ui scale factor
-        ArcanumGuiTheme.DrawDialGauge(ctx, x + w / 2, y + h / 2, r, value, caption, sc, needleColor);
+        ArcanumGuiTheme.DrawDialGauge(ctx, x + w / 2, y + h / 2, r, value, caption, sc, needleColor, liquidColor);
     }
 }
 
@@ -246,6 +250,15 @@ public static class ArcanumOrnamentComposer
     public static GuiComposer AddDialGauge(this GuiComposer composer, ElementBounds bounds, double value = 0, string caption = "", string? key = null)
     {
         if (!composer.Composed) composer.AddStaticElement(new GuiElementDialGauge(composer.Api, bounds, value, caption), key);
+        return composer;
+    }
+
+    /// <summary>Adds a tank dial: the face fills from the bottom in <paramref name="liquidColor"/> up to the level.</summary>
+    public static GuiComposer AddLiquidDialGauge(this GuiComposer composer, ElementBounds bounds, double value, string caption,
+        RGBA liquidColor, string? key = null)
+    {
+        if (!composer.Composed)
+            composer.AddStaticElement(new GuiElementDialGauge(composer.Api, bounds, value, caption, null, liquidColor), key);
         return composer;
     }
 

@@ -626,7 +626,7 @@ namespace ArcanumLib.Gui.Theme
         /// under the hub. <paramref name="uiScale" /> multiplies all thickness/offset
         /// tokens so callers can render at any resolution.
         /// </summary>
-        public static void DrawDialGauge(Context ctx, double cx, double cy, double r, double value, string caption, double uiScale, RGBA? needleColor = null)
+        public static void DrawDialGauge(Context ctx, double cx, double cy, double r, double value, string caption, double uiScale, RGBA? needleColor = null, RGBA? liquidColor = null)
         {
             var p = Palette;
             double s(double v) => v * uiScale;
@@ -636,6 +636,25 @@ namespace ArcanumLib.Gui.Theme
             FillCircle(ctx, cx, cy, r, p.AccentSoft);
             FillCircle(ctx, cx, cy, r - s(2.5), p.SurfaceDeepest);
             StrokeCircle(ctx, cx, cy, r - s(2.5), p.BorderSilver.WithAlpha(0.5), s(0.8));
+
+            // Tank dials: the face fills from the bottom like a sight glass, so the level reads at a glance.
+            if (liquidColor is { } lc && value > 0)
+            {
+                double rf = r - s(3.0);
+                double top = cy + rf - 2 * rf * value;
+                ctx.Save();
+                ctx.Arc(cx, cy, rf, 0, Math.PI * 2);
+                ctx.Clip();
+                ctx.Rectangle(cx - rf, top, rf * 2, cy + rf - top);
+                ctx.SetSourceRGBA(lc.R, lc.G, lc.B, lc.A * 0.55);
+                ctx.Fill();
+                ctx.SetSourceRGBA(Math.Min(1, lc.R + 0.25), Math.Min(1, lc.G + 0.25), Math.Min(1, lc.B + 0.25), 0.85);
+                ctx.LineWidth = s(1.0);
+                ctx.MoveTo(cx - rf, top);
+                ctx.LineTo(cx + rf, top);
+                ctx.Stroke();
+                ctx.Restore();
+            }
 
             // Tick arc: 270° sweep from bottom-left to bottom-right.
             double a0 = Math.PI * 0.75, a1 = Math.PI * 2.25;
@@ -668,8 +687,21 @@ namespace ArcanumLib.Gui.Theme
                 ctx.SetFontSize(s(7.5));
                 var ext = ctx.TextExtents(caption);
                 ctx.MoveTo(cx - ext.Width / 2 - ext.XBearing, cy + r * 0.55);
-                ctx.SetSourceRGBA(p.TextMuted.R, p.TextMuted.G, p.TextMuted.B, 0.9);
-                ctx.ShowText(caption);
+                if (liquidColor != null && value > 0.1)
+                {
+                    // over the fill: a dark outline keeps the light caption readable on any liquid color
+                    ctx.TextPath(caption);
+                    ctx.SetSourceRGBA(0, 0, 0, 0.6);
+                    ctx.LineWidth = s(1.6);
+                    ctx.StrokePreserve();
+                    ctx.SetSourceRGBA(p.TextPrimary.R, p.TextPrimary.G, p.TextPrimary.B, 0.95);
+                    ctx.Fill();
+                }
+                else
+                {
+                    ctx.SetSourceRGBA(p.TextMuted.R, p.TextMuted.G, p.TextMuted.B, 0.9);
+                    ctx.ShowText(caption);
+                }
             }
         }
 

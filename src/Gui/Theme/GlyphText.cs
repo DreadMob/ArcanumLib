@@ -6,14 +6,14 @@ namespace ArcanumLib.Gui.Theme;
 
 /// <summary>
 /// Text with inline vector glyphs. The game's GUI fonts lack many symbols
-/// (★ ⚙ ● ○ ∞ ✓ ✕ −) and Cairo draws them as boxes; this draws those
+/// (★ ⚙ ● ○ ∞ ✓ ✕ − ◀ ▶ ▲ ▼) and Cairo draws them as boxes; this draws those
 /// characters as Cairo shapes in the current source colour, sized to the font,
 /// and everything else with <c>ShowText</c>. Drop-in for
 /// <c>ctx.TextExtents</c> / <c>ctx.ShowText</c> pairs.
 /// </summary>
 public static class GlyphText
 {
-    private const string Glyphs = "★⚙●○∞✓✕−";
+    private const string Glyphs = "★⚙●○∞✓✕−◀▶◄►▲▼";
 
     /// <summary>True when the text contains a glyph drawn as a shape.</summary>
     public static bool HasGlyphs(string text) => text.IndexOfAny(Glyphs.ToCharArray()) >= 0;
@@ -98,6 +98,20 @@ public static class GlyphText
                 ctx.MoveTo(cx - r * 0.7, cy - r * 0.7); ctx.LineTo(cx + r * 0.7, cy + r * 0.7);
                 ctx.MoveTo(cx + r * 0.7, cy - r * 0.7); ctx.LineTo(cx - r * 0.7, cy + r * 0.7); ctx.Stroke();
                 break;
+            case '◀':
+            case '◄':
+                Triangle(ctx, cx - r * 0.8, cy, cx + r * 0.6, cy - r * 0.85, cx + r * 0.6, cy + r * 0.85);
+                break;
+            case '▶':
+            case '►':
+                Triangle(ctx, cx + r * 0.8, cy, cx - r * 0.6, cy - r * 0.85, cx - r * 0.6, cy + r * 0.85);
+                break;
+            case '▲':
+                Triangle(ctx, cx, cy - r * 0.8, cx - r * 0.85, cy + r * 0.6, cx + r * 0.85, cy + r * 0.6);
+                break;
+            case '▼':
+                Triangle(ctx, cx, cy + r * 0.8, cx - r * 0.85, cy - r * 0.6, cx + r * 0.85, cy - r * 0.6);
+                break;
             case '−':
                 ctx.LineWidth = Math.Max(1, r * 0.3);
                 ctx.MoveTo(cx - r * 0.75, cy); ctx.LineTo(cx + r * 0.75, cy); ctx.Stroke();
@@ -105,5 +119,14 @@ public static class GlyphText
         }
         ctx.Restore();
         ctx.MoveTo(p0.X + adv, p0.Y);
+    }
+
+    /// <summary>Filled triangle with softly rounded corners (tip first).</summary>
+    private static void Triangle(Context ctx, double x0, double y0, double x1, double y1, double x2, double y2)
+    {
+        ctx.MoveTo(x0, y0); ctx.LineTo(x1, y1); ctx.LineTo(x2, y2); ctx.ClosePath();
+        ctx.LineWidth = Math.Max(1, Math.Abs(y2 - y1) * 0.12);
+        ctx.FillPreserve();
+        ctx.Stroke();
     }
 }

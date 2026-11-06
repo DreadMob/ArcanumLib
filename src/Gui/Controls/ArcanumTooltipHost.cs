@@ -27,6 +27,10 @@ public class GuiElementTooltip : GuiElement
     /// <summary>Default hover delay before the tooltip appears, in milliseconds.</summary>
     public const double DefaultDelayMs = 500.0;
 
+    /// <summary>Depth the tooltip is drawn at — above 3D item icons in slots (drawn at ~90 plus their own
+    /// depth), like the vanilla hover text (500). The default 50 put items on top of the tooltip.</summary>
+    public const float TooltipZ = 500f;
+
     /// <summary>Default maximum characters per line before word-wrapping.</summary>
     public const int DefaultWrapChars = 40;
 
@@ -165,7 +169,7 @@ public class GuiElementTooltip : GuiElement
         if (scissorWasEnabled) api.Render.GlScissorFlag(false);
         try
         {
-            api.Render.Render2DLoadedTexture(_tex, (float)x, (float)y);
+            api.Render.Render2DLoadedTexture(_tex, (float)x, (float)y, TooltipZ);
         }
         finally
         {

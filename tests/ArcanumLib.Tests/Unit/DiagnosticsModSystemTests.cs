@@ -194,6 +194,20 @@ public class DiagnosticsModSystemTests
         Assert.True(result);
     }
 
+    [Theory]
+    [InlineData("1.0.0-rc.10", "1.0.0-rc.7", true)]
+    [InlineData("1.0.0-rc.7", "1.0.0-rc.10", false)]
+    [InlineData("1.0.0-rc.7.1", "1.0.0-rc.7", true)]
+    public void IsVersionSatisfied_NumericPreReleaseIdentifiers_ComparedAsNumbers(string installed, string required, bool expected)
+    {
+        var method = typeof(DiagnosticsReporter).GetMethod("IsVersionSatisfied",
+            System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static);
+
+        var result = (bool)method!.Invoke(null, new object[] { installed, required })!;
+
+        Assert.Equal(expected, result);
+    }
+
     [Fact]
     public void IsVersionSatisfied_InvalidInstalled_ReturnsFalse()
     {

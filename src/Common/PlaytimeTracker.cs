@@ -37,6 +37,9 @@ namespace ArcanumLib.Common
         /// <summary>Current login streak (consecutive days).</summary>
         int GetLoginStreak(string playerUid);
 
+        /// <summary>Counts today's login (idempotent within a UTC day) and returns the streak.</summary>
+        int RecordLogin(string playerUid);
+
         /// <summary>Sets the first join timestamp for a player.</summary>
         void SetFirstJoinMs(string playerUid, long ms);
 
@@ -153,23 +156,7 @@ namespace ArcanumLib.Common
             var data = GetOrCreateData(uid);
             data.LastOnlineMs = now;
 
-            // Update login streak
-            long todayMs = ToDayStartMs(now);
-            long lastLoginDayMs = data.LastLoginDayMs;
-            if (lastLoginDayMs == 0)
-            {
-                data.LoginStreak = 1;
-            }
-            else
-            {
-                long dayDiff = (todayMs - lastLoginDayMs) / 86400000L;
-                if (dayDiff == 1)
-                    data.LoginStreak++;
-                else if (dayDiff > 1)
-                    data.LoginStreak = 1;
-                // dayDiff == 0 → same day, keep streak
-            }
-            data.LastLoginDayMs = todayMs;
+            RecordLoginDay(data, now);
 
             if (data.FirstJoinMs == 0)
                 data.FirstJoinMs = now;
@@ -341,6 +328,37 @@ namespace ArcanumLib.Common
             var data = PlayerData.GetValueOrDefault(playerUid);
             if (data == null || data.LastOnlineMs == 0) return null;
             return data.LastOnlineMs;
+        }
+
+        /// <summary>Counts today's login (idempotent within a UTC day) and returns the streak.</summary>
+        /// <param name="playerUid">The unique player identifier.</param>
+        /// <returns>The login streak after counting today.</returns>
+        public int RecordLogin(string playerUid)
+        {
+            var data = GetOrCreateData(playerUid);
+            RecordLoginDay(data, DateTimeOffset.UtcNow.ToUnixTimeMilliseconds());
+            _store?.MarkDirty();
+            return data.LoginStreak;
+        }
+
+        private static void RecordLoginDay(PlayerPlaytimeData data, long now)
+        {
+            long todayMs = ToDayStartMs(now);
+            long lastLoginDayMs = data.LastLoginDayMs;
+            if (lastLoginDayMs == 0)
+            {
+                data.LoginStreak = 1;
+            }
+            else
+            {
+                long dayDiff = (todayMs - lastLoginDayMs) / 86400000L;
+                if (dayDiff == 1)
+                    data.LoginStreak++;
+                else if (dayDiff > 1)
+                    data.LoginStreak = 1;
+                // dayDiff == 0 → same day, keep streak
+            }
+            data.LastLoginDayMs = todayMs;
         }
 
         /// <summary>Current login streak (consecutive days).</summary>
