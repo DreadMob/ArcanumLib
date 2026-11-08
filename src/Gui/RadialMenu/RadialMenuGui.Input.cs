@@ -11,7 +11,7 @@ namespace ArcanumLib.Gui.RadialMenu
     /// <summary>Represents radial menu gui.</summary>
     public partial class RadialMenuGui
     {
-        private void DrawHeart(Context ctx, float cx, float cy, float size)
+        private static void DrawHeart(Context ctx, float cx, float cy, float size)
         {
             float s = size;
             ctx.MoveTo(cx, cy + s * 0.35f);
@@ -21,7 +21,7 @@ namespace ArcanumLib.Gui.RadialMenu
             ctx.Fill();
         }
 
-        private void DrawStar(Context ctx, float cx, float cy, float size)
+        private static void DrawStar(Context ctx, float cx, float cy, float size)
         {
             float s = size;
             for (int i = 0; i < 5; i++)
@@ -40,7 +40,7 @@ namespace ArcanumLib.Gui.RadialMenu
             ctx.Fill();
         }
 
-        private void DrawGear(Context ctx, float cx, float cy, float size)
+        private static void DrawGear(Context ctx, float cx, float cy, float size)
         {
             float s = size;
             int teeth = 6;
@@ -65,22 +65,21 @@ namespace ArcanumLib.Gui.RadialMenu
             ctx.Stroke();
         }
 
-        private void DrawSectorIcon(Context ctx, float cx, float cy, float a0, float a1,
-            string icon, bool disabled, Action<Context, float, float, float>? customDraw = null)
+        private static void DrawSectorIcon(Context ctx, IRadialMenuStyle style, float cx, float cy, float a0, float a1,
+            float iconRadius, float s, string icon, bool disabled, Action<Context, float, float, float>? customDraw = null)
         {
             float midAngle = (a0 + a1) / 2f;
-            float ix = cx + (float)Math.Cos(midAngle) * _iconRadius;
-            float iy = cy + (float)Math.Sin(midAngle) * _iconRadius;
-            float s = 20f;
+            float ix = cx + (float)Math.Cos(midAngle) * iconRadius;
+            float iy = cy + (float)Math.Sin(midAngle) * iconRadius;
 
-            var (r, g, b, a) = Style.GetIconColor(disabled);
+            var (r, g, b, a) = style.GetIconColor(disabled);
             ctx.SetSourceRGBA(r, g, b, a);
-            ctx.LineWidth = 2.2f;
+            ctx.LineWidth = 2.2f * s / 20f;
             ctx.LineCap = LineCap.Round;
 
             if (customDraw != null)
             {
-                ctx.LineWidth = 4.5f;
+                ctx.LineWidth = 4.5f * s / 20f;
                 customDraw(ctx, ix, iy, s * 4f);
                 return;
             }
@@ -358,33 +357,37 @@ namespace ArcanumLib.Gui.RadialMenu
 
             float scale = (float)RuntimeEnv.GUIScale;
             float cx = (float)(SingleComposer.Bounds.absX + SingleComposer.Bounds.InnerWidth / 2);
-            float cy = (float)(SingleComposer.Bounds.absY + (_outerRadius + 20f) * scale);
-
-            float dx = mouseX - cx;
-            float dy = mouseY - cy;
-            float dist = GameMath.Sqrt(dx * dx + dy * dy);
+            float cy = (float)(SingleComposer.Bounds.absY + (_outerRadius + Margin) * scale);
 
             int oldHover = _hoveredIndex;
+            int oldArc = _hoveredArc;
+            int oldExpanded = _expandedIndex;
 
-            if (dist < (_innerRadius + 12f) * scale)
+            var layout = new RadialMenuLayout(_items.Count, _outerRadius, _innerRadius);
+            int arcCount = _expandedIndex >= 0 && _expandedIndex < _items.Count ? _items[_expandedIndex].Arcs?.Count ?? 0 : 0;
+            var (sector, arc) = layout.Hit((mouseX - cx) / scale, (mouseY - cy) / scale, _expandedIndex, arcCount);
+            _hoveredIndex = sector;
+            _hoveredArc = arc;
+            if (arc < 0)
             {
-                _hoveredIndex = -2; // center
-            }
-            else if (dist > (_outerRadius + 8f) * scale)
-            {
-                _hoveredIndex = -1; // outside (slight tolerance)
-            }
-            else
-            {
-                float angle = (float)Math.Atan2(dy, dx);
-                float normAngle = GameMath.Mod(angle + (float)Math.PI / 2f + (float)Math.PI / _items.Count, 2f * (float)Math.PI);
-                _hoveredIndex = (int)(normAngle / (2f * (float)Math.PI / _items.Count)) % _items.Count;
+                // a sector with sub-arcs opens its ring; any other sector (or the center) closes it, the gap and the outside keep it
+                if (sector >= 0) _expandedIndex = _items[sector].Arcs?.Count > 0 && !_items[sector].Disabled ? sector : -1;
+                else if (sector == -2) _expandedIndex = -1;
             }
 
-            if (oldHover != _hoveredIndex)
+            if (oldHover != _hoveredIndex || oldArc != _hoveredArc || oldExpanded != _expandedIndex)
             {
                 SingleComposer?.ReCompose();
             }
+        }
+
+        /// <summary>The item under the mouse: a sub-arc of the open ring, else the hovered sector, else null.</summary>
+        private RadialMenuItem? HoveredItem()
+        {
+            if (_hoveredIndex < 0 || _hoveredIndex >= _items.Count) return null;
+            var item = _items[_hoveredIndex];
+            if (_hoveredArc >= 0 && item.Arcs != null && _hoveredArc < item.Arcs.Count) return item.Arcs[_hoveredArc];
+            return item;
         }
 
         /// <summary>Performs the on mouse move operation.</summary>
@@ -410,9 +413,8 @@ namespace ArcanumLib.Gui.RadialMenu
                 return;
             }
 
-            if (_hoveredIndex >= 0 && _hoveredIndex < _items.Count)
+            if (HoveredItem() is { } item)
             {
-                var item = _items[_hoveredIndex];
 
                 // Locked sector: no action, no submenu — keep the wheel open.
                 if (item.Disabled) return;
@@ -461,9 +463,8 @@ namespace ArcanumLib.Gui.RadialMenu
             if (_holdKey.HasValue && args.KeyCode == (int)_holdKey.Value)
             {
                 args.Handled = true;
-                if (_hoveredIndex >= 0 && _hoveredIndex < _items.Count)
+                if (HoveredItem() is { } item)
                 {
-                    var item = _items[_hoveredIndex];
                     if (!item.Disabled && item.Action != null)
                         try { item.Action(); }
                         catch (Exception ex)

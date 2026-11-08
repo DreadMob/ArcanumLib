@@ -45,3 +45,15 @@ public interface IRadialMenuStyle
     /// <returns>A tuple of (red, green, blue, alpha) in 0..1 range.</returns>
     (float r, float g, float b, float a) GetIconColor(bool disabled);
 }
+
+/// <summary>
+/// Optional: a style that draws the sub-arc ring (<see cref="RadialMenuItem.Arcs" />) its own way.
+/// Styles without it get their <see cref="IRadialMenuStyle.DrawSector" /> at the ring's radii.
+/// </summary>
+public interface IRadialMenuArcStyle
+{
+    /// <summary>Draws one segment of the sub-arc ring between <paramref name="innerRadius" /> and <paramref name="outerRadius" />.</summary>
+    void DrawArc(Context ctx, float cx, float cy, float a0, float a1,
+        bool hovered, bool isActive, bool disabled,
+        float outerRadius, float innerRadius);
+}

@@ -45,4 +45,11 @@ public class RadialMenuItem
     /// instead of firing the Action.
     /// </summary>
     public List<RadialMenuItem> SubItems { get; set; } = new();
+
+    /// <summary>
+    /// Sub-arcs: while this sector is hovered an outer ring of these segments opens around it,
+    /// and moving onto one picks it instead of the sector (e.g. the modes of a device whose
+    /// sector itself switches it on and off). The ring stays open until another sector is hovered.
+    /// </summary>
+    public List<RadialMenuItem> Arcs { get; set; } = new();
 }

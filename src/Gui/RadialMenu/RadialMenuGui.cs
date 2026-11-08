@@ -31,9 +31,12 @@ namespace ArcanumLib.Gui.RadialMenu
         private readonly List<RadialMenuItem> _items;
         private float _outerRadius;
         private float _innerRadius;
-        private float _iconRadius;
         private float _originalOuterRadius;
         private int _hoveredIndex = -1;
+        /// <summary>Hovered segment of the open sub-arc ring, or -1.</summary>
+        private int _hoveredArc = -1;
+        /// <summary>Sector whose sub-arc ring is open, or -1.</summary>
+        private int _expandedIndex = -1;
 
         /// <summary>Visual style for this menu, resolved from the style registry.</summary>
         public IRadialMenuStyle Style { get; set; }
@@ -59,7 +62,6 @@ namespace ArcanumLib.Gui.RadialMenu
             _outerRadius = outerRadius;
             _originalOuterRadius = outerRadius;
             _innerRadius = innerRadius;
-            _iconRadius = (outerRadius + innerRadius) / 2f;
             Style = RadialMenuStyleRegistry.GetOrDefault("default");
         }
 
@@ -84,22 +86,27 @@ namespace ArcanumLib.Gui.RadialMenu
         private const int MaxDescriptionLines = 3;
         private const float LineSpacing = 4f;
 
+        /// <summary>Room around the wheel: the drop shadow, and the sub-arc ring when any sector has one.</summary>
+        private float Margin => MarginFor(_items);
+
+        private static float MarginFor(List<RadialMenuItem> items)
+            => 20f + (items.Exists(i => i.Arcs?.Count > 0) ? RadialMenuLayout.ArcGap + RadialMenuLayout.ArcWidth : 0f);
+
         private void Compose()
         {
             // Clamp radii to fit within the screen at the current GUI scale
             float screenWidth = (float)(capi.Render.FrameWidth / RuntimeEnv.GUIScale);
             float screenHeight = (float)(capi.Render.FrameHeight / RuntimeEnv.GUIScale);
             float maxDim = Math.Min(screenWidth, screenHeight);
-            float maxOuter = (maxDim - 80f - TextAreaHeight) / 2f;
+            float maxOuter = (maxDim - 80f - TextAreaHeight) / 2f - (Margin - 20f);
             if (maxOuter < _outerRadius && maxOuter > 40f)
             {
                 float scale = maxOuter / _outerRadius;
                 _outerRadius = maxOuter;
                 _innerRadius *= scale;
-                _iconRadius = (_outerRadius + _innerRadius) / 2f;
             }
 
-            float size = _outerRadius * 2f + 40f;
+            float size = (_outerRadius + Margin) * 2f;
             var dialogBounds = ElementBounds.Fixed(0, 0, size, size + TextAreaHeight)
                 .WithAlignment(EnumDialogArea.CenterMiddle);
             var drawBounds = ElementBounds.Fixed(0, 0, size, size + TextAreaHeight);
@@ -114,41 +121,79 @@ namespace ArcanumLib.Gui.RadialMenu
         {
             float scale = (float)RuntimeEnv.GUIScale;
             ctx.Scale(scale, scale);
+            Paint(ctx, Style, _items, _outerRadius, _innerRadius, _outerRadius / _originalOuterRadius,
+                _hoveredIndex, _hoveredArc, _expandedIndex);
+        }
 
-            int count = _items.Count;
+        /// <summary>
+        /// Draws a wheel the way the open menu does, onto any Cairo context (unscaled units, the centre at
+        /// outer radius + margin from the top left): previews and tests use it without the game.
+        /// </summary>
+        /// <param name="ctx">Cairo context.</param>
+        /// <param name="style">Visual style.</param>
+        /// <param name="items">Sector items.</param>
+        /// <param name="outerRadius">Outer radius of the wheel.</param>
+        /// <param name="innerRadius">Inner radius (center button).</param>
+        /// <param name="radiusScale">Text scale (1 at the authored radius).</param>
+        /// <param name="hovered">Hovered sector, -1 none, -2 the center.</param>
+        /// <param name="hoveredArc">Hovered segment of the open ring, or -1.</param>
+        /// <param name="expanded">Sector whose sub-arc ring is open, or -1.</param>
+        public static void Paint(Context ctx, IRadialMenuStyle style, List<RadialMenuItem> items, float outerRadius, float innerRadius,
+            float radiusScale, int hovered, int hoveredArc, int expanded)
+        {
+            int count = items.Count;
             if (count == 0) return;
 
-            float cx = _outerRadius + 20f;
-            float circleCY = _outerRadius + 20f;
-
-            float anglePerItem = 2f * (float)Math.PI / count;
-            float startAngle = -(float)Math.PI / 2f - anglePerItem / 2f;
+            float margin = MarginFor(items);
+            float cx = outerRadius + margin;
+            float circleCY = outerRadius + margin;
+            var layout = new RadialMenuLayout(count, outerRadius, innerRadius);
+            float iconRadius = (outerRadius + innerRadius) / 2f;
 
             for (int i = 0; i < count; i++)
             {
-                float a0 = startAngle + i * anglePerItem;
-                float a1 = a0 + anglePerItem;
-                bool hovered = i == _hoveredIndex;
+                float a0 = layout.SectorStart(i);
+                float a1 = a0 + layout.AnglePerItem;
+                // the sector stays lit while its ring is open, so the needle keeps pointing at the device
+                bool lit = (i == hovered && hoveredArc < 0) || i == expanded;
 
-                Style.DrawSector(ctx, cx, circleCY, a0, a1, hovered, _items[i].IsActive, _items[i].Disabled,
-                    _outerRadius, _innerRadius);
-                DrawSectorIcon(ctx, cx, circleCY, a0, a1, _items[i].Icon, _items[i].Disabled, _items[i].CustomIconDraw);
+                style.DrawSector(ctx, cx, circleCY, a0, a1, lit, items[i].IsActive, items[i].Disabled,
+                    outerRadius, innerRadius);
+                DrawSectorIcon(ctx, style, cx, circleCY, a0, a1, iconRadius, 20f, items[i].Icon, items[i].Disabled, items[i].CustomIconDraw);
+            }
+
+            if (expanded >= 0 && expanded < count && items[expanded].Arcs is { Count: > 0 } arcs)
+            {
+                float w = layout.ArcAngle(arcs.Count);
+                float arcIconRadius = (layout.ArcInner + layout.ArcOuter) / 2f;
+                for (int k = 0; k < arcs.Count; k++)
+                {
+                    float a0 = layout.ArcStart(expanded, arcs.Count, k);
+                    float a1 = a0 + w;
+                    bool hov = hovered == expanded && hoveredArc == k;
+                    if (style is IRadialMenuArcStyle arcStyle)
+                        arcStyle.DrawArc(ctx, cx, circleCY, a0, a1, hov, arcs[k].IsActive, arcs[k].Disabled, layout.ArcOuter, layout.ArcInner);
+                    else
+                        style.DrawSector(ctx, cx, circleCY, a0, a1, hov, arcs[k].IsActive, arcs[k].Disabled, layout.ArcOuter, layout.ArcInner);
+                    DrawSectorIcon(ctx, style, cx, circleCY, a0, a1, arcIconRadius, 15f, arcs[k].Icon, arcs[k].Disabled, arcs[k].CustomIconDraw);
+                }
             }
 
             // Center cancel button
-            Style.DrawCenterButton(ctx, cx, circleCY, _innerRadius);
+            style.DrawCenterButton(ctx, cx, circleCY, innerRadius);
 
             // Hover label + description below the circle
-            if (_hoveredIndex >= 0 && _hoveredIndex < count)
+            if (hovered >= 0 && hovered < count)
             {
-                DrawHoverText(ctx, cx, circleCY + _outerRadius + 14f, _items[_hoveredIndex]);
+                var item = items[hovered];
+                if (hoveredArc >= 0 && item.Arcs != null && hoveredArc < item.Arcs.Count) item = item.Arcs[hoveredArc];
+                DrawHoverText(ctx, cx, circleCY + outerRadius + margin - 6f, item, outerRadius, radiusScale);
             }
         }
 
-        private void DrawHoverText(Context ctx, float cx, float y, RadialMenuItem item)
+        private static void DrawHoverText(Context ctx, float cx, float y, RadialMenuItem item, float outerRadius, float radiusScale)
         {
-            float radiusScale = _outerRadius / _originalOuterRadius;
-            float maxWidth = _outerRadius * 2f - 40f;
+            float maxWidth = outerRadius * 2f - 40f;
 
             if (!string.IsNullOrWhiteSpace(item.Label))
             {
@@ -179,7 +224,7 @@ namespace ArcanumLib.Gui.RadialMenu
             }
         }
 
-        private List<string> WrapText(Context ctx, string text, float maxWidth, int maxLines)
+        private static List<string> WrapText(Context ctx, string text, float maxWidth, int maxLines)
         {
             var lines = new List<string>();
             if (string.IsNullOrWhiteSpace(text) || maxLines <= 0)
@@ -225,7 +270,7 @@ namespace ArcanumLib.Gui.RadialMenu
             return lines;
         }
 
-        private string TruncateToWidth(Context ctx, string text, float maxWidth)
+        private static string TruncateToWidth(Context ctx, string text, float maxWidth)
         {
             if (string.IsNullOrEmpty(text))
                 return string.Empty;
