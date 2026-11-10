@@ -21,6 +21,7 @@ namespace ArcanumLib.Core;
 public class ArcanumLibModSystem : ModSystem
 {
     private ArcanumRuntime? _runtime;
+    private EnumAppSide _runtimeSide;
     private bool _lifecycleRegistered;
 
     /// <summary>
@@ -48,7 +49,8 @@ public class ArcanumLibModSystem : ModSystem
         if (_runtime != null) return;
 
         api.RegisterCollectibleBehaviorClass("ArcanumCullFaces", typeof(CollectibleBehaviorCullFaces));
-        _runtime = ArcanumRuntime.Activate();
+        _runtime = ArcanumRuntime.Join(api.Side);
+        _runtimeSide = api.Side;
         _runtime.Api = api;
 
         WireStaticLogSink(api);
@@ -110,7 +112,8 @@ public class ArcanumLibModSystem : ModSystem
     {
         if (_runtime != null) return;
 
-        _runtime = ArcanumRuntime.Activate();
+        _runtime = ArcanumRuntime.Join(api.Side);
+        _runtimeSide = api.Side;
         _runtime.Api = api;
         WireStaticLogSink(api);
         RegisterLifecycleHandlers();
@@ -154,7 +157,7 @@ public class ArcanumLibModSystem : ModSystem
     public override void Dispose()
     {
         GroundStorageCullFacesPatch.Dispose();
-        _runtime?.Dispose();
+        _runtime?.Leave(_runtimeSide);
         _runtime = null;
         _lifecycleRegistered = false;
         StaticLogSink.SetLogger(null);

@@ -87,6 +87,35 @@ public class ArcanumRuntimeTests : IDisposable
     }
 
     [Fact]
+    public void Join_SingleplayerClientKeepsServerServices()
+    {
+        var server = ArcanumRuntime.Join(EnumAppSide.Server);
+        var service = new object();
+        server.Services.Register(service, ArcanumServiceScope.Server);
+
+        var client = ArcanumRuntime.Join(EnumAppSide.Client);
+
+        Assert.Same(server, client);
+        Assert.Same(service, ArcanumServices.Get<object>());
+
+        client.Leave(EnumAppSide.Client);
+        Assert.Same(service, ArcanumServices.Get<object>());
+
+        server.Leave(EnumAppSide.Server);
+        Assert.Null(ArcanumRuntime.Current);
+    }
+
+    [Fact]
+    public void Join_SameSideAgainStartsFreshRuntime()
+    {
+        var first = ArcanumRuntime.Join(EnumAppSide.Server);
+        var second = ArcanumRuntime.Join(EnumAppSide.Server);
+
+        Assert.NotSame(first, second);
+        Assert.Same(second, ArcanumRuntime.Current);
+    }
+
+    [Fact]
     public void Initialize_SetsIsInitialized()
     {
         var runtime = ArcanumRuntime.Activate();

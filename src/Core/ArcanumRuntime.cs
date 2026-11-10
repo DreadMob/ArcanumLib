@@ -16,6 +16,7 @@ public sealed class ArcanumRuntime : IDisposable
     private static readonly object _currentLock = new();
     private static IArcanumRuntimeProvider? _provider;
     private bool _disposed;
+    private readonly System.Collections.Generic.HashSet<EnumAppSide> _sides = new();
 
     /// <summary>
     /// The active runtime instance, or <c>null</c> if no world is loaded.
@@ -82,6 +83,45 @@ public sealed class ArcanumRuntime : IDisposable
             _current = runtime;
             return runtime;
         }
+    }
+
+    /// <summary>
+    /// Returns the runtime for <paramref name="side" />. In singleplayer the client and the
+    /// server run in one process: the side that starts second joins the runtime of the first
+    /// (services are kept apart by scope) instead of disposing it. A side that is already
+    /// part of the active runtime (a new world on the same side) gets a fresh runtime.
+    /// </summary>
+    /// <param name="side">The side that is starting.</param>
+    /// <returns>The runtime this side should use.</returns>
+    public static ArcanumRuntime Join(EnumAppSide side)
+    {
+        lock (_currentLock)
+        {
+            if (_current != null && !_current._disposed && _current._sides.Count > 0 && !_current._sides.Contains(side))
+            {
+                _current._sides.Add(side);
+                return _current;
+            }
+
+            var runtime = Activate();
+            runtime._sides.Add(side);
+            return runtime;
+        }
+    }
+
+    /// <summary>
+    /// Releases <paramref name="side" /> from this runtime and disposes it once no side uses it.
+    /// </summary>
+    /// <param name="side">The side that is shutting down.</param>
+    public void Leave(EnumAppSide side)
+    {
+        lock (_currentLock)
+        {
+            _sides.Remove(side);
+            if (_sides.Count > 0) return;
+        }
+
+        Dispose();
     }
 
     /// <summary>
