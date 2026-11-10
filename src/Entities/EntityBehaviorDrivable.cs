@@ -34,7 +34,7 @@ namespace ArcanumLib.Entities;
 /// { "code": "drivable", "drive": { "maxSpeed": 5, "turnSpeed": 1.2, "waterOnly": true } }
 /// </code>
 /// </example>
-public class EntityBehaviorDrivable : EntityBehavior
+public class EntityBehaviorDrivable : EntityBehavior, IRenderer
 {
     /// <summary>Interval in seconds between watched-attribute writes (10 Hz).</summary>
     private const float SyncIntervalSeconds = 0.1f;
@@ -83,6 +83,9 @@ public class EntityBehaviorDrivable : EntityBehavior
     private float _climbTimer;
     private float _syncAccum;
     private Vec3d _integrationResult = new();
+    /// <summary>Client of the driver: the turn is applied per rendered frame, not per game tick (see <see cref="OnRenderFrame"/>).</summary>
+    private ICoreClientAPI? _capi;
+    private bool _localDriving;
 
     /// <summary>
     /// Creates the behavior. Standard entity behavior constructor signature required by
@@ -193,7 +196,35 @@ public class EntityBehaviorDrivable : EntityBehavior
     public override void Initialize(EntityProperties properties, JsonObject attributes)
     {
         _params = DrivableParams.FromAttributes(attributes["drive"]);
+        if (entity.Api is ICoreClientAPI capi)
+        {
+            _capi = capi;
+            capi.Event.RegisterRenderer(this, EnumRenderStage.Before, "arcanum-drivable");
+        }
     }
+
+    public double RenderOrder => -0.06;     // before anything that seats the rider or places the camera
+    public int RenderRange => 9999;
+
+    /// <summary>
+    /// Driver's client: turn the vehicle by the frame's share of the yaw rate. Game ticks run at 30 Hz, so a turn
+    /// applied there advanced the yaw on every second frame while the position moved on every frame, and the vehicle
+    /// (with the driver's view) jerked sideways through every turn.
+    /// </summary>
+    public void OnRenderFrame(float deltaTime, EnumRenderStage stage)
+    {
+        if (!_localDriving || _capi == null || _capi.IsGamePaused || entity.State != EnumEntityState.Active) return;
+        if (!float.IsFinite(deltaTime) || deltaTime <= 0f) return;
+        ApplyYaw(entity.Pos, _yawRate * (1f - _params.Understeer) * MathF.Min(deltaTime, 0.1f), deltaTime);
+    }
+
+    public override void OnEntityDespawn(EntityDespawnData despawn)
+    {
+        _capi?.Event.UnregisterRenderer(this, EnumRenderStage.Before);
+        base.OnEntityDespawn(despawn);
+    }
+
+    public void Dispose() { }
 
     /// <summary>
     /// Resolves cross-behavior references and restores the persisted drive state from
@@ -238,7 +269,8 @@ public class EntityBehaviorDrivable : EntityBehavior
         ResolveController(out Entity? controller, out EntityControls? controls);
         bool controlled = controller != null && controls != null;
 
-        if (!server && (!controlled || controller is not EntityPlayer || !IsLocalPlayer(controller)))
+        _localDriving = !server && controlled && controller is EntityPlayer && IsLocalPlayer(controller);
+        if (!server && !_localDriving)
         {
             // Remote observers and mounts controlled by someone else are packet-driven;
             // only keep the exposed values in sync.
@@ -417,30 +449,8 @@ public class EntityBehaviorDrivable : EntityBehavior
         // terrain would wedge the entity - AdjustCollisionBoxesToYaw pre-rotates the boxes
         // and reports whether the new orientation is free (it may push the entity out
         // instead). Without it the single axis-aligned collision box is yaw-invariant.
-        float yawDelta = _yawRate * (1f - _params.Understeer) * dt;
-        if (_multiBoxPhysics != null)
-        {
-            // A parked vehicle's boxes are already aligned — skip the per-tick
-            // rotate + terrain collision test unless the yaw actually changes.
-            if (yawDelta != 0f || pos.Yaw != _boxesAlignedYaw)
-            {
-                float newYaw = pos.Yaw + yawDelta;
-                if (_multiBoxPhysics.AdjustCollisionBoxesToYaw(dt, true, newYaw))
-                {
-                    pos.Yaw = newYaw;
-                }
-                else if (yawDelta != 0f)
-                {
-                    // Rotation was rejected; re-align the boxes with the unchanged yaw.
-                    _multiBoxPhysics.AdjustCollisionBoxesToYaw(dt, true, pos.Yaw);
-                }
-                _boxesAlignedYaw = pos.Yaw;
-            }
-        }
-        else
-        {
-            pos.Yaw += yawDelta;
-        }
+        // the driver's client turns per frame instead (OnRenderFrame)
+        if (!_localDriving) ApplyYaw(pos, _yawRate * (1f - _params.Understeer) * dt, dt);
 
         // --- Horizontal motion ------------------------------------------------------
         // While pressed against terrain, bleed the drive speed: otherwise full-throttle
@@ -567,6 +577,34 @@ public class EntityBehaviorDrivable : EntityBehavior
     {
         if (_multiBoxPhysics == null) return null;
         return MultiBoxBoxesField?.GetValue(_multiBoxPhysics) is Cuboidf[] { Length: > 0 } boxes ? boxes : null;
+    }
+
+    /// <summary>Turns by <paramref name="yawDelta"/>, unless the multibox physics finds the new heading blocked.</summary>
+    private void ApplyYaw(EntityPos pos, float yawDelta, float dt)
+    {
+        if (_multiBoxPhysics != null)
+        {
+            // A parked vehicle's boxes are already aligned — skip the per-tick
+            // rotate + terrain collision test unless the yaw actually changes.
+            if (yawDelta != 0f || pos.Yaw != _boxesAlignedYaw)
+            {
+                float newYaw = pos.Yaw + yawDelta;
+                if (_multiBoxPhysics.AdjustCollisionBoxesToYaw(dt, true, newYaw))
+                {
+                    pos.Yaw = newYaw;
+                }
+                else if (yawDelta != 0f)
+                {
+                    // Rotation was rejected; re-align the boxes with the unchanged yaw.
+                    _multiBoxPhysics.AdjustCollisionBoxesToYaw(dt, true, pos.Yaw);
+                }
+                _boxesAlignedYaw = pos.Yaw;
+            }
+        }
+        else
+        {
+            pos.Yaw += yawDelta;
+        }
     }
 
     /// <summary>
