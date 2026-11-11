@@ -8,6 +8,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Added
 
+- `ArcanumSlider.ReadoutWidth` — keeps the value readout beside the track instead of above its right end, so it never sits on the track.
 - `ArcanumLib.Blocks.Clock` — data-driven clock (`BlockClock`, `BlockEntityClock`, `ClockRenderer`, chime-hours dialog): hands per dial, pendulums/gears, chime, new-year melody, storm warning, client-side ticking and a winding sound, all from the blocktype's `attributes.clock` (`ClockConfig`). Mods register the classes under their own names.
 - `GlyphText` — draws symbols the GUI fonts lack (★ ⚙ ● ○ ∞ ✓ ✕ −) as Cairo shapes inline with text; `ArcanumList`, `ArcanumDropdown` and `ArcanumButton` labels use it.
 - `ArcanumLib.Gui.Map`: `ChunkTerrainSource` (client terrain thumbnails per chunk — vanilla world-map cache DB + live chunks, vanilla colour table) and `GuiElementChunkGrid` (`AddChunkGrid`) — zoomable/pannable chunk map with selection, overlay painters and a player marker.

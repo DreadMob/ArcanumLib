@@ -52,6 +52,17 @@ public class ArcanumSlider : GuiElement
         set { if (enabled != value) { enabled = value; cacheKey = null; } }
     }
 
+    /// <summary>Width (unscaled px) kept right of the track for the readout; 0 = readout above the track's right end.
+    /// Beside the track the readout never sits on it, whatever the bounds' height.</summary>
+    public int ReadoutWidth
+    {
+        get => readoutWidth;
+        set { if (readoutWidth != value) { readoutWidth = Math.Max(0, value); cacheKey = null; } }
+    }
+    private int readoutWidth;
+
+    private double TrackWidth => Math.Max(1, Bounds.OuterWidth - (readoutWidth > 0 ? scaled(readoutWidth) : 0));
+
     /// <summary>Current value.</summary>
     public int GetValue() => value;
 
@@ -77,7 +88,7 @@ public class ArcanumSlider : GuiElement
 
     private void UpdateFromX(double mouseX)
     {
-        double w = Bounds.OuterWidth;
+        double w = TrackWidth;
         double f = w > 0 ? Math.Clamp((mouseX - Bounds.absX) / w, 0, 1) : 0;
         int raw = (int)Math.Round(minValue + f * (maxValue - minValue));
         int stepped = minValue + (int)Math.Round((raw - minValue) / (double)step) * step;
@@ -141,7 +152,7 @@ public class ArcanumSlider : GuiElement
     {
         if (Bounds == null || api?.Render == null) return;
         tex ??= new LoadedTexture(api!);
-        string key = $"{value}|{hovered}|{dragging}|{enabled}|{(int)Bounds.OuterWidth}x{(int)Bounds.OuterHeight}";
+        string key = $"{value}|{hovered}|{dragging}|{enabled}|{readoutWidth}|{(int)Bounds.OuterWidth}x{(int)Bounds.OuterHeight}";
         if (string.Equals(cacheKey, key, StringComparison.Ordinal) && tex.TextureId > 0) return;
         cacheKey = key;
 
@@ -159,7 +170,9 @@ public class ArcanumSlider : GuiElement
             // it stays fully inside the texture (24 px bounds → ~10 px strip).
             double th = scaled(10);
             double knobR = scaled(8);
-            double cy = h - Math.Max(th / 2, knobR) - scaled(1);
+            double cy = readoutWidth > 0 ? h / 2.0 : h - Math.Max(th / 2, knobR) - scaled(1);
+            double full = w;
+            w = (int)Math.Ceiling(TrackWidth);
             double ty = cy - th / 2;
             ArcanumGuiTheme.FillRoundedRectVerticalGradient(ctx, 0, ty, w, th, th / 2,
                 p.SurfaceDeepest, p.SurfaceBase);
@@ -205,9 +218,11 @@ public class ArcanumSlider : GuiElement
             ctx.SelectFontFace("Sans", FontSlant.Normal, FontWeight.Bold);
             ctx.SetFontSize(scaled(9));
             var ext = ctx.TextExtents(label);
-            double baseline = Math.Max(ctx.FontExtents.Ascent + scaled(0.5), ty - scaled(2));
+            double baseline = readoutWidth > 0
+                ? cy - ext.Height / 2 - ext.YBearing
+                : Math.Max(ctx.FontExtents.Ascent + scaled(0.5), ty - scaled(2));
             ctx.SetSourceRGBA(p.TextSecondary.R, p.TextSecondary.G, p.TextSecondary.B, 0.95 * kAlpha);
-            ctx.MoveTo(w - ext.Width - scaled(4), baseline);
+            ctx.MoveTo(readoutWidth > 0 ? Math.Min(w + scaled(8), full - ext.XAdvance) : w - ext.Width - scaled(4), baseline);
             ctx.ShowText(label);
 
             generateTexture(surface, ref tex);
