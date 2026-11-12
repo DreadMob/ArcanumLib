@@ -12,7 +12,7 @@ using ArcanumLib.Gui.Theme;
 namespace ArcanumLib.Gui.Dialogs;
 
 /// <summary>
-/// Brass-and-walnut skin for the Arcanum GUI toolkit (shared by AlegacyContraptions and AlegacyAttire): dark iron + walnut surfaces,
+/// Brass-and-walnut skin for the Arcanum GUI toolkit (shared by AlegacySteamworks and AlegacyAttire): dark iron + walnut surfaces,
 /// brass rims and rivets, parchment text. The palette lives in ArcanumLib
 /// (<see cref="GuiThemePalette" />); this file is only the mod's paint job.
 /// </summary>
