@@ -23,6 +23,7 @@ public class ArcanumLibModSystem : ModSystem
     private ArcanumRuntime? _runtime;
     private EnumAppSide _runtimeSide;
     private bool _lifecycleRegistered;
+    private bool _groundPiles;
 
     /// <summary>
     /// Returns the execution order relative to other systems.
@@ -46,6 +47,8 @@ public class ArcanumLibModSystem : ModSystem
     /// <param name="api">The core API.</param>
     public override void StartPre(ICoreAPI api)
     {
+        api.RegisterBlockBehaviorClass(ArcanumLib.Blocks.BlockBehaviorFacePlayer.ClassName, typeof(ArcanumLib.Blocks.BlockBehaviorFacePlayer));
+        if (!_groundPiles) { ArcanumLib.Blocks.GroundPiles.Apply(); _groundPiles = true; }
         if (_runtime != null) return;
 
         api.RegisterCollectibleBehaviorClass("ArcanumCullFaces", typeof(CollectibleBehaviorCullFaces));
@@ -157,6 +160,7 @@ public class ArcanumLibModSystem : ModSystem
     public override void Dispose()
     {
         GroundStorageCullFacesPatch.Dispose();
+        if (_groundPiles) { ArcanumLib.Blocks.GroundPiles.Dispose(); _groundPiles = false; }
         _runtime?.Leave(_runtimeSide);
         _runtime = null;
         _lifecycleRegistered = false;
