@@ -184,6 +184,21 @@ public interface IEventBusService : IDisposable
 /// </summary>
 public sealed class EventBusService : IEventBusService
 {
+    /// <summary>Side whose API runs queued publishes; null = whichever API is registered first.</summary>
+    private readonly ArcanumServiceScope? _scope;
+
+    /// <summary>Creates a bus. <paramref name="scope"/> names the side it belongs to: in singleplayer both sides
+    /// have a bus, and queued handlers must run on their own side's main thread.</summary>
+    public EventBusService(ArcanumServiceScope? scope)
+    {
+        _scope = scope;
+    }
+
+    /// <summary>Creates a bus not bound to a side.</summary>
+    public EventBusService() : this(null) { }
+
+    private ICoreAPI? Api => (_scope is { } s ? ArcanumServices.Get<ICoreAPI>(s) : null) ?? ArcanumServices.Get<ICoreAPI>();
+
     private sealed class HandlerEntry
     {
         public Action<object?> Handler = _ => { };
@@ -345,7 +360,7 @@ public sealed class EventBusService : IEventBusService
             snapshot = new List<HandlerEntry>(list);
         }
 
-        var api = ArcanumServices.Get<ICoreAPI>();
+        var api = Api;
         if (api?.World == null)
             return InvokeHandlers(snapshot, evt, $"{typeof(T).Name}[{tag}]");
 
@@ -470,7 +485,7 @@ public sealed class EventBusService : IEventBusService
             }
             catch (Exception ex)
             {
-                ArcanumServices.Get<ICoreAPI>()?.Logger?.Warning(
+                Api?.Logger?.Warning(
                     "[ArcanumLib] EventBus handler for {0} threw: {1}", label, ex.Message);
                 if (entry.DiagInfo != null)
                     entry.DiagInfo.LastError = ex.Message;

@@ -124,7 +124,9 @@ public class StatusEffectService : IStatusEffectService
         lock (_sync)
         {
             // Check immunities and resistances
-            var resistance = ArcanumServices.Get<IEffectResistanceService>();
+            // The entity's own side: in singleplayer both sides register a resistance service.
+            var resistance = ArcanumServices.Get<IEffectResistanceService>(ArcanumServices.ScopeFor(entity.Api))
+                ?? ArcanumServices.Get<IEffectResistanceService>();
             if (resistance != null)
             {
                 if (resistance.IsImmuneToEffect(entity, effect)) return null;

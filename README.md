@@ -262,7 +262,7 @@ Most subsystems publish themselves through `ArcanumServices`. The table below sh
 | `DeferredWork` | `IDeferredWorkService` | `ArcanumLibModSystem` | `ArcanumServices.Get<IDeferredWorkService>(scope)` — per side |
 | `GameTimeScheduler` | `IGameTimeScheduler` | `ArcanumPerformanceModSystem` | `ArcanumServices.Get<IGameTimeScheduler>(ArcanumServiceScope.Server)` |
 | `StatCoalescingEngine` | `IStatCoalescingEngine` | `ArcanumPerformanceModSystem` | `ArcanumServices.Get<IStatCoalescingEngine>(ArcanumServiceScope.Server)` |
-| `StatusEffectService` | `IStatusEffectService` | `StatusEffectModSystem` | `ArcanumServices.Get<IStatusEffectService>()` — Global scope, one instance per process |
+| `StatusEffectService` | `IStatusEffectService` | `StatusEffectModSystem` | `ArcanumServices.Get<IStatusEffectService>(scope)` — per side |
 | `EffectResistanceService` | `IEffectResistanceService` | `ArcanumLibModSystem` | `ArcanumServices.Get<IEffectResistanceService>(scope)` — per side |
 | `PityTracker` | `IPityTracker`, `IPityProvider` | **Consumer** (e.g. quest/progression mod) | `ArcanumServices.Get<IPityTracker>(ArcanumServiceScope.Server)` |
 

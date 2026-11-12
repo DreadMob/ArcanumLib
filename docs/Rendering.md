@@ -30,4 +30,4 @@ Keep the other elements free of half-transparent pixels — they still render in
 "behaviors": [ { "name": "ArcanumCullFaces" } ]
 ```
 
-Turns on back-face culling when the item is held or lies on the ground, so an outline shell shows without its inside faces. GUI rendering is unchanged. ArcanumLib applies the same to such items lying in ground storage (client patch on `GroundStorageRenderer`).
+Turns on back-face culling when the item is held or lies on the ground, so an outline shell shows without its inside faces. GUI rendering is unchanged. ArcanumLib applies the same to such items in ground storage and on shelves, display cases and other display blocks (their no-cull chunk faces move to the culled opaque pass; glass and other passes are kept).

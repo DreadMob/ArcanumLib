@@ -17,7 +17,7 @@ The library's own `ModSystem`s. Vintage Story discovers them; a dependent mod wr
 | `MultiblockReach` | server | 0.1 | Widens vanilla multiblock fillers (see [Blocks](Blocks.md)). |
 | `PlayerTransferModSystem` | server | 0.15 | `/arcanum transfer` (see [Account transfer](PlayerTransfer.md)). |
 | `ArcanumDataModSystem` | server | default | `ModDataStore` registry and its load/save on world events, `PlaytimeTracker`, `ActionRegistryService`, `ActionExecutorService`. |
-| `StatusEffectModSystem` | both | default | `StatusEffectService` (Global scope, ticked once a second on each side). |
+| `StatusEffectModSystem` | both | default | `StatusEffectService`, one per side in that side's scope, ticked once a second. |
 | `PlayerAnimationSystem` | both | default | Custom player animations (see [Player animations](PlayerAnimations.md)). |
 | `OnlinePlayerCache`, `PlayerZoneTracker`, `PlayerProximityTracker`, `PlayerInLandTracker` | server | default | Player trackers (see [Player trackers](PlayerTrackers.md)). |
 | `DiagnosticsModSystem` | server | 1000 | Start-up checks and `/arcanum diagnose`, `monitor`, `eventbus` (see [Diagnostics](Diagnostics.md)). |

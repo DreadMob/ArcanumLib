@@ -46,6 +46,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Fixed
 
+- Singleplayer: `StatusEffectModSystem` shared one Global `StatusEffectService` between the client and the server, so effects ticked on both sides (twice as fast) and a client-side despawn could clear server effects. Each side now owns its service in its own scope.
+- Singleplayer: `EventBusService.PublishAsync` queued handlers on the main thread of whichever API was registered last (often the client's for a server bus); each bus now knows its side. `CleanupScope` and `StatCoalescingEngine` cancel deferred work on their own side, `StatusEffectService` reads the resistance service of the entity's side.
+- `ArcanumCullFaces` items on shelves and in display cases: the display mesh patch existed but was never applied. It is now, and it only moves no-cull faces to the opaque pass instead of overwriting every pass and the extra tesselator bits.
 - Drivable step-up: the hop keeps a minimum forward speed and does not brake for its whole duration, so slow-accelerating vehicles clear the step instead of falling back.
 - `ArcanumCheckbox` ignored every click: `OnMouseUp` cleared the pressed flag before the base call routed to `OnMouseUpOnElement`, which needs it.
 - `ArcanumDropdown` menu opened at the wrong spot and oversized at GUI scale ≠ 1 (screen px were passed to `ElementBounds.Fixed` and scaled twice).

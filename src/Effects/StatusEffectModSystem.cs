@@ -8,7 +8,8 @@ using Vintagestory.API.Server;
 namespace ArcanumLib.Effects;
 
 /// <summary>
-/// ModSystem that ticks the <see cref="StatusEffectService" /> each game tick.
+/// ModSystem that owns and ticks one <see cref="StatusEffectService" /> per side, registered in that side's
+/// <see cref="ArcanumServiceScope" /> (in singleplayer the client and the server keep their own effects).
 /// </summary>
 public class StatusEffectModSystem : ModSystem
 {
@@ -19,6 +20,7 @@ public class StatusEffectModSystem : ModSystem
     private readonly List<IEventAPI> _despawnEvents = new();
     private EntityDespawnDelegate? _despawnHandler;
     private IStatusEffectService? _service;
+    private ArcanumServiceScope _scope = ArcanumServiceScope.Global;
 
     /// <summary>
     /// Registers the tick listener on the client.
@@ -27,7 +29,7 @@ public class StatusEffectModSystem : ModSystem
     public override void StartClientSide(ICoreClientAPI capi)
     {
         _capi = capi;
-        _service = EnsureService();
+        _service = EnsureService(_scope = ArcanumServiceScope.Client);
         _despawnHandler = (entity, _) => _service?.RemoveAll(entity);
         _clientListenerId = capi.Event.RegisterGameTickListener(dt => _service?.Tick(dt), 1000);
         capi.Event.OnEntityDespawn += _despawnHandler;
@@ -41,21 +43,21 @@ public class StatusEffectModSystem : ModSystem
     public override void StartServerSide(ICoreServerAPI sapi)
     {
         _sapi = sapi;
-        _service = EnsureService();
+        _service = EnsureService(_scope = ArcanumServiceScope.Server);
         _despawnHandler = (entity, _) => _service?.RemoveAll(entity);
         _serverListenerId = sapi.Event.RegisterGameTickListener(dt => _service?.Tick(dt), 1000);
         sapi.Event.OnEntityDespawn += _despawnHandler;
         _despawnEvents.Add(sapi.Event);
     }
 
-    private static IStatusEffectService EnsureService()
+    private static IStatusEffectService EnsureService(ArcanumServiceScope scope)
     {
-        var service = ArcanumServices.Get<IStatusEffectService>();
+        var service = ArcanumServices.Get<IStatusEffectService>(scope);
         if (service == null)
         {
             var concrete = new StatusEffectService();
-            ArcanumServices.Register(concrete);
-            ArcanumServices.Register<IStatusEffectService>(concrete);
+            ArcanumServices.Register(concrete, scope);
+            ArcanumServices.Register<IStatusEffectService>(concrete, scope);
             service = concrete;
         }
         return service;
@@ -89,7 +91,7 @@ public class StatusEffectModSystem : ModSystem
         _despawnEvents.Clear();
 
         _service?.Clear();
-        ArcanumServices.Unregister<StatusEffectService>();
-        ArcanumServices.Unregister<IStatusEffectService>();
+        ArcanumServices.Unregister<StatusEffectService>(_scope);
+        ArcanumServices.Unregister<IStatusEffectService>(_scope);
     }
 }

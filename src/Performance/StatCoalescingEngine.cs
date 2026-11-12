@@ -70,6 +70,10 @@ public class StatCoalescingEngine : IStatCoalescingEngine, IDisposable
 {
     private ICoreServerAPI? _sapi;
 
+    /// <summary>The server's deferred-work service (in singleplayer the client has its own).</summary>
+    private static IDeferredWorkService? Deferred =>
+        ArcanumServices.Get<IDeferredWorkService>(ArcanumServiceScope.Server) ?? ArcanumServices.Get<IDeferredWorkService>();
+
     /// <summary>
     /// Enables or disables coalescing at runtime. When disabled, queued stats are applied
     /// immediately.
@@ -134,7 +138,7 @@ public class StatCoalescingEngine : IStatCoalescingEngine, IDisposable
             }
             foreach (var key in keys)
             {
-                ArcanumServices.Get<IDeferredWorkService>()?.Cancel(StatKey(key));
+                Deferred?.Cancel(StatKey(key));
             }
             lock (_syncLock)
             {
@@ -187,7 +191,7 @@ public class StatCoalescingEngine : IStatCoalescingEngine, IDisposable
 
         if (needsSchedule)
         {
-            ArcanumServices.Get<IDeferredWorkService>()?.Coalesce(
+            Deferred?.Coalesce(
                 StatKey(entityId),
                 () => FlushUpdates(api, entityId),
                 CoalesceWindowMs,
@@ -248,7 +252,7 @@ public class StatCoalescingEngine : IStatCoalescingEngine, IDisposable
 
         if (needsSchedule)
         {
-            ArcanumServices.Get<IDeferredWorkService>()?.Coalesce(
+            Deferred?.Coalesce(
                 StatKey(entityId),
                 () => FlushUpdates(api, entityId),
                 CoalesceWindowMs,
@@ -271,7 +275,7 @@ public class StatCoalescingEngine : IStatCoalescingEngine, IDisposable
             if (update.IsFlushing) return;
         }
 
-        ArcanumServices.Get<IDeferredWorkService>()?.Cancel(StatKey(entityId));
+        Deferred?.Cancel(StatKey(entityId));
         FlushUpdates(api, entityId);
     }
 
@@ -330,7 +334,7 @@ public class StatCoalescingEngine : IStatCoalescingEngine, IDisposable
         }
         foreach (var key in keys)
         {
-            ArcanumServices.Get<IDeferredWorkService>()?.Cancel(StatKey(key));
+            Deferred?.Cancel(StatKey(key));
         }
         lock (_syncLock)
         {
@@ -421,7 +425,7 @@ public class StatCoalescingEngine : IStatCoalescingEngine, IDisposable
             return;
         }
 
-        ArcanumServices.Get<IDeferredWorkService>()?.Cancel(StatKey(entityId));
+        Deferred?.Cancel(StatKey(entityId));
         lock (_syncLock)
         {
             _pendingUpdates.Remove(entityId);

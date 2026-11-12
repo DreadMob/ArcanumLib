@@ -107,7 +107,10 @@ namespace ArcanumLib.Common
             {
                 try
                 {
-                    ArcanumServices.Get<IDeferredWorkService>()?.Cancel(_deferredKeys[i]);
+                    // The scope's own side: in singleplayer both sides run a deferred-work service.
+                    var deferred = (_api != null ? ArcanumServices.Get<IDeferredWorkService>(ArcanumServices.ScopeFor(_api)) : null)
+                        ?? ArcanumServices.Get<IDeferredWorkService>();
+                    deferred?.Cancel(_deferredKeys[i]);
                 }
                 catch (Exception ex)
                 {

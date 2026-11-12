@@ -86,6 +86,7 @@ public class ArcanumLibModSystem : ModSystem
         ImageIconCache.Init(capi);
         CustomTabIconRenderer.RegisterGenericIcons();
         GroundStorageCullFacesPatch.Apply();
+        DisplayCullFacesPatch.Apply();
         _runtime.Initialize();
     }
 
@@ -140,7 +141,7 @@ public class ArcanumLibModSystem : ModSystem
         _runtime!.Services.Register(resistance, scope);
         _runtime!.Services.Register<IEffectResistanceService>(resistance, scope);
 
-        var eventBus = new EventBusService();
+        var eventBus = new EventBusService(scope);
         _runtime!.Services.Register(eventBus, scope);
         _runtime!.Services.Register<IEventBusService>(eventBus, scope);
 
@@ -160,6 +161,7 @@ public class ArcanumLibModSystem : ModSystem
     public override void Dispose()
     {
         GroundStorageCullFacesPatch.Dispose();
+        DisplayCullFacesPatch.Dispose();
         if (_groundPiles) { ArcanumLib.Blocks.GroundPiles.Dispose(); _groundPiles = false; }
         _runtime?.Leave(_runtimeSide);
         _runtime = null;
