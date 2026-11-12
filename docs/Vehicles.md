@@ -6,7 +6,7 @@ nav_order: 19
 
 # Vehicles & mounts
 
-`ArcanumLib.Entities` — driving an entity from its seat, and keeping riders in their seat pose.
+`ArcanumLib.Entities` — driving an entity from its seat, keeping riders in their seat pose, standing them up next to a seat, and clips that follow a speed.
 
 ## EntityBehaviorDrivable
 
@@ -64,3 +64,36 @@ RiderPoses.Keep(rider, seat.SuggestedAnimation);  // one rider; returns whether 
 ```
 
 Seats whose pose the caller changes on purpose (a carried rider, a pose synced to a clip) are left to the caller.
+
+## WheelClip
+
+A looping clip whose speed follows something on the client: wheels, paddles, treads, a drill head, a winch drum. Create one per clip and call `Run` every client tick with the signed target speed (negative runs the clip backwards, 0 comes to rest):
+
+```csharp
+_wheels ??= new WheelClip("roll");
+_wheels.Run(entity.AnimManager, speed / maxSpeed * 2f, dt);
+```
+
+- Started once, never stopped: at speed 0 it holds the pose where it is. `StopAnimation` would fade the bones back to the rest angle (wheels roll backwards for a moment) and the next start would jump to frame 0 — never stop such a clip.
+- Started with `ClientSide = true`. A client-started clip without it is dropped by the next server animation packet on every entity but the local player. If something still drops it, the next `Run` restarts it from the frame it was on (`Frame`).
+- The speed is eased (~0.15 s), since observers get the speed from the server in steps.
+
+`Speed` is the eased speed last applied; `Run` returns whether it (re)started the clip.
+
+## SeatExit
+
+Someone getting up from a seat or a bed stays where the seat was and stands inside the block's collision boxes; the physics does not push out of a box the entity is already in, so they sink through the furniture. `SeatExit.StandUp` moves them to the free floor nearest the seat, searching only the ring of cells right around the block's footprint (never past a wall), on the same level, one up, then one down; if walled in, on top of the block. Call it on the server when the rider unmounts:
+
+```csharp
+public override void DidUnmount(EntityAgent agent)
+{
+    base.DidUnmount(agent);
+    if (DoTeleportOnUnmount) SeatExit.StandUp(agent.World, agent, block, pos, SeatPosition.XYZ);
+}
+```
+
+`beside: true` (a bed) always stands the sleeper on the floor beside the block, even when they would fit on the mattress. `SeatExit.Spot` returns the place without moving anyone (null: free where they are, or nowhere better). Block seats only: the footprint is the block's collision boxes.
+
+## Riders seen by other players
+
+For a rider who is not the local player, vanilla `EntityPlayerShapeRenderer` turns the body by the **vehicle's** yaw (`MountedOn.Entity.Pos.Yaw`) and multiplies only `seat.RenderTransform` in before it; the seat attachment point's own Y rotation is never applied. A seat facing forward looks right, a sideways or rear seat on an entity shows the rider along the entity for everyone else, while the rider sees themselves correctly. Seats on such attachment points must add the turn to `RenderTransform` for non-local riders (AlegacySteamworks `EntityVehicleSeat` does). Block seats (`IMountableSeat.Entity == null`) are not affected: there the renderer uses the rider's own body yaw.

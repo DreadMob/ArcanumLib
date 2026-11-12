@@ -46,7 +46,7 @@ Everything you need for custom in-game UI without fighting the low-level API.
 | [BlockEntityConfigDialog]({{ site.baseurl }}{% link BlockEntityConfigDialog.md %}) | Generic base dialog for editing block entity configuration with typed config and save/cancel. |
 | [ImageIconCache]({{ site.baseurl }}{% link ImageIconCache.md %}) | Load and draw `.png`/`.jpg`/`.webp` icons with clipping and tinting. |
 | [Chunk grid map]({{ site.baseurl }}{% link ChunkGrid.md %}) | Zoomable chunk map with terrain thumbnails, selection and overlays. |
-| [Rendering helpers]({{ site.baseurl }}{% link Rendering.md %}) | See-through glass on entities (`ArcanumGlassShape`) and back-face culling for held items. |
+| [Rendering helpers]({{ site.baseurl }}{% link Rendering.md %}) | See-through glass on entities (`ArcanumGlassShape`), back-face culling for held items, item meshes in block-atlas chunk meshes (`ChunkItemMeshes`). |
 
 ## Blocks, Entities & Players
 
@@ -56,7 +56,8 @@ Shared block, vehicle and player-data features driven from JSON.
 |------|---------|
 | [Blocks]({{ site.baseurl }}{% link Blocks.md %}) | `arcanumlib.FacePlayer`, multiblock forwarding and reach, ground piles of one-per-stack items. |
 | [Clock]({{ site.baseurl }}{% link Clock.md %}) | Data-driven clock block: dials, pendulums, chimes, storm warning. |
-| [Vehicles & mounts]({{ site.baseurl }}{% link Vehicles.md %}) | `EntityBehaviorDrivable` (drive an entity from its seat) and `RiderPoses`. |
+| [Vehicles & mounts]({{ site.baseurl }}{% link Vehicles.md %}) | `EntityBehaviorDrivable` (drive an entity from its seat) `RiderPoses`, `WheelClip` (speed-driven client clips), `SeatExit` (stand up beside a seat). |
+| [Machine claims]({{ site.baseurl }}{% link MachineClaims.md %}) | `MachineClaims.MayWork`: quiet land-claim test for machines in tick paths, throttled message to the driver. |
 | [Player animations]({{ site.baseurl }}{% link PlayerAnimations.md %}) | Custom player animations from `config/playeranimations/`, synced to every client. |
 | [Account transfer]({{ site.baseurl }}{% link PlayerTransfer.md %}) | `/arcanum transfer`: move a player's progress to another account through registered participants. |
 | [Player trackers]({{ site.baseurl }}{% link PlayerTrackers.md %}) | Online player cache, zone, proximity and land-claim trackers. |
