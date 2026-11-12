@@ -60,6 +60,8 @@ namespace ArcanumLib.PlayerTransfer
         {
             if (sapi != null) sapi.Event.PlayerNowPlaying -= OnPlayerNowPlaying;
             ArcanumServices.Unregister<PlayerTransferModSystem>(ArcanumServiceScope.Server);
+            if (sapi != null) PlayerDataTransfer.Clear();
+            sapi = null;
         }
 
         /// <summary>Pending entity-attribute halves (for <c>/arcanum transfer status</c>).</summary>

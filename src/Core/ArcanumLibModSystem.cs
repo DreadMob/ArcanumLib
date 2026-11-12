@@ -24,6 +24,7 @@ public class ArcanumLibModSystem : ModSystem
     private EnumAppSide _runtimeSide;
     private bool _lifecycleRegistered;
     private bool _groundPiles;
+    private bool _clientSide;
 
     /// <summary>
     /// Returns the execution order relative to other systems.
@@ -72,6 +73,7 @@ public class ArcanumLibModSystem : ModSystem
     public override void StartClientSide(ICoreClientAPI capi)
     {
         EnsureRuntime(capi);
+        _clientSide = true;
 
         _runtime!.Side = EnumAppSide.Client;
         _runtime.Api = capi;
@@ -129,10 +131,29 @@ public class ArcanumLibModSystem : ModSystem
     {
         if (_lifecycleRegistered) return;
         _lifecycleRegistered = true;
+        RegisterWorldRegistries();
+    }
+
+    /// <summary>Static registries emptied with the world (<see cref="ArcanumLifecycle.DisposeAll" />).</summary>
+    internal static void RegisterWorldRegistries()
+    {
         ArcanumLifecycle.Register("ImageIconCache", () => { }, ImageIconCache.Dispose);
         ArcanumLifecycle.Register("CollectibleNameResolver", () => { }, CollectibleNameResolver.Clear);
         ArcanumLifecycle.Register("ModDataStore", () => { }, ModDataStore.Clear);
         ArcanumLifecycle.Register("CustomIconRegistry", () => { }, CustomIconRegistry.Clear);
+        // outlines are keyed by collectible ids the server assigned; another world numbers items differently
+        ArcanumLifecycle.Register("GuiItemFit", () => { }, Gui.Controls.GuiItemFit.Clear);
+        // a dialog closed by world unload never removes its occluder, the next world's slots would stay hidden
+        ArcanumLifecycle.Register("GuiOccluders", () => { }, Gui.Controls.GuiOccluders.Clear);
+        // wrappers hold the old world's api and network channel; the next world must register its own
+        ArcanumLifecycle.Register("ArcanumChannelHub", () => { }, Network.ArcanumChannelHub.Clear);
+        // installed by a mod's StartServerSide on every start; must not route into an unloaded mod
+        ArcanumLifecycle.Register("ChatAnnounce", () => { }, () => Text.ChatAnnounce.Handler = null);
+        // stamps are World.ElapsedMilliseconds, which starts again at 0 in the next world (would mute denials)
+        ArcanumLifecycle.Register("BlockEntityAccessGate", () => { }, Common.BlockEntityAccessGate.ClearDenyLog);
+        // Not cleared: RadialMenuStyleRegistry (stateless style objects with no api or textures, any mod's
+        // registration stays valid for every world). ArcanumTexturePool is GL-bound and disposed in Dispose()
+        // of the client instance, on the main thread.
     }
 
     private void RegisterCommonServices(ArcanumServiceScope scope)
@@ -163,6 +184,8 @@ public class ArcanumLibModSystem : ModSystem
         GroundStorageCullFacesPatch.Dispose();
         DisplayCullFacesPatch.Dispose();
         if (_groundPiles) { ArcanumLib.Blocks.GroundPiles.Dispose(); _groundPiles = false; }
+        // GL textures: freed here, on the client's main thread (the lifecycle may run on the server thread)
+        if (_clientSide) { Gui.ArcanumTexturePool.DisposeAll(); _clientSide = false; }
         _runtime?.Leave(_runtimeSide);
         _runtime = null;
         _lifecycleRegistered = false;

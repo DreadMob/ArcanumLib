@@ -52,8 +52,8 @@ namespace ArcanumLib.PlayerTransfer
     }
 
     /// <summary>
-    /// Registry of transfer participants. Mods register once at server start; the order of
-    /// registration is the order of execution.
+    /// Registry of transfer participants. Mods register at every server start (it is emptied when the
+    /// server stops); the order of registration is the order of execution.
     /// </summary>
     public static class PlayerDataTransfer
     {
@@ -203,8 +203,12 @@ namespace ArcanumLib.PlayerTransfer
                 return Prefixes.Any(p => p.Value && key.StartsWith(p.Key, StringComparison.OrdinalIgnoreCase));
         }
 
-        /// <summary>Test hook.</summary>
-        internal static void ResetForTests()
+        /// <summary>
+        /// Forgets every registration. Mods register on each server start and their delegates hold that
+        /// world's objects, so the registry is emptied when the server side stops (singleplayer reload,
+        /// several Atlas boots in one process), otherwise hooks would run twice and on a dead world.
+        /// </summary>
+        internal static void Clear()
         {
             lock (Gate)
             {

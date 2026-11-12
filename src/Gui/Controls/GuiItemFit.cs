@@ -20,7 +20,15 @@ public static class GuiItemFit
 {
     private readonly record struct Extent(double MinX, double MaxX, double MinY, double MaxY);
 
+    // keyed by collectible id, which the server assigns: cleared on world unload (ArcanumLibModSystem lifecycle)
     private static readonly Dictionary<(EnumItemClass, int, bool), Extent?> Cache = new();
+
+    internal static int CachedCount => Cache.Count;
+
+    internal static void RememberNoOutline(EnumItemClass cls, int id, bool spin) => Cache[(cls, id, spin)] = null;
+
+    /// <summary>Forgets every cached outline (ids belong to the world that assigned them).</summary>
+    public static void Clear() => Cache.Clear();
 
     /// <summary>Draw <paramref name="slot"/>'s stack (or nothing) centred in <paramref name="box"/>, its outline
     /// taking <paramref name="frac"/> of the box. <paramref name="spin"/>: slowly turning (the outline then covers
@@ -128,6 +136,11 @@ public static class GuiOccluders
     public static void Add(ElementBounds b) { if (!Open.Contains(b)) Open.Add(b); }
 
     public static void Remove(ElementBounds b) => Open.Remove(b);
+
+    internal static int Count => Open.Count;
+
+    /// <summary>Drops every open occluder (a dialog closed by world unload never removes its own).</summary>
+    public static void Clear() => Open.Clear();
 
     public static bool Covers(ElementBounds box)
     {

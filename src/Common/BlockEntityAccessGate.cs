@@ -29,6 +29,11 @@ public static class BlockEntityAccessGate
     private const int DenyLogCooldownMs = 4000, DenyLogCapacity = 512;
     private static readonly Dictionary<string, long> _denyLogAt = new();
 
+    internal static int DenyLogCount { get { lock (_denyLogAt) return _denyLogAt.Count; } }
+
+    /// <summary>Forgets denial stamps (world unload: the next world's clock starts at 0 again).</summary>
+    public static void ClearDenyLog() { lock (_denyLogAt) _denyLogAt.Clear(); }
+
     /// <summary>Full gate: location, then claim rights.</summary>
     public static bool CheckAccess(ICoreServerAPI? sapi, IServerPlayer? player, BlockPos? pos, BlockEntityAction action, string logTag = "arcanumlib")
     {
