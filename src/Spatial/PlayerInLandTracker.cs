@@ -29,13 +29,54 @@ public class PlayerInLandTracker : ModSystem
     public static int TickIntervalMs { get; set; } = 1000;
 
     /// <summary>Raised when a player enters a land claim from outside.</summary>
-    public static event Action<string, string>? PlayerClaimEntered;
+    public static event Action<string, string>? PlayerClaimEntered
+    {
+        add { lock (EventGate) _entered += value; _instance?.UpdateTicking(); }
+        remove { lock (EventGate) _entered -= value; _instance?.UpdateTicking(); }
+    }
 
     /// <summary>Raised when a player leaves a land claim for outside.</summary>
-    public static event Action<string, string>? PlayerClaimExited;
+    public static event Action<string, string>? PlayerClaimExited
+    {
+        add { lock (EventGate) _exited += value; _instance?.UpdateTicking(); }
+        remove { lock (EventGate) _exited -= value; _instance?.UpdateTicking(); }
+    }
 
     /// <summary>Raised whenever the player changes from one claim to another, including entering null.</summary>
-    public static event Action<string, string?, string?>? PlayerClaimChanged;
+    public static event Action<string, string?, string?>? PlayerClaimChanged
+    {
+        add { lock (EventGate) _changed += value; _instance?.UpdateTicking(); }
+        remove { lock (EventGate) _changed -= value; _instance?.UpdateTicking(); }
+    }
+
+    // Polling every player's claim is only worth it while someone listens: the tick listener starts with the
+    // first subscriber and stops (forgetting the cached claims) when the last one leaves.
+    private static readonly object EventGate = new();
+    private static Action<string, string>? _entered;
+    private static Action<string, string>? _exited;
+    private static Action<string, string?, string?>? _changed;
+    private static bool HasSubscribers { get { lock (EventGate) return _entered != null || _exited != null || _changed != null; } }
+
+    /// <summary>True while the tick listener is registered (tests).</summary>
+    internal bool IsTicking => _tickListenerId != 0;
+
+    private void UpdateTicking()
+    {
+        if (_sapi == null) return;
+        bool want = HasSubscribers;
+        if (want && _tickListenerId == 0)
+        {
+            foreach (var p in _sapi.World.AllOnlinePlayers)
+                if (p is IServerPlayer sp && sp.Entity?.Pos != null) _currentClaims[sp.PlayerUID] = GetClaimName(sp);
+            _tickListenerId = _sapi.Event.RegisterGameTickListener(OnTick, TickIntervalMs);
+        }
+        else if (!want && _tickListenerId != 0)
+        {
+            _sapi.Event.UnregisterGameTickListener(_tickListenerId);
+            _tickListenerId = 0;
+            _currentClaims.Clear();
+        }
+    }
 
     /// <summary>Loads only on the server side, where land claims are authoritative.</summary>
     /// <param name="forSide">The application side being tested.</param>
@@ -43,25 +84,25 @@ public class PlayerInLandTracker : ModSystem
     /// <inheritdoc />
     public override bool ShouldLoad(EnumAppSide forSide) => forSide == EnumAppSide.Server;
 
-    /// <summary>Initializes the tracker, registers the tick listener, and subscribes to player join/leave events.</summary>
+    /// <summary>Initializes the tracker (ticking starts with the first event subscriber) and subscribes to player join/leave events.</summary>
     /// <param name="api">The server API.</param>
     /// <inheritdoc />
     public override void StartServerSide(ICoreServerAPI api)
     {
         _sapi = api;
         _instance = this;
-        _tickListenerId = api.Event.RegisterGameTickListener(OnTick, TickIntervalMs);
         api.Event.PlayerJoin += OnPlayerJoin;
         api.Event.PlayerLeave += OnPlayerLeave;
+        UpdateTicking();
     }
 
     /// <summary>Releases all resources used by the current object.</summary>
     /// <inheritdoc />
     public override void Dispose()
     {
-        if (_sapi != null && _tickListenerId != 0)
+        if (_sapi != null)
         {
-            _sapi.Event.UnregisterGameTickListener(_tickListenerId);
+            if (_tickListenerId != 0) _sapi.Event.UnregisterGameTickListener(_tickListenerId);
             _sapi.Event.PlayerJoin -= OnPlayerJoin;
             _sapi.Event.PlayerLeave -= OnPlayerLeave;
             _tickListenerId = 0;
@@ -107,7 +148,7 @@ public class PlayerInLandTracker : ModSystem
 
     private void OnPlayerJoin(IServerPlayer player)
     {
-        _currentClaims[player.PlayerUID] = GetClaimName(player);
+        if (_tickListenerId != 0) _currentClaims[player.PlayerUID] = GetClaimName(player);
     }
 
     private void OnPlayerLeave(IServerPlayer player)
@@ -143,15 +184,15 @@ public class PlayerInLandTracker : ModSystem
 
             if (!string.IsNullOrWhiteSpace(lastClaim))
             {
-                PlayerClaimExited?.Invoke(uid, lastClaim);
+                _exited?.Invoke(uid, lastClaim);
             }
 
             if (!string.IsNullOrWhiteSpace(newClaim))
             {
-                PlayerClaimEntered?.Invoke(uid, newClaim);
+                _entered?.Invoke(uid, newClaim);
             }
 
-            PlayerClaimChanged?.Invoke(uid, lastClaim, newClaim);
+            _changed?.Invoke(uid, lastClaim, newClaim);
         }
     }
 

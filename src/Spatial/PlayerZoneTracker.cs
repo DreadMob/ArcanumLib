@@ -166,6 +166,7 @@ public readonly record struct BoxZoneShape : IZoneShape
 /// <summary>
 /// Server-side tracker for player presence in 3D zones. Other mods can register
 /// zones and receive enter/exit callbacks without per-mod tick listeners.
+/// The tick listener runs only while at least one zone is registered.
 /// </summary>
 public class PlayerZoneTracker : ModSystem
 {
@@ -199,31 +200,45 @@ public class PlayerZoneTracker : ModSystem
     /// <inheritdoc />
     public override bool ShouldLoad(EnumAppSide forSide) => forSide == EnumAppSide.Server;
 
-    /// <summary>Initializes the tracker, registers the tick listener, and subscribes to player leave events.</summary>
+    /// <summary>Initializes the tracker and subscribes to player leave events; ticking starts with the first zone.</summary>
     /// <param name="api">The server API.</param>
     /// <inheritdoc />
     public override void StartServerSide(ICoreServerAPI api)
     {
         _sapi = api;
         _instance = this;
-        _tickListenerId = api.Event.RegisterGameTickListener(OnTick, TickIntervalMs);
         api.Event.PlayerLeave += OnPlayerLeave;
+    }
+
+    /// <summary>True while the tick listener is registered (tests).</summary>
+    internal bool IsTicking => _tickListenerId != 0;
+
+    private void UpdateTicking()
+    {
+        if (_sapi == null) return;
+        if (_zones.Count > 0 && _tickListenerId == 0)
+            _tickListenerId = _sapi.Event.RegisterGameTickListener(OnTick, TickIntervalMs);
+        else if (_zones.Count == 0 && _tickListenerId != 0)
+        {
+            _sapi.Event.UnregisterGameTickListener(_tickListenerId);
+            _tickListenerId = 0;
+        }
     }
 
     /// <summary>Releases all resources used by the current object.</summary>
     /// <inheritdoc />
     public override void Dispose()
     {
-        if (_sapi != null && _tickListenerId != 0)
-        {
-            _sapi.Event.UnregisterGameTickListener(_tickListenerId);
-            _sapi.Event.PlayerLeave -= OnPlayerLeave;
-            _tickListenerId = 0;
-        }
-
         var keys = new List<string>(_zones.Keys);
         foreach (var zoneId in keys)
             _Unregister(zoneId);
+
+        if (_sapi != null)
+        {
+            if (_tickListenerId != 0) _sapi.Event.UnregisterGameTickListener(_tickListenerId);
+            _sapi.Event.PlayerLeave -= OnPlayerLeave;
+            _tickListenerId = 0;
+        }
 
         _playersInZone.Clear();
         _lastZonesByPlayer.Clear();
@@ -337,6 +352,8 @@ public class PlayerZoneTracker : ModSystem
             }
             set.Add(zoneId);
         }
+
+        UpdateTicking();
     }
 
     private void _Unregister(string zoneId)
@@ -368,6 +385,8 @@ public class PlayerZoneTracker : ModSystem
             }
             _playersInZone.Remove(zoneId);
         }
+
+        UpdateTicking();
     }
 
     private void OnTick(float dt)

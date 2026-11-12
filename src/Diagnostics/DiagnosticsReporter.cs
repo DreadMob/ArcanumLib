@@ -80,20 +80,21 @@ internal sealed class DiagnosticsReporter
         var statusEffect = ArcanumServices.Get<IStatusEffectService>();
         var logger = ArcanumServices.Get<ICategorizedLogger>();
 
+        // Optional: no mod uses the action pipeline in production; a missing service is worth a warning only.
         if (actionRegistry != null)
             report.AppendLine("  [OK]   ActionRegistryService");
         else
         {
-            report.AppendLine("  [FAIL] ActionRegistryService — required service not registered");
-            errors++;
+            report.AppendLine("  [WARN] ActionRegistryService — optional service not registered");
+            warnings++;
         }
 
         if (actionExecutor != null)
             report.AppendLine("  [OK]   ActionExecutorService");
         else
         {
-            report.AppendLine("  [FAIL] ActionExecutorService — required service not registered");
-            errors++;
+            report.AppendLine("  [WARN] ActionExecutorService — optional service not registered");
+            warnings++;
         }
 
         if (statusEffect != null)

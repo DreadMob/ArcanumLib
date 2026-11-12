@@ -109,6 +109,12 @@ public class StatusEffectService : IStatusEffectService
     /// </summary>
     public event Action<Entity, IStatusEffectInstance>? OnEffectRemoved;
 
+    /// <summary>Raised after every successful <see cref="Apply" />, outside the lock: the owner starts ticking.</summary>
+    internal event Action? EffectApplied;
+
+    /// <summary>True while any entity has an effect (or an emptied container not yet swept by <see cref="Tick" />).</summary>
+    public bool HasActive => !_containers.IsEmpty;
+
     /// <summary>
     /// Applies an effect to an entity.
     /// </summary>
@@ -118,6 +124,13 @@ public class StatusEffectService : IStatusEffectService
     /// <param name="data">Optional payload.</param>
     /// <returns>The active or updated effect instance, or <c>null</c> if the entity is null or the effect was resisted.</returns>
     public IStatusEffectInstance? Apply(Entity? entity, IStatusEffect effect, float durationMs, object? data = null)
+    {
+        var instance = ApplyLocked(entity, effect, durationMs, data);
+        if (instance != null) EffectApplied?.Invoke();
+        return instance;
+    }
+
+    private IStatusEffectInstance? ApplyLocked(Entity? entity, IStatusEffect effect, float durationMs, object? data)
     {
         if (entity == null) return null;
 
