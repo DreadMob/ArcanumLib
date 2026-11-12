@@ -9,6 +9,8 @@ nav_order: 60
 
 `ArcanumLib.Common` — server-side checks for packets a client sends to a block entity. The engine checks range and claim rights for block interactions, but custom block-entity packets (`OnReceivedClientPacket`) get nothing; these two helpers are that check.
 
+[BlockEntityPackets]({{ site.baseurl }}{% link BlockEntityPackets.md %}) runs both for every typed message and for the vanilla inventory packets, so a new block entity should use it instead of calling them by hand.
+
 ## BlockEntityAccessGate
 
 ```csharp
@@ -27,6 +29,8 @@ public override void OnReceivedClientPacket(IPlayer fromPlayer, int packetid, by
     base.OnReceivedClientPacket(fromPlayer, packetid, data);
 }
 ```
+
+`BlockEntityAction`: `Configure` and `InsertExtract` need the claim's `Use` right, `Listen` only the location checks, `None` passes any valid player.
 
 `CheckAccess` passes when the position is valid, in the player's dimension, within the player's pick range (+`InteractSlack` 0.5 and a selection-box margin), in a loaded chunk (packet data never loads chunks), and the player has `Use` rights in the land claim. On a claim refusal it also sends the vanilla "no privilege" message. `CanUseInventory` adds the engine's own check that the inventory is actually open for that player. Denials are logged rate-limited (`LogDenial`), never with the payload.
 

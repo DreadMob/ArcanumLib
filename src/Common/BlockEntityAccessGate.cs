@@ -11,7 +11,12 @@ public enum BlockEntityAction
     /// <summary>GUI settings edits.</summary>
     Configure,
     /// <summary>Inventory slot packets and item moves.</summary>
-    InsertExtract
+    InsertExtract,
+    /// <summary>Reports from a player who only watches or hears the block (a GUI opening as a listener): location
+    /// checks, no land-claim right — nothing in the world changes.</summary>
+    Listen,
+    /// <summary>No gate at all, only a valid player: closing a window must always work, even out of reach.</summary>
+    None
 }
 
 /// <summary>
@@ -38,6 +43,7 @@ public static class BlockEntityAccessGate
     public static bool CheckAccess(ICoreServerAPI? sapi, IServerPlayer? player, BlockPos? pos, BlockEntityAction action, string logTag = "arcanumlib")
     {
         if (sapi?.World?.BlockAccessor == null || player?.Entity == null || pos == null) return false;
+        if (action == BlockEntityAction.None) return true;
         if (!sapi.World.BlockAccessor.IsValidPos(pos)) return Deny(sapi, player, pos, action, "bad-pos", logTag);
         if (player.Entity.Pos.Dimension != pos.dimension) return Deny(sapi, player, pos, action, "dimension", logTag);
         double reach = player.WorldData.PickingRange + InteractSlack;
@@ -46,6 +52,7 @@ public static class BlockEntityAccessGate
         double bound = reach + SelectionBoxMargin;
         if (dx * dx + dy * dy + dz * dz > bound * bound) return Deny(sapi, player, pos, action, "distance", logTag);
         if (sapi.World.BlockAccessor.GetChunkAtBlockPos(pos) == null) return Deny(sapi, player, pos, action, "unloaded", logTag);   // never load chunks from packet data
+        if (action == BlockEntityAction.Listen) return true;
         var resp = sapi.World.Claims.TestAccess(player, pos, EnumBlockAccessFlags.Use);
         if (resp == EnumWorldAccessResponse.Granted) return true;
         LogDenial(sapi, player, pos, action, "access-" + resp.ToString().ToLowerInvariant(), logTag);

@@ -172,6 +172,7 @@ Helpers that remove boilerplate for common Vintage Story patterns.
 | Page | Purpose |
 |------|---------|
 | [TypedNetworkChannel]({{ site.baseurl }}{% link TypedNetworkChannel.md %}) | Typed send/receive wrapper for network channels. |
+| [BlockEntityPackets]({{ site.baseurl }}{% link BlockEntityPackets.md %}) | Typed block-entity packets with the access gate, slot guard and safe decoding built in. |
 | [ServerBroadcaster]({{ site.baseurl }}{% link ServerBroadcaster.md %}) | Broadcast packets to all online players with predicate, radius, and exclusion filters. |
 | [Packet security]({{ site.baseurl }}{% link PacketSecurity.md %}) | Server-side range/claim gate and slot-index validation for block-entity packets. |
 
