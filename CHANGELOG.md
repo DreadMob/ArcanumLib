@@ -43,11 +43,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - `InventoryChangeTracker` now implements `IDisposable` and protects its cache under a single lock.
 - `CooldownTracker` now synchronizes all watched-attribute operations with a shared lock.
 - `ArcanumServices` now supports per-scope `Register`, `Unregister`, `Get`, `TryGet`, `EnsureInitialized`, and `Shutdown`.
+- Idle subsystems no longer tick: `StatusEffectModSystem` ticks only while some entity has an effect, `PlayerZoneTracker` (and so `PlayerProximityTracker`) only while a zone is registered, `PlayerInLandTracker` only while one of its events has a subscriber. `/arcanum diagnose` reports a missing action registry/executor as a warning, not a failure.
 
 ### Fixed
 
 - Singleplayer: `StatusEffectModSystem` shared one Global `StatusEffectService` between the client and the server, so effects ticked on both sides (twice as fast) and a client-side despawn could clear server effects. Each side now owns its service in its own scope.
 - Singleplayer: `EventBusService.PublishAsync` queued handlers on the main thread of whichever API was registered last (often the client's for a server bus); each bus now knows its side. `CleanupScope` and `StatCoalescingEngine` cancel deferred work on their own side, `StatusEffectService` reads the resistance service of the entity's side.
+- World unload now empties the static registries that held the old world's state: `GuiItemFit` outlines (keyed by server-assigned item ids: wrong icon sizes on the next server), `GuiOccluders`, `ArcanumChannelHub` wrappers (old api), `ChatAnnounce.Handler`, the `BlockEntityAccessGate` denial stamps (clock restarts at 0) and, on the client, `ArcanumTexturePool`. `PlayerDataTransfer` is emptied when the server stops, so a second world in one process no longer runs every participant twice on dead objects.
 - `ArcanumCullFaces` items on shelves and in display cases: the display mesh patch existed but was never applied. It is now, and it only moves no-cull faces to the opaque pass instead of overwriting every pass and the extra tesselator bits.
 - Drivable step-up: the hop keeps a minimum forward speed and does not brake for its whole duration, so slow-accelerating vehicles clear the step instead of falling back.
 - `ArcanumCheckbox` ignored every click: `OnMouseUp` cleared the pressed flag before the base call routed to `OnMouseUpOnElement`, which needs it.

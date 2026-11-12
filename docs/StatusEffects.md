@@ -99,7 +99,7 @@ var instance = svc.Apply(entity, myEffect, durationMs: 10000, data: null);
 
 ### Tick
 
-Call this from a client/server tick handler:
+`StatusEffectModSystem` already does this once a second on each side, from the first `Apply` until no entity has an effect left. Call it yourself only for a service you created:
 
 ```csharp
 svc.Tick(dt); // dt in seconds
@@ -162,5 +162,6 @@ Use events to drive UI, logging, or side effects without touching effect classes
 ## Lifecycle
 
 - `StatusEffectService` is registered in `ArcanumServices` by `StatusEffectModSystem` during `StartClientSide` / `StartServerSide`.
+- Its 1 s tick listener starts with the first successful `Apply` and stops on the tick that leaves the service empty. A replacement `IStatusEffectService` registered by a mod before it starts is ticked all the time (it cannot say when it is empty).
 - `StatusEffectModSystem.Dispose()` unregisters the service and clears state on world unload.
 - Methods are safe to call before the service is ready; they will return no-ops / empty results when the service is not registered.

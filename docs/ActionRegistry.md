@@ -162,7 +162,7 @@ ActionResult result = executor.Execute(descriptor, context);
 
 ## Notes
 
-- `ActionRegistryService` and `ActionExecutorService` are registered in `ArcanumServices` (Server scope) by `ArcanumDataModSystem` during `StartServerSide`.
+- `ActionRegistryService` and `ActionExecutorService` are registered in `ArcanumServices` (Server scope) by `ArcanumDataModSystem` during `StartServerSide`. They have no tick listeners, so an unused registry costs two small objects; `/arcanum diagnose` treats them as optional.
 - The registry is thread-safe (locked).
 - Cooldowns are per-player per-action-id, tracked server-side, and use `World.ElapsedMilliseconds`.
 - `ArcanumDataModSystem.Dispose()` unregisters the services on world unload.

@@ -31,8 +31,8 @@ Verifies that expected services are registered in `ArcanumServices`:
 |---------|----------|---------------|
 | `ICoreAPI` | yes | `ArcanumLibModSystem` |
 | `ICoreServerAPI` | yes | `ArcanumLibModSystem` |
-| `ActionRegistryService` | yes | `ArcanumDataModSystem` |
-| `ActionExecutorService` | yes | `ArcanumDataModSystem` |
+| `ActionRegistryService` | no | `ArcanumDataModSystem` |
+| `ActionExecutorService` | no | `ArcanumDataModSystem` |
 | `StatusEffectService` | no | `StatusEffectModSystem` |
 | `CategorizedLogger` | no | Consumer via `CategorizedLogger.Init` |
 

@@ -16,8 +16,8 @@ The library's own `ModSystem`s. Vintage Story discovers them; a dependent mod wr
 | `ArcanumPerformanceModSystem` | both | 0.1 | Server: `GameTimeScheduler`, `StatCoalescingEngine`. |
 | `MultiblockReach` | server | 0.1 | Widens vanilla multiblock fillers (see [Blocks](Blocks.md)). |
 | `PlayerTransferModSystem` | server | 0.15 | `/arcanum transfer` (see [Account transfer](PlayerTransfer.md)). |
-| `ArcanumDataModSystem` | server | default | `ModDataStore` registry and its load/save on world events, `PlaytimeTracker`, `ActionRegistryService`, `ActionExecutorService`. |
-| `StatusEffectModSystem` | both | default | `StatusEffectService`, one per side in that side's scope, ticked once a second. |
+| `ArcanumDataModSystem` | server | default | `ModDataStore` registry and its load/save on world events, `PlaytimeTracker`, `ActionRegistryService`, `ActionExecutorService` (no tick listeners). |
+| `StatusEffectModSystem` | both | default | `StatusEffectService`, one per side in that side's scope, ticked once a second while any entity has an effect. |
 | `PlayerAnimationSystem` | both | default | Custom player animations (see [Player animations](PlayerAnimations.md)). |
 | `OnlinePlayerCache`, `PlayerZoneTracker`, `PlayerProximityTracker`, `PlayerInLandTracker` | server | default | Player trackers (see [Player trackers](PlayerTrackers.md)). |
 | `DiagnosticsModSystem` | server | 1000 | Start-up checks and `/arcanum diagnose`, `monitor`, `eventbus` (see [Diagnostics](Diagnostics.md)). |
@@ -34,5 +34,6 @@ var bus  = ArcanumServices.Get<IEventBusService>(ArcanumServiceScope.Client);
 ## Notes
 
 - `ArcanumLibModSystem` starts the runtime in `StartPre`, so mods whose `StartPre` runs later can already use `ArcanumServices`.
-- On unload each side leaves the runtime; the last one out disposes it, which runs the `ArcanumLifecycle` cleanups (`ImageIconCache`, `CollectibleNameResolver`, `ModDataStore`, `CustomIconRegistry`) and shuts the services down.
+- On unload each side leaves the runtime; the last one out disposes it, which runs the `ArcanumLifecycle` cleanups (`ImageIconCache`, `CollectibleNameResolver`, `ModDataStore`, `CustomIconRegistry`, `GuiItemFit`, `GuiOccluders`, `ArcanumChannelHub`, `ChatAnnounce.Handler`, the `BlockEntityAccessGate` denial log) and shuts the services down. The client instance disposes `ArcanumTexturePool` itself, on the main thread. `RadialMenuStyleRegistry` is kept: its styles hold no world state.
+- A static registry of your own that holds per-world state (ids, apis, delegates into a mod) needs the same: `ArcanumLifecycle.Register(name, init, dispose)` from a `Start`, it is dropped with the world and must be registered again by the next one.
 - Every chat command of the library is a subcommand of `/arcanum` (`ChatCommands.GetOrCreate("arcanum")`); a dependent mod adds its own subcommands the same way instead of a new root command.

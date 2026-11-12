@@ -38,7 +38,7 @@ PlayerDataTransfer.Register("mymod-reputation", ctx =>
 
 | Registration | For |
 |--------------|-----|
-| `Register(id, ctx => …)` / `Register(IPlayerDataTransfer)` | Your own stores. Order of registration = order of execution; same id replaces. A participant that throws lands in `ctx.Failures`, the rest continue. |
+| `Register(id, ctx => …)` / `Register(IPlayerDataTransfer)` | Your own stores. Register in every `StartServerSide` (not once per process): the registry is emptied when the server stops. Order of registration = order of execution; same id replaces. A participant that throws lands in `ctx.Failures`, the rest continue. |
 | `RegisterEntityAttributePrefix(prefix, fillOnly)` | Player watched attributes that are progress. This is an **allow-list**: most mod keys on a player are transient state. `fillOnly` copies only when the target has no such key (pending rewards), never merges. |
 | `ExcludeEntityAttributePrefix(prefix)` | Transient keys under an allowed prefix (combat tags, bindings). |
 | `RegisterEntityAttributeSelector(attrs => keys)` | Data-driven key names that no fixed prefix covers. |

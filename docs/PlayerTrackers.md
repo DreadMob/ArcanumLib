@@ -6,7 +6,7 @@ nav_order: 44
 
 # Player trackers
 
-`ArcanumLib.Spatial` and `ArcanumLib.Common` — server-side `ModSystem`s that watch where online players are, so a mod reacts to enter/leave instead of scanning every player each tick. All of them load automatically on the server and tick once a second by default.
+`ArcanumLib.Spatial` and `ArcanumLib.Common` — server-side `ModSystem`s that watch where online players are, so a mod reacts to enter/leave instead of scanning every player each tick. All of them load automatically on the server; a tracker ticks (once a second by default) only while it has something to watch, so with no users it costs nothing.
 
 ## OnlinePlayerCache
 
@@ -40,7 +40,8 @@ PlayerZoneTracker.Unregister("arena-1");
 
 - Shapes: `SphereZoneShape { Center, Radius, Dimension }`, `BoxZoneShape { Min, Max, Dimension }`, or your own `IZoneShape` (`Contains`, `DistanceTo`, `GetChunkKeys`).
 - Global events `PlayerEntered` / `PlayerExited` (`zoneId`, player) fire for every zone.
-- `TickIntervalMs` (default 1000) sets the update rate; `ForceUpdate()` runs one now.
+- `TickIntervalMs` (default 1000) sets the update rate (read when the first zone is registered); `ForceUpdate()` runs one now.
+- The tick listener runs only while at least one zone is registered.
 
 ## PlayerProximityTracker
 
@@ -60,7 +61,7 @@ public override void OnBlockRemoved()
 }
 ```
 
-Registering twice is a no-op; the stay interval follows `PlayerZoneTracker.TickIntervalMs`.
+Registering twice is a no-op; the stay interval follows `PlayerZoneTracker.TickIntervalMs`. Each listener is a zone of `PlayerZoneTracker`, so there is no tick of its own and none at all without listeners.
 
 ## PlayerInLandTracker
 
@@ -75,4 +76,4 @@ string? claim = PlayerInLandTracker.GetPlayerClaim(uid);
 bool there = PlayerInLandTracker.IsPlayerInClaim(uid, "Market square");
 ```
 
-Values are cached and refreshed by the tick (`TickIntervalMs`, default 1000).
+Values are cached and refreshed by the tick (`TickIntervalMs`, default 1000). The tick runs only while one of the three events has a subscriber; without one `GetPlayerClaim` looks the claim up directly. Static events outlive the world: unsubscribe in your `Dispose`, or the next world keeps polling for a dead handler.
