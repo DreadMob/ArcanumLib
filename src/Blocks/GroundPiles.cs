@@ -68,9 +68,13 @@ public static class GroundPiles
         _harmony.Patch(AccessTools.Method(t, nameof(BlockEntityGroundStorage.putOrGetItemSingle)), prefix: Hook(nameof(PutOrGetPrefix)));
         _harmony.Patch(AccessTools.Method(t, "regenCollisionSelectionBox"), postfix: Hook(nameof(BoxesPostfix)));
         _harmony.Patch(AccessTools.Method(t, "UpdateLegacyStorageLayouts"), prefix: Hook(nameof(LegacyLayoutsPrefix)));
-        // Both live on BlockEntityDisplay (ground storage does not override them): the hooks run for every display.
+        // Ground storage overrides both since 1.22, so the display's own getOrCreateMesh is hooked as well: shelves,
+        // cases and mod displays go through it. Older games resolve both lookups to the same method.
         _harmony.Patch(AccessTools.Method(t, "getMeshCacheKey"), postfix: Hook(nameof(MeshKeyPostfix)));
-        _harmony.Patch(AccessTools.Method(t, "getOrCreateMesh"), prefix: Hook(nameof(MeshPrefix)));
+        var groundMesh = AccessTools.Method(t, "getOrCreateMesh");
+        var displayMesh = AccessTools.DeclaredMethod(typeof(BlockEntityDisplay), "getOrCreateMesh");
+        _harmony.Patch(groundMesh, prefix: Hook(nameof(MeshPrefix)));
+        if (displayMesh != groundMesh) _harmony.Patch(displayMesh, prefix: Hook(nameof(MeshPrefix)));
         _harmony.Patch(AccessTools.Method(typeof(BlockPitkiln), nameof(BlockPitkiln.TryCreateKiln)), prefix: Hook(nameof(PitKilnPrefix)));
     }
 
@@ -269,15 +273,15 @@ public static class GroundPiles
     private static bool IsLoneOpen(BlockEntityGroundStorage be, ItemSlot slot) =>
         !slot.Empty && PileOf(slot.Itemstack) != null && HasDisplayedShape(slot.Itemstack) && Filled(be) == 1;
 
-    /// <summary>On a shelf or in a case an <c>openOnDisplay</c> item is its own shape with its own transform: vanilla
-    /// would apply that transform to the displayedShape mesh, which is cached once for every pile and would keep
-    /// shrinking.</summary>
+    /// <summary>On a shelf, in a case or any other display an <c>openOnDisplay</c> item is its own shape with its own
+    /// transform: vanilla would apply that transform to the displayedShape mesh, which is cached once for every pile
+    /// and every display, so it would keep shrinking.</summary>
     private static bool IsOpenOnDisplay(BlockEntityDisplay display, ItemSlot slot) =>
-        display is BlockEntityShelf or BlockEntityDisplayCase && !slot.Empty
+        display is not BlockEntityGroundStorage && !slot.Empty
         && PileOf(slot.Itemstack) is { } pile && pile["openOnDisplay"].AsBool(false);
 
-    // getMeshCacheKey / getOrCreateMesh live on BlockEntityDisplay, so these two hooks also run for
-    // shelves, display cases and every other display — take the base type and filter.
+    // MeshPrefix sits on both the ground storage override and BlockEntityDisplay's own method (which the override
+    // calls as base): take the base type and filter.
     public static void MeshKeyPostfix(BlockEntityDisplay __instance, ItemSlot slot, ref string __result)
     {
         if (__instance is BlockEntityGroundStorage gs && IsLoneOpen(gs, slot)) __result = "pileopen-" + __result;

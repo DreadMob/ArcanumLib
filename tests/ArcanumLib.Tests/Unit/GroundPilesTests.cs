@@ -26,6 +26,20 @@ public class GroundPilesTests
         finally { GroundPiles.Dispose(); }
     }
 
+    /// <summary>Ground storage overrides getOrCreateMesh since 1.22: hooking it alone left shelves on vanilla, which
+    /// shrank the shared pile mesh (patterns on shelves drawn as tiny bundles).</summary>
+    [Fact]
+    public void Shelves_Get_The_Mesh_Hook_Too()
+    {
+        GroundPiles.Apply();
+        try
+        {
+            var display = AccessTools.DeclaredMethod(typeof(BlockEntityDisplay), "getOrCreateMesh");
+            Assert.Contains("arcanumlib.groundpiles", Harmony.GetPatchInfo(display)?.Owners ?? Enumerable.Empty<string>());
+        }
+        finally { GroundPiles.Dispose(); }
+    }
+
     /// <summary>The mesh-key / mesh patches land on BlockEntityDisplay (shared by shelves and display cases), so their
     /// hooks must take the base type and filter ground storage themselves.</summary>
     [Fact]
