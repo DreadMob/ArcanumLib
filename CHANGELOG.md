@@ -8,6 +8,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Added
 
+- `ArcanumLib.Common.MachineClaims.MayWork` — land-claim test for machines working in a tick path (quiet `TestAccess`, the refusal told to the driver/owner at most every 4 s; owner-offline block entities only in unclaimed land and own claims). Moved from AlegacySteamworks.
+- `ArcanumLib.Rendering.ChunkItemMeshes` / `BlockAtlasItemSource` — stack meshes for block-entity chunk meshes with block-atlas textures, cached by stack and handed out as copies. Moved from AlegacySteamworks; replaces ad-hoc texture sources in AlegacyCuriosities.
+- `ArcanumLib.Entities.SeatExit` — stands someone getting up from a block seat or bed on the nearest free floor around the block's footprint. Moved from AlegacyCuriosities.
+- `ArcanumLib.Entities.WheelClip` — a looping client clip whose eased speed follows a value, never stopped, survives server animation packets. Moved from AlegacySteamworks.
 - `/arcanum transfer <from> <to> [confirm]` and `/arcanum transfer status` (`PlayerTransferCommands`) — the account progress transfer command, formerly the Quest Framework's `/avq datatransfer`; `PlayerDataTransfer.RegisterAfterTransfer` adds steps for data outside the world (website DB). The `/arcanum` root is shared via `GetOrCreate`.
 - `ArcanumLib.Blocks.GroundPiles` — one-per-stack items with attribute `groundPile: { group, capacity, step, rows, fan, openOnDisplay }` pile up to 12 on one ground storage (flat with a little jitter, fanned, or as a log pile of rolls); a lone item with a `displayedShape` lies with its own shape. Replaces the pattern pile of AlegacyAttire and the `stackPile` of AlegacySteamworks (one patch set, filtered to ground storage on the shared `BlockEntityDisplay` mesh hooks; empty grown slots are dropped before a pit kiln takes the pile).
 - Block behavior `arcanumlib.FacePlayer` (`BlockBehaviorFacePlayer`) — a horizontally orientable block turns its front to the player placing it.
