@@ -3,6 +3,7 @@ layout: default
 title: Misc Helpers
 nav_order: 99
 description: Small syntactic-sugar helpers that remove boilerplate but are not killer features on their own.
+has_children: true
 ---
 
 # Misc Helpers

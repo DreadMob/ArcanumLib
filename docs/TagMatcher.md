@@ -25,9 +25,11 @@ Match collectibles and item stacks against include/exclude tag-sets and code pat
 ```csharp
 using ArcanumLib.Data;
 
+var tags = api.CollectibleTagRegistry;   // vanilla ITagRegistry<TagSet>
+
 var matcher = new TagMatcher()
-    .AddInclude(api.ToCollectibleTagSet("metal"))
-    .AddExclude(api.ToCollectibleTagSet("raw"))
+    .AddInclude(tags.CreateTagSet(new[] { "metal" }))
+    .AddExclude(tags.CreateTagSet(new[] { "raw" }))
     .AddCodePattern("game:ingot-*")
     .SetTagMode(TagMatcher.MatchMode.Any);
 

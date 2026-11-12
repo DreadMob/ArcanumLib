@@ -2,7 +2,7 @@
 layout: default
 title: PositionUtils
 nav_order: 30
-parent: Randomization & Geometry
+parent: "Misc Helpers"
 ---
 
 # PositionUtils

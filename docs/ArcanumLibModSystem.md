@@ -6,19 +6,33 @@ nav_order: 6
 
 # ArcanumLibModSystem
 
-Central `ModSystem` that boots and shuts down ArcanumLib lifecycle: API registration, icon cache initialization, and service/clear cleanup on world unload.
+The library's own `ModSystem`s. Vintage Story discovers them; a dependent mod writes no start-up code for them.
 
-## What is it for?
+## What they do
 
-- Registers `ICoreAPI`, `ICoreServerAPI`, and `ICoreClientAPI` with `ArcanumServices`.
-- Initializes `ImageIconCache` on the client.
-- Disposes `ImageIconCache`, clears `CollectibleNameResolver`, and shuts down `ArcanumServices` on unload.
+| System | Side | Order | Does |
+|--------|------|-------|------|
+| `ArcanumLibModSystem` | both | -1000 | Joins the `ArcanumRuntime`, registers the APIs and the common services (`EventBusService`, `DeferredWorkService`, `EffectResistanceService`) per side, registers the block behavior `arcanumlib.FacePlayer`, the collectible behavior `ArcanumCullFaces` and (client) the entity renderer `ArcanumGlassShape`, applies the ground-pile and ground-storage cull patches, initialises `ImageIconCache` and the generic tab icons. |
+| `ArcanumPerformanceModSystem` | both | 0.1 | Server: `GameTimeScheduler`, `StatCoalescingEngine`. |
+| `MultiblockReach` | server | 0.1 | Widens vanilla multiblock fillers (see [Blocks](Blocks.md)). |
+| `PlayerTransferModSystem` | server | 0.15 | `/arcanum transfer` (see [Account transfer](PlayerTransfer.md)). |
+| `ArcanumDataModSystem` | server | default | `ModDataStore` registry and its load/save on world events, `PlaytimeTracker`, `ActionRegistryService`, `ActionExecutorService`. |
+| `StatusEffectModSystem` | both | default | `StatusEffectService` (Global scope, ticked once a second on each side). |
+| `PlayerAnimationSystem` | both | default | Custom player animations (see [Player animations](PlayerAnimations.md)). |
+| `OnlinePlayerCache`, `PlayerZoneTracker`, `PlayerProximityTracker`, `PlayerInLandTracker` | server | default | Player trackers (see [Player trackers](PlayerTrackers.md)). |
+| `DiagnosticsModSystem` | server | 1000 | Start-up checks and `/arcanum diagnose`, `monitor`, `eventbus` (see [Diagnostics](Diagnostics.md)). |
 
-## Quick example
+## Runtime and singleplayer
 
-No consumer code is required. The system is auto-discovered by Vintage Story and loads early (`ExecuteOrder` = -1000).
+`ArcanumRuntime` owns the service registry of one world. In singleplayer the client and the server run in one process: the side that starts second **joins** the runtime of the first instead of replacing it, and the services stay apart by `ArcanumServiceScope` (`Client`, `Server`, `Global`). A new world on a side that is already part of the runtime gets a fresh one. Resolve services by scope:
+
+```csharp
+var sapi = ArcanumServices.Get<ICoreServerAPI>(ArcanumServiceScope.Server);
+var bus  = ArcanumServices.Get<IEventBusService>(ArcanumServiceScope.Client);
+```
 
 ## Notes
 
-- Loads on both sides (`ShouldLoad` returns `true`).
-- `ArcanumLibModSystem.Dispose` runs when the world unloads; it does not destroy per-world data stores itself, but clears the `ArcanumServices` registry, which lets services be garbage collected.
+- `ArcanumLibModSystem` starts the runtime in `StartPre`, so mods whose `StartPre` runs later can already use `ArcanumServices`.
+- On unload each side leaves the runtime; the last one out disposes it, which runs the `ArcanumLifecycle` cleanups (`ImageIconCache`, `CollectibleNameResolver`, `ModDataStore`, `CustomIconRegistry`) and shuts the services down.
+- Every chat command of the library is a subcommand of `/arcanum` (`ChatCommands.GetOrCreate("arcanum")`); a dependent mod adds its own subcommands the same way instead of a new root command.

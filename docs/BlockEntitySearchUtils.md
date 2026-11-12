@@ -2,7 +2,7 @@
 layout: default
 title: BlockEntitySearchUtils
 nav_order: 31
-parent: Randomization & Geometry
+parent: "Misc Helpers"
 ---
 
 # BlockEntitySearchUtils

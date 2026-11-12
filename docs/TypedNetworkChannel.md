@@ -1,4 +1,4 @@
-﻿---
+---
 layout: default
 title: TypedNetworkChannel
 nav_order: 110
@@ -63,6 +63,16 @@ public override void StartClientSide(ICoreClientAPI capi)
 | `SendToPlayer<T>(T message, IServerPlayer player)` | Server | Send a message to one specific player. |
 | `SendToPlayers<T>(T message, IEnumerable<IServerPlayer> players)` | Server | Send a message to a collection of players. |
 | `SendToAllExcept<T>(T message, IServerPlayer? exceptPlayer)` | Server | Broadcast to all online players except the given one. |
+
+## Sharing a channel: ArcanumChannelHub
+
+Two mods (or two places in one mod) that want the same channel name on the same side get the same wrapper, so the Vintage Story channel is registered once:
+
+```csharp
+var ch = ArcanumChannelHub.GetOrCreate(api, "mymod:shared");   // TryGet(api, name, out ch) to only look
+```
+
+Extra message types through the shared channel add up. Vintage Story keeps **one** handler per packet type per channel, so if two consumers attach `On<T>`/`OnServer<T>` for the same type, the last one wins.
 
 ## Notes
 

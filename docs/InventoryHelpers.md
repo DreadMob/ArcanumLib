@@ -17,7 +17,6 @@ nav_order: 3
 - Count how many matching items an inventory contains.
 - Consume a specific quantity of an item.
 - Find the first slot that matches a condition.
-- Check whether two stacks are the same collectible or whether a stack is empty/null.
 
 ## Quick example
 
@@ -34,7 +33,7 @@ bool hasEnough = inventory.HasAtLeast("game:ingot-iron", 4);
 int consumed = inventory.ConsumeItems("game:ingot-iron", 4);
 
 // Find the first matching slot.
-var slot = inventory.FindFirst(s => s?.Itemstack?.HasCollectibleCode("game:gear-temporal") == true);
+var slot = inventory.FindFirst(s => s?.Itemstack?.Collectible?.Code?.Path == "gear-temporal");
 ```
 
 ## API overview
@@ -44,13 +43,10 @@ var slot = inventory.FindFirst(s => s?.Itemstack?.HasCollectibleCode("game:gear-
 | `IPlayer.TryGiveOrDrop(stack, world, dropPosition)` | Gives a stack to the player, dropping any overflow. |
 | `IServerPlayer.TryGiveOrDrop(stack)` | Server-side overload. |
 | `IInventory.CountItems(predicate)` | Counts slots matching a predicate. |
-| `IInventory.CountItem(code)` | Counts items with the given collectible code. |
+| `IInventory.CountItem(code)` | Counts items with the given collectible code (`string` or `AssetLocation`). |
 | `IInventory.FindFirst(predicate)` | Returns the first matching `ItemSlot`. |
 | `IInventory.ConsumeItems(code, quantity)` | Removes up to `quantity` matching items and returns the amount consumed. |
 | `IInventory.HasAtLeast(code, quantity)` | Returns `true` if the inventory contains at least `quantity` matching items. |
-| `ItemStack.HasCollectibleCode(code)` | Returns `true` if the stack's collectible matches the code. |
-| `ItemStack.IsSameCollectible(other)` | Returns `true` if two stacks share the same collectible. |
-| `ItemStack.IsEmptyOrNull()` | Returns `true` for `null` or empty stacks. |
 
 ## Notes
 

@@ -1,4 +1,4 @@
-﻿---
+---
 layout: default
 title: Arcanum GUI Toolkit
 nav_order: 10
@@ -62,13 +62,14 @@ The toolkit is organised into the following namespaces. The snippets below show 
 
 | Namespace | Purpose |
 |-----------|---------|
-| `ArcanumLib.Gui.Theme` | The `ArcanumGuiTheme` colour palette, `RGBA`, `ArcanumFont`, and Cairo drawing helpers. |
+| `ArcanumLib.Gui.Theme` | The `ArcanumGuiTheme` colour palette (`GuiThemePalette`, `PaletteScope`), `RGBA`, `ArcanumFont`, `GlyphText` and Cairo drawing helpers. |
 | `ArcanumLib.Gui.Icons` | `ImageIconCache` for loading and drawing PNG/JPEG/GIF/BMP/ICO/WebP/HEIF icons and other `SKCodec` formats. Also contains `CustomIconRegistry` and `ICustomIconRenderer` for custom Cairo-drawn icons, and `CustomTabIconRenderer` for decorative tab icons. |
-| `ArcanumLib.Gui.Controls` | Ready-to-use elements: `ArcanumIcon`, `ArcanumCard`, `ArcanumButton`, `ArcanumScrollbar`, `ArcanumDialogBackground`, `ArcanumList<T>`, `ItemListElement`, `GuiElementCustomTabContent`, `GuiDateTimePicker`. |
-| `ArcanumLib.Gui.Layout` | `ArcanumLayout` helpers for vertical/horizontal stacks and the `ArcanumComposer` fluent builder. |
-| `ArcanumLib.Gui.Dialogs` | `ArcanumGuiDialog` base class. |
+| `ArcanumLib.Gui.Controls` | Ready-to-use elements: `ArcanumIcon`, `ArcanumCard`, `ArcanumButton`, `ArcanumScrollbar`, `ArcanumDialogBackground`, `ArcanumList<T>`, `ItemListElement`, `GuiElementCustomTabContent`, `GuiDateTimePicker`, plus the input controls, ornaments and item slots on [GUI Controls](GuiControls.md). |
+| `ArcanumLib.Gui.Layout` | The `ArcanumComposer` fluent builder (vertical/horizontal stacks). |
+| `ArcanumLib.Gui.Dialogs` | `ArcanumGuiDialog` base class, `BlockEntityConfigDialog`, the brass skin (`BrassDialog`, `BrassTheme`). |
+| `ArcanumLib.Gui.Map` | `ChunkTerrainSource` and `GuiElementChunkGrid`, see [Chunk grid map](ChunkGrid.md). |
 | `ArcanumLib.Gui.RadialMenu` | `RadialMenuGui`, `RadialMenuItem`, `IRadialMenuStyle`, and `RadialMenuStyleRegistry`. See the [Radial Menu](RadialMenu.md) page for details. |
-| `ArcanumLib.Gui` | Extension methods for `GuiComposer` such as `AddItemSlot`. |
+| `ArcanumLib.Gui` | Extension methods for `GuiComposer` such as `AddItemSlot`; `ArcanumTexturePool`. |
 
 ### Theme
 
@@ -90,18 +91,7 @@ var caption = ArcanumFont.Caption;
 
 ### Layout
 
-Instead of manually computing `ElementBounds.Fixed` coordinates:
-
-```csharp
-var rows = ArcanumLayout.VerticalFill(bgBounds, gap: 12, padding: 20,
-    headerH: 64,
-    bodyH: 120,
-    footerH: 36);
-
-var headerBounds = rows[0];
-var bodyBounds = rows[1];
-var footerBounds = rows[2];
-```
+Instead of manually computing `ElementBounds.Fixed` coordinates, stack containers with `ArcanumComposer` (see below): `BeginVertical(padding, gap)` / `BeginHorizontal(...)` hand each child the next free bounds, so rows and columns need no hand-computed offsets.
 
 ### Icon
 
@@ -157,7 +147,7 @@ public class MyDialog : ArcanumGuiDialog
 | `AddIcon` | Draw a WebP/PNG icon with optional clip/tint. |
 | `AddCard` | Rounded themed card background with nested child content. |
 | `AddList<T>` | Add an `ArcanumList<T>` with selection and scrolling. |
-| `AddTextInput` / `AddNumberInput` / `AddDropdown` | Standard Vintage Story inputs. |
+| `AddTextInput` / `AddNumberInput` / `AddDropdown` | Vintage Story's own text, number and dropdown inputs (for the themed ones see [GUI Controls](GuiControls.md)). |
 | `AddScrollbar` | A standalone `ArcanumScrollbar`. |
 
 `ArcanumComposer.Compose()` finalises the stack and returns the underlying `GuiComposer`.
@@ -236,5 +226,5 @@ ArcanumTooltip.Set(SingleComposer, "myTip", "New text");
 ## Notes
 
 - `ArcanumComposer` is a convenience wrapper, not a full layout engine. Complex absolute-positioned or overlapping dialogs may still need direct `GuiComposer` calls.
-- `ArcanumList<T>` draws simple text rows. For rich per-row layouts (icons, multiple columns, etc.), build a custom `GuiElement` or use `ArcanumComposer` inside a scrollable `GuiElementContainer`.
+- `ArcanumList<T>` draws simple text rows. For rich per-row layouts (icons, multiple columns, etc.), use `ItemListElement` or build a custom `GuiElement`.
 - `ArcanumList<T>` does not support multi-select in this first version.

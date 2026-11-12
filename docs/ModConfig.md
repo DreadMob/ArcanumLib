@@ -47,17 +47,18 @@ int max = config.Current.MaxItems;
 | `Load()` | `ConfigResult` | Loads, validates, and applies defaults. |
 | `Save()` | `ConfigResult` | Serializes and stores the current config. |
 | `Reload()` | `ConfigResult` | Re-loads from disk. |
-| `TryApplyJson(string)` | `ConfigResult` | Applies a JSON string with validation. |
+| `TryApplyJson(string)` | `bool` | Applies a JSON string with validation; `false` keeps the current config. |
+| `ToJson()` | `string` | The current config as indented JSON. |
 | `Current` | `T` | The currently loaded config instance. |
 
 ### ConfigResult
 
 ```csharp
-public sealed class ConfigResult
+public readonly struct ConfigResult
 {
-    public ConfigStatus Status { get; }   // Success, DefaultsUsed, ParseFailed, ValidationError, IOError
+    public ConfigResultKind Kind { get; }  // Success, DefaultsUsed, ParseFailed, ValidationFailed, IOError
     public string? Message { get; }
-    public bool IsSuccess { get; }
+    public bool IsSuccess { get; }         // Success or DefaultsUsed
 }
 ```
 

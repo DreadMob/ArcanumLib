@@ -1,8 +1,8 @@
-﻿---
+---
 layout: default
 title: CooldownTracker
-parent: "ApiExtensions"
 nav_order: 2
+parent: "Misc Helpers"
 ---
 
 # CooldownTracker

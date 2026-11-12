@@ -31,8 +31,8 @@ Verifies that expected services are registered in `ArcanumServices`:
 |---------|----------|---------------|
 | `ICoreAPI` | yes | `ArcanumLibModSystem` |
 | `ICoreServerAPI` | yes | `ArcanumLibModSystem` |
-| `ActionRegistryService` | yes | `ActionRegistryModSystem` |
-| `ActionExecutorService` | yes | `ActionRegistryModSystem` |
+| `ActionRegistryService` | yes | `ArcanumDataModSystem` |
+| `ActionExecutorService` | yes | `ArcanumDataModSystem` |
 | `StatusEffectService` | no | `StatusEffectModSystem` |
 | `CategorizedLogger` | no | Consumer via `CategorizedLogger.Init` |
 
@@ -43,13 +43,9 @@ Verifies that expected ModSystems are loaded:
 | System | Required |
 |--------|----------|
 | `ArcanumLibModSystem` | yes |
-| `ActionRegistryModSystem` | yes |
+| `ArcanumDataModSystem` | yes |
+| `ArcanumPerformanceModSystem` | yes |
 | `StatusEffectModSystem` | no |
-| `PityTrackerModSystem` | no |
-| `ModDataStoreModSystem` | no |
-| `StatCoalescingEngine` | no |
-| `GameTimeScheduler` | no |
-| `DeferredWork` | no |
 
 ### Singletons
 
@@ -85,6 +81,10 @@ A game-tick listener samples every 5 seconds:
 | Players online | `Server.Players.Length`. |
 
 Up to 60 samples (5 minutes) are retained for trend display.
+
+### GUI textures
+
+Lists the live GUI textures of controls that report to `GuiTextureTracker` (`Register`/`Unregister` per baked texture, `Regen` per rebake) — a rising count points at a control that rebakes or leaks. It reflects the process it runs in, so on a dedicated server the list is empty; in singleplayer it shows the client's controls.
 
 ## Commands
 

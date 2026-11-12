@@ -1,8 +1,8 @@
-﻿---
+---
 layout: default
 title: WatchedAttributes
-parent: "ApiExtensions"
 nav_order: 6
+parent: "Misc Helpers"
 ---
 
 # WatchedAttributes

@@ -34,6 +34,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Changed
 
+- Documentation brought up to the code: new pages for blocks (FacePlayer, multiblock forwarding/reach, ground piles), the clock, vehicles and rider poses, player animations, account transfer, player trackers, GUI controls, rendering helpers, packet security, hotkeys and chat announcements; stale API in InventoryHelpers, ModConfig, ItemMode, TagMatcher, Diagnostics, ModDataStore and PityTracker fixed; pages whose navigation parent no longer existed are reachable again.
 - Consolidated multiple `ModSystem` classes into `ArcanumDataModSystem`, `ArcanumPerformanceModSystem`, and `ArcanumLibModSystem`.
 - `ArcanumLibModSystem` now registers client and server APIs under `ArcanumServiceScope.Client` and `ArcanumServiceScope.Server`.
 - `PlaytimeTracker.Current` and `PityTracker.Current` now use `ArcanumServiceScope.Server`.

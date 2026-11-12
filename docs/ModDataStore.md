@@ -1,7 +1,8 @@
-﻿---
+---
 layout: default
 title: ModDataStore
 nav_order: 40
+has_children: true
 ---
 
 # ModDataStore
@@ -65,7 +66,7 @@ store.Save();
 
 ### Global API
 
-If `ModDataStoreModSystem` is loaded, you can omit `sapi`:
+On the server (`ArcanumDataModSystem` registers the store registry), you can omit `sapi`:
 
 ```csharp
 var store = ModDataStore.GetOrCreate<MySaveData>("mymod", "state", 1);

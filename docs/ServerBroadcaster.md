@@ -1,7 +1,8 @@
-﻿---
+---
 layout: default
 title: ServerBroadcaster
 nav_order: 50
+parent: "TypedNetworkChannel"
 ---
 
 # ServerBroadcaster

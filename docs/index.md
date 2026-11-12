@@ -20,6 +20,14 @@ The library is split into clear areas. Each page answers three questions: **what
 
 ---
 
+## Core
+
+| Page | Purpose |
+|------|---------|
+| [Getting Started]({{ site.baseurl }}{% link GettingStarted.md %}) | Copy-paste examples for a first dependent mod. |
+| [ArcanumServices]({{ site.baseurl }}{% link ArcanumServices.md %}) | Scoped service registry (client, server, global) owned by the world's runtime. |
+| [ArcanumLibModSystem]({{ site.baseurl }}{% link ArcanumLibModSystem.md %}) | What the library's own ModSystems register and when; runtime sharing in singleplayer. |
+
 ## GUI & Rendering
 
 Everything you need for custom in-game UI without fighting the low-level API.
@@ -27,15 +35,31 @@ Everything you need for custom in-game UI without fighting the low-level API.
 | Page | Purpose |
 |------|---------|
 | [Arcanum GUI Toolkit]({{ site.baseurl }}{% link ArcanumGui.md %}) | Themed colour palette, layout helpers, composer, and reusable controls. |
+| [GUI Controls]({{ site.baseurl }}{% link GuiControls.md %}) | Checkbox, toggle, spinner, slider, dropdown, tabs, text input, progress bar, tooltips, ornaments, fitted item slots, glyph text, palette scopes, texture pool. |
 | [Radial Menu]({{ site.baseurl }}{% link RadialMenu.md %}) | Generic Cairo-styled radial (pie) menu with pluggable styles via `IRadialMenuStyle` registry. |
 | [ItemListElement]({{ site.baseurl }}{% link ItemListElement.md %}) | Scrollable vertical list with icon nodes, status colours, tooltips, and custom icon support. |
 | [CustomTabContent]({{ site.baseurl }}{% link CustomTabContent.md %}) | Data-driven scrollable tab content with decorative Cairo icons and section layout. |
 | [GuiDateTimePicker]({{ site.baseurl }}{% link GuiDateTimePicker.md %}) | Reusable date/time picker for `GuiComposer` with Now/Clear buttons. |
 | [Custom Icons]({{ site.baseurl }}{% link CustomIcons.md %}) | Registry and interface for custom Cairo-drawn GUI icons keyed by string. |
-|| [HUDs & Overlays]({{ site.baseurl }}{% link Huds.md %}) | Generic HUD panels, client systems, packet icon HUDs, and transient overlays. |
-|| [Holograms]({{ site.baseurl }}{% link Holograms.md %}) | Floating text labels above blocks with texture caching and 3D projection. |
+| [HUDs & Overlays]({{ site.baseurl }}{% link Huds.md %}) | Generic HUD panels, client systems, packet icon HUDs, and transient overlays. |
+| [Holograms]({{ site.baseurl }}{% link Holograms.md %}) | Floating text labels above blocks with texture caching and 3D projection. |
 | [BlockEntityConfigDialog]({{ site.baseurl }}{% link BlockEntityConfigDialog.md %}) | Generic base dialog for editing block entity configuration with typed config and save/cancel. |
 | [ImageIconCache]({{ site.baseurl }}{% link ImageIconCache.md %}) | Load and draw `.png`/`.jpg`/`.webp` icons with clipping and tinting. |
+| [Chunk grid map]({{ site.baseurl }}{% link ChunkGrid.md %}) | Zoomable chunk map with terrain thumbnails, selection and overlays. |
+| [Rendering helpers]({{ site.baseurl }}{% link Rendering.md %}) | See-through glass on entities (`ArcanumGlassShape`) and back-face culling for held items. |
+
+## Blocks, Entities & Players
+
+Shared block, vehicle and player-data features driven from JSON.
+
+| Page | Purpose |
+|------|---------|
+| [Blocks]({{ site.baseurl }}{% link Blocks.md %}) | `arcanumlib.FacePlayer`, multiblock forwarding and reach, ground piles of one-per-stack items. |
+| [Clock]({{ site.baseurl }}{% link Clock.md %}) | Data-driven clock block: dials, pendulums, chimes, storm warning. |
+| [Vehicles & mounts]({{ site.baseurl }}{% link Vehicles.md %}) | `EntityBehaviorDrivable` (drive an entity from its seat) and `RiderPoses`. |
+| [Player animations]({{ site.baseurl }}{% link PlayerAnimations.md %}) | Custom player animations from `config/playeranimations/`, synced to every client. |
+| [Account transfer]({{ site.baseurl }}{% link PlayerTransfer.md %}) | `/arcanum transfer`: move a player's progress to another account through registered participants. |
+| [Player trackers]({{ site.baseurl }}{% link PlayerTrackers.md %}) | Online player cache, zone, proximity and land-claim trackers. |
 
 ## Items & Equipment
 
@@ -91,12 +115,11 @@ Keep the server/client responsive.
 | [TimedCache]({{ site.baseurl }}{% link TimedCache.md %}) | Thread-safe cache with TTL eviction. |
 | [CleanupScope]({{ site.baseurl }}{% link CleanupScope.md %}) | Cancel listeners, work, and nested disposables in one call. |
 
-## Events & Commands
+## Events
 
 | Page | Purpose |
 |------|---------|
 | [EventBusService]({{ site.baseurl }}{% link EventBus.md %}) | Typed publish/subscribe event bus for cross-mod communication. |
-
 
 ## Diagnostics
 
@@ -120,15 +143,13 @@ Helpers that remove boilerplate for common Vintage Story patterns.
 
 | Page | Purpose |
 |------|---------|
-
 | [Misc Helpers]({{ site.baseurl }}{% link MiscHelpers.md %}) | Thin sugar and helper factories: chat formatting, damage sources, side checks, health scaling, player filters. |
-
 | [CooldownTracker]({{ site.baseurl }}{% link CooldownTracker.md %}) | Per-entity cooldowns in `WatchedAttributes`. |
-
 | [EventScope]({{ site.baseurl }}{% link EventScope.md %}) | Disposable event subscription scope. |
 | [PlaytimeTracker]({{ site.baseurl }}{% link PlaytimeTracker.md %}) | Per-player online time tracking, login streaks, real-time cooldowns, and combat-state checks. |
 | [WatchedAttributes]({{ site.baseurl }}{% link WatchedAttributes.md %}) | Get-or-create and set helpers for `ITreeAttribute`. |
-
+| [Hotkeys]({{ site.baseurl }}{% link Hotkeys.md %}) | `ArcanumHotkeyService`: named hotkeys with parsing and real unregistration. |
+| [Chat announcements]({{ site.baseurl }}{% link ChatAnnounce.md %}) | One entry point for server-wide announcements with a pluggable per-player filter. |
 
 ## Randomization & Geometry
 
@@ -151,6 +172,7 @@ Helpers that remove boilerplate for common Vintage Story patterns.
 |------|---------|
 | [TypedNetworkChannel]({{ site.baseurl }}{% link TypedNetworkChannel.md %}) | Typed send/receive wrapper for network channels. |
 | [ServerBroadcaster]({{ site.baseurl }}{% link ServerBroadcaster.md %}) | Broadcast packets to all online players with predicate, radius, and exclusion filters. |
+| [Packet security]({{ site.baseurl }}{% link PacketSecurity.md %}) | Server-side range/claim gate and slot-index validation for block-entity packets. |
 
 ---
 

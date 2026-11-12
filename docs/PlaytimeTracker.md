@@ -2,7 +2,7 @@
 layout: default
 title: PlaytimeTracker
 nav_order: 42
-parent: Common & Utility
+parent: "Misc Helpers"
 ---
 
 # PlaytimeTracker & PlaytimeCooldownManager

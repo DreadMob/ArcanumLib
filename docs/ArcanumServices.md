@@ -118,6 +118,6 @@ ArcanumRuntime.Current?.Dispose();
 - Registration is thread-safe.
 - Use `T` as the service contract. For example, register `PityTracker` and resolve it via `ArcanumServices.Get<IPityTracker>()`.
 - Services that implement `IDisposable` are disposed by `Shutdown` and `Unregister`.
-- Prefer explicit `Client` / `Server` scopes for side-specific services to avoid singleplayer conflicts.
+- Prefer explicit `Client` / `Server` scopes for side-specific services. `Get<T>()` without a scope searches `Global`, `Server`, `Client`, `World` in that order, so in singleplayer a call from client code finds the **server's** instance of a service both sides register (`IEventBusService`, `IDeferredWorkService`, `IEffectResistanceService`). `ArcanumServices.ScopeFor(api)` gives the scope of an API.
 - `Get<T>` and `Get(Type)` return null when no runtime is active, making them safe for logging paths.
 - `Register` and `EnsureInitialized` throw when no runtime is active, since registration requires an active world.

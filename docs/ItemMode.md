@@ -27,13 +27,7 @@ public class ItemMode
     public string Id { get; set; }
     public string Name { get; set; }
     public string Icon { get; set; }
-    public List<ItemAction> Actions { get; set; }
-}
-
-public class ItemAction
-{
-    public string Id { get; set; }
-    public string[] Args { get; set; }
+    public List<ActionDescriptor> Actions { get; set; }   // ArcanumLib.Actions, see ActionRegistry
 }
 ```
 

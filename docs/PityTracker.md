@@ -136,5 +136,5 @@ public class MyPityModSystem : ModSystem
 
 - All public methods on `PityTracker` are thread-safe (`_syncLock`).
 - `PityTracker.Current` is an `IPityTracker?` read-only facade backed by `ArcanumServices`. Register the instance with `ArcanumServices.Register(tracker, ArcanumServiceScope.Server)` and it will be returned here.
-- `PityTrackerModSystem` creates and saves the global tracker on the server.
+- ArcanumLib does not create a tracker: the consuming mod constructs one with its own save key and publishes it (see the table in the README, *Service ownership*).
 - `RecordOpen` automatically marks the `ModDataStore` as dirty so the next `Save` persists.

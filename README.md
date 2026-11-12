@@ -4,7 +4,7 @@
 
 [![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 [![Game Version](https://img.shields.io/badge/Vintage%20Story-1.22.1+-green.svg)](https://www.vintagestory.at/)
-[![Version](https://img.shields.io/badge/Version-1.0.0--rc1-orange.svg)](resources/modinfo.json)
+[![Version](https://img.shields.io/badge/Version-1.0.0--rc.13-orange.svg)](resources/modinfo.json)
 [![C#](https://img.shields.io/badge/C%23-.NET%2010-purple.svg)]()
 
 ---
@@ -25,6 +25,8 @@ The library is built around a few headline features that have no vanilla equival
 - **Radial Menu** — Cairo-styled pie menu with pluggable `IRadialMenuStyle` themes. No vanilla equivalent.
 - **ModDataStore** — versioned per-savegame persistence with schema migrations. Replaces raw `StoreData` string dictionaries.
 - **PityTracker** — per-player pity/guarantee counters for loot systems.
+- **Account transfer** — `/arcanum transfer` moves a player's progress to another account through every mod that registered its data, with shared merge rules.
+- **Shared blocks & vehicles** — face-the-player placement, multiblock forwarding and reach, ground piles, a data-driven clock, a drivable-entity behavior and see-through entity glass, all usable from JSON.
 
 Beyond those, the library ships thinner helpers (color structs, wildcard matching, watched-attributes helpers, damage source factories, etc.) collected under [Misc Helpers](docs/MiscHelpers.md) so they don't dilute the main feature pages.
 
@@ -87,6 +89,20 @@ See [`docs/GettingStarted.md`](docs/GettingStarted.md) for a hands-on introducti
 | **Holograms** | `SingleHologramRenderer` and `AreaHologramRenderer` for floating block labels with `IHologramTextSource`, versioned texture caching, and 3D projection. |
 | **ImageIconCache** | Load, cache and draw icon image surfaces with circle, hexagon, and diamond clipping plus optional tinting. |
 | **ModeIconBuilder** | Factory for tool-mode icons (in-game icon, letter, or live `ItemStack` rendering). |
+| **GUI Controls** | Checkbox, toggle, spinner, slider, dropdown, tab strip, text input/area, progress bar, tooltips, rivet/plaque/dial ornaments, fitted item slots (`GuiItemFit`), `GlyphText`, `PaletteScope`, `ArcanumTexturePool`, the brass dialog skin. |
+| **Chunk grid map** | `ChunkTerrainSource` + `GuiElementChunkGrid`: zoomable chunk map with terrain thumbnails, selection and overlays. |
+| **Rendering helpers** | `ArcanumGlassShape` entity renderer (real see-through `renderPass 3` panes) and the `ArcanumCullFaces` item behavior. |
+
+### Blocks, Entities & Players
+
+| Module | Description |
+|--------|-------------|
+| **Blocks** | `arcanumlib.FacePlayer`, `IMultiBlockForwarding` / `IMultiBlockForwardingBoxes`, `MultiblockReach` (fillers 5 sideways, 8 up), `GroundPiles` (`groundPile` item attribute). |
+| **Clock** | `BlockClock` / `BlockEntityClock`, configured by `attributes.clock`. |
+| **Vehicles & mounts** | `EntityBehaviorDrivable` with `drive` tuning, `RiderPoses.Keep`. |
+| **Player animations** | `config/playeranimations/*.json` injected into any player shape, synced to all clients. |
+| **Account transfer** | `PlayerDataTransfer` participants, `PlayerDataMerge` rules, `/arcanum transfer`. |
+| **Player trackers** | `OnlinePlayerCache`, `PlayerZoneTracker`, `PlayerProximityTracker`, `PlayerInLandTracker`. |
 
 ### Items & Equipment
 
@@ -105,7 +121,7 @@ See [`docs/GettingStarted.md`](docs/GettingStarted.md) for a hands-on introducti
 | **ActionRegistryService / ActionExecutorService** | Typed action registry with JSON-declared actions, cooldowns, and permissions. |
 | **CategorizedLogger** | File and console logger with per-category files and throttled debug output. |
 
-### Events & Commands
+### Events
 
 | Module | Description |
 |--------|-------------|
@@ -132,7 +148,7 @@ See [`docs/GettingStarted.md`](docs/GettingStarted.md) for a hands-on introducti
 |--------|-------------|
 | **ModAssetLoader** | Loads and merges typed JSON assets from all loaded mods, supporting multi-pack content definitions. |
 | **ModAssetRegistry** | Builds validated, keyed, source-tracked registries from `ModAssetLoader` output. |
-| **TagSetExtensions** | Set operations and readable aliases for `Vintagestory.API.Datastructures.TagSet`. |
+| **TagMatcher** | Match collectibles and stacks against include/exclude tag sets and code patterns. |
 | **ValidationResult** | Immutable result object that accumulates errors and warnings from validation pipelines. |
 
 ### Caching & Performance
@@ -167,6 +183,8 @@ See [`docs/GettingStarted.md`](docs/GettingStarted.md) for a hands-on introducti
 | **TypedNetworkChannel** | Typed network channel wrapper with duplicate message-type protection. |
 | **ServerBroadcaster** | Snapshot-based packet broadcast to all or filtered online players. |
 | **InventoryChangeTracker** | Fingerprint-based inventory change detection with disconnect cleanup. |
+| **ArcanumChannelHub** | One shared `TypedNetworkChannel` per (side, name). |
+| **Packet security** | `BlockEntityAccessGate` (range + claim check for block-entity packets), `InventorySlotPacketGuard`. |
 
 ### Common & Utility
 
@@ -178,6 +196,8 @@ See [`docs/GettingStarted.md`](docs/GettingStarted.md) for a hands-on introducti
 | **PlaytimeTracker** | Per-player online time tracking, login streaks, real-time cooldowns, and combat-state checks. |
 | **WatchedAttributesExtensions** | Get-or-create, set-if-missing, and set-and-mark-dirty helpers for `ITreeAttribute`. |
 | **CooldownTracker** | Per-entity cooldown state in `WatchedAttributes` with readiness, remaining, and progress checks. |
+| **ArcanumHotkeyService** | Named hotkeys with key-combination parsing and real unregistration. |
+| **ChatAnnounce** | Server-wide announcements with a pluggable per-player filter. |
 | **Misc Helpers** | Thin sugar: `IsClient`/`IsServer`, `RGBA`, `Pretty`, `Wildcard`, `CollectibleNameResolver`, `EntityHealthExtensions`, `PlayerExtensions`, `ShapeCloner`. |
 
 ---
@@ -186,34 +206,40 @@ See [`docs/GettingStarted.md`](docs/GettingStarted.md) for a hands-on introducti
 
 ```
 ArcanumLib/
-├── ArcanumLibModSystem.cs    — Vintage Story entry point, lifecycle, and API registration
 ├── src/
-│   ├── Core/                  — ArcanumServices, ArcanumLibModSystem
-│   ├── Gui/                   — theme, composer, controls, layout, icons, radial menu, huds
+│   ├── Core/                  — ArcanumRuntime, ArcanumServices, the library's ModSystems
+│   ├── Gui/                   — theme, composer, controls, layout, icons, radial menu, HUDs, chunk map
 │   ├── Hologram/              — floating block text, texture caching, 3D projection
-│   ├── Geometry/              — PositionUtils, BlockEntitySearchUtils
-│   ├── Caching/               — TimedCache and SimpleLRUCache
-│   ├── Common/                — EventScope, CleanupScope, PlaytimeTracker, PlaytimeCooldownManager
-│   ├── Events/                — EventBusService, IEvent
-
-│   ├── Data/                  — TagSet, WatchedAttributes, and CooldownTracker
+│   ├── Blocks/                — FacePlayer, multiblock forwarding/reach, GroundPiles, Clock
+│   ├── Entities/              — EntityBehaviorDrivable, RiderPoses
+│   ├── PlayerAnimations/      — PlayerAnimationSystem
+│   ├── PlayerTransfer/        — PlayerDataTransfer, PlayerDataMerge, /arcanum transfer
+│   ├── Rendering/             — GlassEntityShapeRenderer, cull-face behavior
+│   ├── Spatial/               — zone, proximity and land-claim trackers
+│   ├── Geometry/              — PositionUtils, BlockEntitySearchUtils, ShapeCloner
+│   ├── Caching/               — TimedCache
+│   ├── Common/                — scopes, PlaytimeTracker, OnlinePlayerCache, hotkeys, packet guards, helpers
+│   ├── Events/                — EventBusService
+│   ├── Data/                  — TagMatcher, WatchedAttributes, CooldownTracker
 │   ├── Validation/            — ValidationResult
 │   ├── Assets/                — ModAssetLoader, ModAssetRegistry
 │   ├── Performance/           — DeferredWorkService, GameTimeScheduler, StatCoalescingEngine
 │   ├── Random/                — WeightedRandom, WeightedTable, LootTable
-│   ├── Text/                  — Pretty, Wildcard
-│   ├── Network/               — TypedNetworkChannel, ServerBroadcaster
+│   ├── Text/                  — Pretty, Wildcard, ChatAnnounce
+│   ├── Network/               — TypedNetworkChannel, ArcanumChannelHub, ServerBroadcaster
 │   ├── Helpers/               — CollectibleNameResolver
-│   ├── Persistence/           — ModDataStore
+│   ├── Persistence/           — ModDataStore, ModConfig
 │   ├── Actions/               — ActionRegistryService, ActionExecutorService
-│   ├── Effects/               — StatusEffectService
+│   ├── Effects/               — StatusEffectService, EffectResistanceService
 │   ├── Progression/           — PityTracker
-│   ├── Inventory/             — InventoryChangeTracker, InventoryFingerprint, InventoryHelpers
+│   ├── Inventory/             — InventoryChangeTracker, InventoryFingerprint, InventoryExtensions, ItemStackBuilder
+│   ├── Items/                 — ItemCharge, ItemMode, ItemModeManager
+│   ├── Particles/             — ParticleEffectBuilder, ParticleUtils
 │   ├── Logging/               — CategorizedLogger
-│   └── Items/                 — ItemCharge, ItemMode, ItemModeManager
+│   └── Diagnostics/           — /arcanum diagnose, runtime monitor
+├── resources/                 — modinfo.json, lang, player-animation patch
+├── tests/                     — unit and Atlas integration tests
 ├── docs/                      — API documentation
-├── resources/
-│   └── modinfo.json           — mod metadata
 ├── LICENSE                    — MIT License
 └── README.md                  — this file
 ```
@@ -230,21 +256,22 @@ Most subsystems publish themselves through `ArcanumServices`. The table below sh
 | `ActionRegistry` | `IActionRegistryService` | `ArcanumDataModSystem` | `ArcanumServices.Get<IActionRegistryService>(ArcanumServiceScope.Server)` |
 | `ActionExecutor` | `IActionExecutorService` | `ArcanumDataModSystem` | `ArcanumServices.Get<IActionExecutorService>(ArcanumServiceScope.Server)` |
 | `PlaytimeTracker` | `IPlaytimeTracker` | `ArcanumDataModSystem` | `ArcanumServices.Get<IPlaytimeTracker>(ArcanumServiceScope.Server)` |
-| `OnlinePlayerCache` | `IOnlinePlayerCache` | `OnlinePlayerCache` | `ArcanumServices.Get<IOnlinePlayerCache>()` |
-| `EventBus` | `IEventBusService` | `ArcanumLibModSystem` | `ArcanumServices.Get<IEventBusService>()` |
+| `OnlinePlayerCache` | `IOnlinePlayerCache` | `OnlinePlayerCache` | `ArcanumServices.Get<IOnlinePlayerCache>(ArcanumServiceScope.Server)` |
+| `EventBus` | `IEventBusService` | `ArcanumLibModSystem` | `ArcanumServices.Get<IEventBusService>(scope)` — per side |
 | `CategorizedLogger` | `ICategorizedLogger` | `CategorizedLogger` (consumer calls `Init`) | `ArcanumServices.Get<ICategorizedLogger>()` or `CategorizedLogger.Instance` |
-| `DeferredWork` | `IDeferredWorkService` | `ArcanumLibModSystem` | `ArcanumServices.Get<IDeferredWorkService>()` |
+| `DeferredWork` | `IDeferredWorkService` | `ArcanumLibModSystem` | `ArcanumServices.Get<IDeferredWorkService>(scope)` — per side |
 | `GameTimeScheduler` | `IGameTimeScheduler` | `ArcanumPerformanceModSystem` | `ArcanumServices.Get<IGameTimeScheduler>(ArcanumServiceScope.Server)` |
 | `StatCoalescingEngine` | `IStatCoalescingEngine` | `ArcanumPerformanceModSystem` | `ArcanumServices.Get<IStatCoalescingEngine>(ArcanumServiceScope.Server)` |
-| `StatusEffectService` | `IStatusEffectService` | `StatusEffectModSystem` | `ArcanumServices.Get<IStatusEffectService>()` |
-| `EffectResistanceService` | `IEffectResistanceService` | `StatusEffectModSystem` | `ArcanumServices.Get<IEffectResistanceService>()` |
+| `StatusEffectService` | `IStatusEffectService` | `StatusEffectModSystem` | `ArcanumServices.Get<IStatusEffectService>()` — Global scope, one instance per process |
+| `EffectResistanceService` | `IEffectResistanceService` | `ArcanumLibModSystem` | `ArcanumServices.Get<IEffectResistanceService>(scope)` — per side |
 | `PityTracker` | `IPityTracker`, `IPityProvider` | **Consumer** (e.g. quest/progression mod) | `ArcanumServices.Get<IPityTracker>(ArcanumServiceScope.Server)` |
 
 Notes:
 
 - `PityTracker` is intentionally **not** owned by ArcanumLib. The library provides the implementation; the consuming mod decides the save key and publishes the instance. This avoids multiple mods fighting over the same global tracker.
 - `CategorizedLogger` is published by whichever mod calls `CategorizedLogger.Init(api, ...)`. ArcanumLib does not create one automatically.
-- `ArcanumLibModSystem` and `ArcanumDataModSystem` are loaded by Vintage Story in order (`ExecuteOrder = 0.1` for the performance system), so the owned services above are available before most other `StartServerSide` / `StartClientSide` calls.
+- `ArcanumLibModSystem` runs first (`ExecuteOrder = -1000`), the performance system at 0.1, so the owned services above are available before most other `StartServerSide` / `StartClientSide` calls.
+- Services marked *per side* are registered once per side; in singleplayer both exist in one process, so pass `ArcanumServiceScope.Client` / `Server` (or `ArcanumServices.ScopeFor(api)`) — an unscoped `Get` returns the server's one first.
 
 ---
 

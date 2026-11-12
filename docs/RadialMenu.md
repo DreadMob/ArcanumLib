@@ -115,6 +115,7 @@ A `GuiDialog` subclass that renders the radial menu.
 | `IsActive` | Draws the sector with an active/toggled highlight. |
 | `Disabled` | Draws the sector greyed out (e.g. on cooldown). |
 | `SubItems` | If set, clicking opens a nested radial menu with these items instead of firing `Action`. |
+| `Arcs` | Sub-arcs: while the sector is hovered an outer ring of these items opens around it, and moving onto one picks it instead of the sector (e.g. the modes of a device whose sector switches it on and off). The ring stays open until another sector is hovered. |
 
 ### IRadialMenuStyle
 
@@ -124,6 +125,8 @@ A `GuiDialog` subclass that renders the radial menu.
 | `DrawSector(...)` | Draws a single sector wedge. Receives center, angles, state flags, and radii. |
 | `DrawCenterButton(...)` | Draws the center cancel button inside the inner radius. |
 | `GetIconColor(bool disabled)` | Returns the RGBA tint for sector icons. |
+
+A style that also implements `IRadialMenuArcStyle` (`DrawArc(ctx, cx, cy, a0, a1, hovered, isActive, disabled, outerRadius, innerRadius)`) draws the sub-arc segments itself; `DefaultRadialMenuStyle` does. `RadialMenuLayout` holds the geometry shared by drawing and hit testing (sectors start at the top and run clockwise, the arc ring lies just outside the wheel).
 
 ### RadialMenuStyleRegistry
 
