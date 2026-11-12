@@ -213,6 +213,8 @@ public class PlayerZoneTracker : ModSystem
     /// <summary>True while the tick listener is registered (tests).</summary>
     internal bool IsTicking => _tickListenerId != 0;
 
+    internal static bool HasEventSubscribers => PlayerEntered != null || PlayerExited != null;
+
     private void UpdateTicking()
     {
         if (_sapi == null) return;
@@ -242,6 +244,9 @@ public class PlayerZoneTracker : ModSystem
 
         _playersInZone.Clear();
         _lastZonesByPlayer.Clear();
+        // static events outlive the world: a handler left by a mod would run on the next world with dead objects
+        PlayerEntered = null;
+        PlayerExited = null;
         _instance = null;
         _sapi = null;
         base.Dispose();

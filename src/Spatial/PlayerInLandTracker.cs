@@ -109,6 +109,8 @@ public class PlayerInLandTracker : ModSystem
         }
 
         _currentClaims.Clear();
+        // static events outlive the world: a handler left by a mod would keep the next world polling for it
+        lock (EventGate) { _entered = null; _exited = null; _changed = null; }
         _instance = null;
         _sapi = null;
         base.Dispose();

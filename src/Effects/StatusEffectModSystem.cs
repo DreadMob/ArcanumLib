@@ -19,6 +19,8 @@ public class StatusEffectModSystem : ModSystem
     private long _listenerId;
     private IEventAPI? _events;
     private readonly object _tickGate = new();
+    private int _mainThreadId;
+    private bool _startQueued;
     private ICoreClientAPI? _capi;
     private ICoreServerAPI? _sapi;
     private readonly List<IEventAPI> _despawnEvents = new();
@@ -60,6 +62,7 @@ public class StatusEffectModSystem : ModSystem
     private void StartTicking(IEventAPI events)
     {
         _events = events;
+        _mainThreadId = Environment.CurrentManagedThreadId;   // Start* runs on the side's main thread
         if (_service is StatusEffectService lazy)
         {
             lazy.EffectApplied += OnEffectApplied;
@@ -75,6 +78,14 @@ public class StatusEffectModSystem : ModSystem
         lock (_tickGate)
         {
             if (_listenerId != 0 || _events == null) return;
+            if (Environment.CurrentManagedThreadId != _mainThreadId)
+            {
+                // Apply from a worker thread: tick listeners may only be registered on the main thread
+                if (_startQueued) return;
+                _startQueued = true;
+                _events.EnqueueMainThreadTask(() => { lock (_tickGate) _startQueued = false; StartTick(); }, "arcanumlib-statuseffects");
+                return;
+            }
             _listenerId = _events.RegisterGameTickListener(OnTick, 1000);
         }
     }

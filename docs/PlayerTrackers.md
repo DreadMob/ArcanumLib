@@ -39,7 +39,7 @@ PlayerZoneTracker.Unregister("arena-1");
 ```
 
 - Shapes: `SphereZoneShape { Center, Radius, Dimension }`, `BoxZoneShape { Min, Max, Dimension }`, or your own `IZoneShape` (`Contains`, `DistanceTo`, `GetChunkKeys`).
-- Global events `PlayerEntered` / `PlayerExited` (`zoneId`, player) fire for every zone.
+- Global events `PlayerEntered` / `PlayerExited` (`zoneId`, player) fire for every zone; they are emptied when the server stops.
 - `TickIntervalMs` (default 1000) sets the update rate (read when the first zone is registered); `ForceUpdate()` runs one now.
 - The tick listener runs only while at least one zone is registered.
 
@@ -76,4 +76,4 @@ string? claim = PlayerInLandTracker.GetPlayerClaim(uid);
 bool there = PlayerInLandTracker.IsPlayerInClaim(uid, "Market square");
 ```
 
-Values are cached and refreshed by the tick (`TickIntervalMs`, default 1000). The tick runs only while one of the three events has a subscriber; without one `GetPlayerClaim` looks the claim up directly. Static events outlive the world: unsubscribe in your `Dispose`, or the next world keeps polling for a dead handler.
+Values are cached and refreshed by the tick (`TickIntervalMs`, default 1000). The tick runs only while one of the three events has a subscriber; without one `GetPlayerClaim` looks the claim up directly. The static events of both trackers are emptied when the server stops, so subscribe again in every `StartServerSide`.

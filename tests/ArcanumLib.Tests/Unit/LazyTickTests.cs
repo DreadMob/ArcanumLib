@@ -107,6 +107,58 @@ public class LazyTickTests : IDisposable
     }
 
     [Fact]
+    public void ZoneTracker_DropsEventSubscribersWithTheWorld()
+    {
+        var tracker = new PlayerZoneTracker();
+        tracker.StartServerSide(Sapi());
+        PlayerZoneTracker.PlayerEntered += (_, _) => { };   // a mod that never unsubscribes
+        Assert.True(PlayerZoneTracker.HasEventSubscribers);
+
+        tracker.Dispose();
+
+        Assert.False(PlayerZoneTracker.HasEventSubscribers);
+    }
+
+    [Fact]
+    public void InLandTracker_NextWorldDoesNotPollForTheOldWorldsHandler()
+    {
+        var first = new PlayerInLandTracker();
+        first.StartServerSide(Sapi());
+        PlayerInLandTracker.PlayerClaimEntered += (_, _) => { };   // never unsubscribed
+        Assert.True(first.IsTicking);
+        first.Dispose();
+
+        var second = new PlayerInLandTracker();
+        second.StartServerSide(Sapi());
+        try { Assert.False(second.IsTicking); }
+        finally { second.Dispose(); }
+    }
+
+    [Fact]
+    public void StatusEffects_ApplyOffThread_StartsTickOnTheMainThread()
+    {
+        var sapi = Sapi();
+        Action? queued = null;
+        sapi.Event.When(e => e.EnqueueMainThreadTask(Arg.Any<Action>(), Arg.Any<string>()))
+            .Do(ci => queued = ci.Arg<Action>());
+        var system = new StatusEffectModSystem();
+        system.StartServerSide(sapi);
+        try
+        {
+            var service = ArcanumServices.Get<IStatusEffectService>(ArcanumServiceScope.Server)!;
+            System.Threading.Tasks.Task.Run(() => service.Apply(new DummyEntity(12), Effect("worker"), 5000)).Wait();
+
+            Assert.False(system.IsTicking);
+            sapi.Event.DidNotReceiveWithAnyArgs().RegisterGameTickListener(default(Action<float>)!, 0, 0);
+            Assert.NotNull(queued);
+
+            queued!();   // the main thread runs the queued start
+            Assert.True(system.IsTicking);
+        }
+        finally { system.Dispose(); }
+    }
+
+    [Fact]
     public void PlayerTransfer_RegistryEmptiedWhenServerStops()
     {
         // a started system (StartServerSide also wires chat commands, which need the real parsers)
