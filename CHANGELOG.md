@@ -8,6 +8,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Added
 
+- `/arcanum transfer <from> <to> [confirm]` and `/arcanum transfer status` (`PlayerTransferCommands`) — the account progress transfer command, formerly the Quest Framework's `/avq datatransfer`; `PlayerDataTransfer.RegisterAfterTransfer` adds steps for data outside the world (website DB). The `/arcanum` root is shared via `GetOrCreate`.
+- `ArcanumLib.Blocks.MultiblockReach` — vanilla multiblock filler blocks reach 5 cells sideways and 8 up (vanilla: 2 and 3), so dependent mods need no multiblock patch of their own; offsets other mods patch in again are merged, not repeated.
 - `ArcanumSlider.ReadoutWidth` — keeps the value readout beside the track instead of above its right end, so it never sits on the track.
 - `ArcanumLib.Blocks.Clock` — data-driven clock (`BlockClock`, `BlockEntityClock`, `ClockRenderer`, chime-hours dialog): hands per dial, pendulums/gears, chime, new-year melody, storm warning, client-side ticking and a winding sound, all from the blocktype's `attributes.clock` (`ClockConfig`). Mods register the classes under their own names.
 - `GlyphText` — draws symbols the GUI fonts lack (★ ⚙ ● ○ ∞ ✓ ✕ −) as Cairo shapes inline with text; `ArcanumList`, `ArcanumDropdown` and `ArcanumButton` labels use it.

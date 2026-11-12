@@ -6,7 +6,7 @@ using Vintagestory.API.Server;
 namespace ArcanumLib.PlayerTransfer
 {
     /// <summary>
-    /// One account-to-account progress transfer (/avq datatransfer). Participants move their own
+    /// One account-to-account progress transfer (<c>/arcanum transfer</c>). Participants move their own
     /// per-player data from <see cref="FromUid" /> to <see cref="ToUid" />, merging into whatever the
     /// target already has (counters add up, flags OR, lists union, times/levels take the max) and
     /// leaving the source empty.
@@ -60,6 +60,7 @@ namespace ArcanumLib.PlayerTransfer
         private static readonly object Gate = new();
         private static readonly List<IPlayerDataTransfer> Participants = new();
         private static readonly List<Action<IServerPlayer>> AfterEntityMergeHooks = new();
+        private static readonly List<(string id, Action<PlayerTransferContext, Action<string>> step)> AfterSteps = new();
         private static readonly Dictionary<string, bool> Prefixes = new(StringComparer.OrdinalIgnoreCase);
         private static readonly Dictionary<string, Func<string, string, string>> CustomDataMergers = new(StringComparer.OrdinalIgnoreCase);
         private static readonly List<Func<Vintagestory.API.Datastructures.ITreeAttribute, IEnumerable<string>>> KeySelectors = new();
@@ -164,6 +165,23 @@ namespace ArcanumLib.PlayerTransfer
             lock (Gate) AfterEntityMergeHooks.Add(hook);
         }
 
+        /// <summary>
+        /// Registers (or replaces, by id) a step that runs once the in-game data has moved, for data kept outside the
+        /// world (a website database, an external service). <c>reply</c> sends a line to whoever ran the command and
+        /// may be called later from any thread; the step itself runs on the server thread and must not block.
+        /// </summary>
+        public static void RegisterAfterTransfer(string id, Action<PlayerTransferContext, Action<string>> step)
+        {
+            if (string.IsNullOrWhiteSpace(id) || step == null) return;
+            lock (Gate)
+            {
+                AfterSteps.RemoveAll(s => string.Equals(s.id, id, StringComparison.OrdinalIgnoreCase));
+                AfterSteps.Add((id, step));
+            }
+        }
+
+        public static IReadOnlyList<(string id, Action<PlayerTransferContext, Action<string>> step)> AfterTransferSteps { get { lock (Gate) return AfterSteps.ToList(); } }
+
         public static IReadOnlyList<IPlayerDataTransfer> All { get { lock (Gate) return Participants.ToList(); } }
         public static IReadOnlyCollection<string> EntityAttributePrefixes { get { lock (Gate) return Prefixes.Keys.ToList(); } }
         internal static IReadOnlyCollection<string> ExcludedEntityAttributePrefixes { get { lock (Gate) return ExcludedPrefixes.ToList(); } }
@@ -192,6 +210,7 @@ namespace ArcanumLib.PlayerTransfer
             {
                 Participants.Clear();
                 AfterEntityMergeHooks.Clear();
+                AfterSteps.Clear();
                 CustomDataMergers.Clear();
                 CustomDataPrefixes.Clear();
                 WorldModdataKeys.Clear();

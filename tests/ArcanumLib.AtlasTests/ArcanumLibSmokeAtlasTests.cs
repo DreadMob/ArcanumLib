@@ -95,4 +95,16 @@ public class ArcanumLibSmokeAtlasTests : AtlasScenarioBase
 
         tracker.Initialize();
     }
+
+    /// <summary>Filler blocks reach five cells sideways and eight up, both corners of the range exist once.</summary>
+    [AtlasScenario]
+    public async Task Multiblock_Fillers_Reach_Five_Sideways_And_Eight_Up()
+    {
+        await World.Ticks(1);
+        foreach (var code in new[] { "multiblock-monolithic-n5-p8-p5", "multiblock-monolithic-p5-n2-n5", "multiblock-monolithic-0-p8-0" })
+            Assert.NotNull(Sapi.World.GetBlock(new AssetLocation("game", code)));
+        int fillers = 0;
+        foreach (var b in Sapi.World.Blocks) if (b?.Code?.Path.StartsWith("multiblock-monolithic-") == true) fillers++;
+        Assert.Equal(11 * 11 * 11, fillers);
+    }
 }

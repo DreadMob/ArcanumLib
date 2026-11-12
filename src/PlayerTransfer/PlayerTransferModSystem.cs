@@ -53,6 +53,7 @@ namespace ArcanumLib.PlayerTransfer
             store = ModDataStore.GetOrCreate<PendingPlayerTransferData>(api, "arcanumlib", "playertransfer", 1);
             api.Event.PlayerNowPlaying += OnPlayerNowPlaying;
             ArcanumServices.Register(this, ArcanumServiceScope.Server);
+            PlayerTransferCommands.Register(api, this);
         }
 
         public override void Dispose()
@@ -61,7 +62,7 @@ namespace ArcanumLib.PlayerTransfer
             ArcanumServices.Unregister<PlayerTransferModSystem>(ArcanumServiceScope.Server);
         }
 
-        /// <summary>Pending entity-attribute halves (for /avq datatransfer status).</summary>
+        /// <summary>Pending entity-attribute halves (for <c>/arcanum transfer status</c>).</summary>
         public IReadOnlyList<PendingPlayerTransfer> Pending => store?.Data.Pending.ToList() ?? new List<PendingPlayerTransfer>();
 
         /// <summary>

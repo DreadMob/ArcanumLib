@@ -40,7 +40,7 @@ internal sealed class DiagnosticsCommands
     {
         try
         {
-            var cmd = sapi.ChatCommands.Create("arcanum")
+            var cmd = sapi.ChatCommands.GetOrCreate("arcanum")
                 .WithDescription("ArcanumLib diagnostics and monitoring")
                 .RequiresPrivilege("controlserver");
 
