@@ -8,6 +8,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Added
 
+- `ArcanumLib.Network.BlockEntityPackets` — typed block-entity packets: ProtoBuf messages with ids derived from the type (`IdOf<T>`), `FromClient`/`FromServer` handlers, `SendToServer`/`SendTo`/`SendToClients`; every client message passes the access gate, an optional rate limit and a decode that never throws, `WithInventory` gates the vanilla slot and open/close packets. `BlockEntityAction` gains `Listen` (location only) and `None` (no gate).
 - `/arcanum transfer <from> <to> [confirm]` and `/arcanum transfer status` (`PlayerTransferCommands`) — the account progress transfer command, formerly the Quest Framework's `/avq datatransfer`; `PlayerDataTransfer.RegisterAfterTransfer` adds steps for data outside the world (website DB). The `/arcanum` root is shared via `GetOrCreate`.
 - `ArcanumLib.Blocks.GroundPiles` — one-per-stack items with attribute `groundPile: { group, capacity, step, rows, fan, openOnDisplay }` pile up to 12 on one ground storage (flat with a little jitter, fanned, or as a log pile of rolls); a lone item with a `displayedShape` lies with its own shape. Replaces the pattern pile of AlegacyAttire and the `stackPile` of AlegacySteamworks (one patch set, filtered to ground storage on the shared `BlockEntityDisplay` mesh hooks; empty grown slots are dropped before a pit kiln takes the pile).
 - Block behavior `arcanumlib.FacePlayer` (`BlockBehaviorFacePlayer`) — a horizontally orientable block turns its front to the player placing it.
