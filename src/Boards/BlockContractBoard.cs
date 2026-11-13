@@ -1,3 +1,4 @@
+using ArcanumLib.Blocks;
 using Vintagestory.API.Common;
 using Vintagestory.API.Config;
 using Vintagestory.API.MathTools;
@@ -8,9 +9,10 @@ namespace ArcanumLib.Boards
     /// <summary>
     /// A contract board block: a click opens the board named by <c>attributes.boardKey</c> (see
     /// <see cref="BoardRegistry" />). Contracts are not stored in the block: every block with the same key shows the same
-    /// board. Registered as <c>arcanumlib.ContractBoard</c> (block entity: the same name).
+    /// board. Registered as <c>arcanumlib.ContractBoard</c> (block entity: the same name). A board may be a vanilla
+    /// <c>Multiblock</c>: its filler cells hand clicks and boxes to the controller.
     /// </summary>
-    public class BlockContractBoard : Block
+    public class BlockContractBoard : Block, IMultiBlockForwarding, IMultiBlockForwardingBoxes
     {
         public const string ClassName = "arcanumlib.ContractBoard";
 
