@@ -249,16 +249,27 @@ namespace ArcanumLib.Boards
                 ExpireDaysDefault = rules.ExpireDaysDefault,
                 CooldownRemainingHours = board.PostCooldownRemainingHours(player.PlayerUID, rules.PostCooldownHours),
                 MaxTitleLength = rules.MaxTitleLength,
-                MaxDescriptionLength = rules.MaxDescriptionLength
+                MaxDescriptionLength = rules.MaxDescriptionLength,
+                RequireReward = rules.RequireEscrow
             };
+            foreach (var source in board.RewardSources.OfType<IBoardPostableReward>())
+            {
+                var field = source.Field(board, player);
+                if (field == null) continue;
+                field.Source = source.Id;
+                packet.RewardFields.Add(field);
+            }
             foreach (var goal in board.Goals.OfType<IPostableBoardGoal>())
             {
                 if (rules.AllowedKinds.Count > 0 && !rules.AllowedKinds.Contains(goal.Kind)) continue;
+                var targets = goal.TargetOptions(board, player).ToList();
+                var names = targets.Count > 0 ? goal.TargetOptionNames(board, player, targets) : null;
                 packet.Goals.Add(new BoardGoalInfo
                 {
                     Kind = goal.Kind,
                     NameKey = goal.NameKey,
-                    Targets = goal.TargetOptions(board, player).ToList(),
+                    Targets = targets,
+                    TargetNames = names != null && names.Count == targets.Count ? names.ToList() : new List<string>(),
                     HasDemand = goal.HasDemand,
                     ConfirmDays = goal.ConfirmDays,
                     TargetIsItem = goal.TargetIsItem
@@ -293,7 +304,7 @@ namespace ArcanumLib.Boards
 
             string? error = goal == null
                 ? board.LangKey("error-kind-not-allowed")
-                : board.Post(player, draft, inv, board.Options.PostRules.ClampExpireDays(msg.ExpireDays));
+                : board.Post(player, draft, inv, board.Options.PostRules.ClampExpireDays(msg.ExpireDays), rewards: msg.Rewards);
             if (error == null)
             {
                 openPostBoards.Remove(invId);

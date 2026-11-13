@@ -105,5 +105,8 @@
  "board-your-work-accepted": "Вашу работу приняли — заберите награду у доски.",
  "board-your-work-disputed": "Автор ({0}) оспорил вашу работу: «{1}». Решит модератор.",
  "board-error-not-done": "Этот заказ не ждёт ответа автора.",
- "board-error-dispute-reason": "Напишите, что не так с работой."
+ "board-error-dispute-reason": "Напишите, что не так с работой.",
+ "board-post-and-items": "и/или предметы:",
+ "board-post-reward-have": "есть {0}",
+ "board-post-reward-toomuch": "столько нет: есть {0}"
 }

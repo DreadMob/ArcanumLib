@@ -21,6 +21,8 @@ nav_order: 44
 | `cancelled` | `Cancel` (author, open only), `ForceCancel` (admin) | Escrow back to the author, reward sources release. |
 | `expired` | `SweepExpiry` once `ExpireTotalDays` passed | Like cancel; a claimer's tracking is dropped even when offline. |
 
+Events: `Posted`, `Accepted`, `Abandoned`, `Completed` (also after an accepted service), `Collected`, `Cancelled`, `Expired`, `Disputed` (`e.Reason`) and `Resolved` (`e.Reason`, `e.Paid`) for a tribunal or moderation log.
+
 A refund for an offline author goes to `BoardOptions.OfflineRefund`; boards created by the registry keep it and hand it out when the author joins.
 
 ## Creating a board
@@ -65,13 +67,15 @@ public class DeliveryGoal : BoardGoalBase, IPostableBoardGoal
 }
 ```
 
-Other hooks: `ValidateAccept`, `OnAccepted`, `OnLoaded` (re-attach tracking of claimed contracts after a restart), `OnReleased` (abandon / expiry / admin cancel; `player` is null when offline), `OnPosted`, `CountsForPostCooldown`. A goal done outside the board (a kill seen by an event) calls `board.Complete(player, contract, force: true)`; a tracked task finished by an admin calls `OnGoalCompletedElsewhere`. Goals keep their own parameters in `BoardContract.Data`.
+Other hooks: `ValidateAccept`, `OnAccepted`, `OnLoaded` (re-attach tracking of claimed contracts after a restart), `OnReleased` (abandon / expiry / admin cancel; `player` is null when offline), `OnPosted`, `CountsForPostCooldown`. A goal done outside the board (a kill seen by an event) calls `board.Complete(player, contract, force: true)`; a tracked task finished by an admin calls `OnGoalCompletedElsewhere` (the overload without a player settles for an offline claimer, who collects later). A goal that keeps an item for the contract (a parcel) hands it back with `ReturnToAuthor(contract, stack)`, which keeps it for an offline author. Targets that are ids get names in the post window from `IPostableBoardGoal.TargetOptionNames`. Goals keep their own parameters in `BoardContract.Data`.
 
 **Work the author accepts.** A goal nothing can check (a service: "roof the tavern") returns `true` from `IsCompletable`/`TryComplete` and sets `ConfirmDays` (e.g. 3). Handing it in only marks it `done`; the author then confirms or disputes, and silence counts as accepted. `OnFulfilled` gets `claimer == null` when the term ran out with the taker offline. The deadline and the dispute reason are in `Data` (`ContractBoard.ConfirmDueKey`, `ContractBoard.DisputeKey`).
 
 ## Reward sources
 
 Escrowed items are built in. Anything else implements `IBoardRewardSource`: `Pay` when the claimer gets the reward (server contracts: on completion; player contracts: on collect), `Release` on cancel / expiry, `Holds` while it still owes something. Reserve at post time in the goal's `ValidatePost`/`OnPosted` or on the `Posted` event, and list the reward on the contract as a `BoardRewardEntry { Kind, Code, Amount }` so windows can show it (lang key `<Kind>-reward`, args amount and code).
+
+A reward the author types in (money from an account, points) implements `IBoardPostableReward` on top: `Field` describes the amount field the post window shows (label, choices such as currencies, the most per choice; null hides it), and `Reserve(board, author, draft, choice, amount)` takes it after every check, right before the escrow, and lists it on the draft. A post with only such an amount counts as having a reward (`RequireEscrow`). If a later step fails, the board calls `Release` on what was already reserved. Code posts pass the amounts as `Post(..., rewards: [new BoardRewardFieldValue { Source = id, Choice, Amount }])`. Example: `AlegacyEconomy/Orders/AccountReward.cs` (money held in a treasury account).
 
 ## Block and windows
 

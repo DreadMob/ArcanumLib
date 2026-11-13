@@ -64,6 +64,12 @@ namespace ArcanumLib.Boards
         public event Action<BoardContractEvent>? Cancelled;
         public event Action<BoardContractEvent>? Expired;
 
+        /// <summary>The author disputed work marked done (Player = author, <see cref="BoardContractEvent.Reason" /> set).</summary>
+        public event Action<BoardContractEvent>? Disputed;
+
+        /// <summary>An admin settled a done or disputed contract (<see cref="BoardContractEvent.Paid" />: claimer paid or author refunded).</summary>
+        public event Action<BoardContractEvent>? Resolved;
+
         public ContractBoard(ICoreServerAPI sapi, string key, BoardOptions? options = null)
         {
             Sapi = sapi ?? throw new ArgumentNullException(nameof(sapi));
@@ -189,16 +195,24 @@ namespace ArcanumLib.Boards
         /// <see cref="BoardPostCheck.GoalOnly" />: the caller already checked the post itself (a goal with its own
         /// posting rules); only the goal's <see cref="IBoardGoal.ValidatePost" /> runs.
         /// </param>
-        public string? Post(IServerPlayer author, BoardContract draft, IInventory? escrowInv, double expireInDays = 0, BoardPostCheck check = BoardPostCheck.Full)
+        /// <param name="rewards">Amounts for the board's <see cref="IBoardPostableReward" />s (the post window's fields).</param>
+        public string? Post(IServerPlayer author, BoardContract draft, IInventory? escrowInv, double expireInDays = 0, BoardPostCheck check = BoardPostCheck.Full,
+            IReadOnlyList<BoardRewardFieldValue>? rewards = null)
         {
+            var reserved = new List<IBoardPostableReward>();
+            var toReserve = (rewards ?? Array.Empty<BoardRewardFieldValue>())
+                .Where(v => v != null && v.Amount > 0)
+                .Select(v => (value: v, source: RewardSources.OfType<IBoardPostableReward>().FirstOrDefault(s => s.Id == v.Source)))
+                .ToList();
             try
             {
                 string? error = null;
+                if (toReserve.Any(r => r.source == null)) return LangKey("error-reward");
                 if (check == BoardPostCheck.Full)
                 {
                     error = Options.ValidatePost != null
                         ? Options.ValidatePost(author, draft, escrowInv)
-                        : ValidateByRules(author, draft, escrowInv);
+                        : ValidateByRules(author, draft, escrowInv, hasOtherReward: toReserve.Count > 0);
                     if (error != null) return error;
                 }
 
@@ -219,9 +233,20 @@ namespace ArcanumLib.Boards
                 draft.ClaimedByName = null;
                 draft.ExpireTotalDays = expireInDays > 0 ? draft.CreatedTotalDays + expireInDays : 0;
 
+                foreach (var (value, source) in toReserve)
+                {
+                    error = source!.Reserve(this, author, draft, value.Choice, value.Amount);
+                    if (error != null)
+                    {
+                        foreach (var done in reserved) done.Release(this, draft);
+                        return error;
+                    }
+                    reserved.Add(source);
+                }
+
                 // Read the reward before Deposit empties the slots.
                 string? escrowSummary = BoardEscrow.Summarize(escrowInv);
-                if (!Escrow.Deposit(draft, escrowInv) && Options.PostRules.RequireEscrow)
+                if (!Escrow.Deposit(draft, escrowInv) && Options.PostRules.RequireEscrow && reserved.Count == 0)
                     return LangKey("error-escrow-empty");
 
                 state.Contracts.Add(draft);
@@ -235,12 +260,17 @@ namespace ArcanumLib.Boards
             }
             catch (Exception ex)
             {
+                foreach (var done in reserved)
+                {
+                    try { done.Release(this, draft); }
+                    catch (Exception releaseEx) { Sapi.Logger.Error("[Boards] Release after a failed post on {0}: {1}", Key, releaseEx); }
+                }
                 Sapi.Logger.Error("[Boards] Post on {0} failed for player {1}: {2}", Key, author?.PlayerName, ex);
                 return LangKey("error-failed");
             }
         }
 
-        private string? ValidateByRules(IServerPlayer author, BoardContract draft, IInventory? escrowInv)
+        private string? ValidateByRules(IServerPlayer author, BoardContract draft, IInventory? escrowInv, bool hasOtherReward)
         {
             var rules = Options.PostRules;
             if (rules.AllowedKinds.Count > 0 && !rules.AllowedKinds.Contains(draft.Kind ?? ""))
@@ -266,7 +296,7 @@ namespace ArcanumLib.Boards
                     stacks++;
                 }
             }
-            if (stacks == 0 && rules.RequireEscrow) return LangKey("error-escrow-empty");
+            if (stacks == 0 && rules.RequireEscrow && !hasOtherReward) return LangKey("error-escrow-empty");
             if (stacks > rules.RewardSlotCount) return LangKey("error-reward");
             return null;
         }
@@ -359,6 +389,16 @@ namespace ArcanumLib.Boards
         /// The goal reports it was completed outside <see cref="Complete" /> (an admin finished the tracked task):
         /// settle the contract so it does not stay claimed forever. Ignored while <see cref="Complete" /> runs for it.
         /// </summary>
+        public void OnGoalCompletedElsewhere(BoardContract contract)
+        {
+            if (contract.State != BoardStates.Claimed || contract.ClaimedByUid == null) return;
+            if (completionInFlight.Contains(contract.Id)) return;
+            var goal = GetGoal(contract.Kind);
+            if (goal == null) return;
+            Settle(FindOnline(contract.ClaimedByUid), contract, goal);
+        }
+
+        /// <summary>As <see cref="OnGoalCompletedElsewhere(BoardContract)" />, for a claimer known to be online.</summary>
         public void OnGoalCompletedElsewhere(IServerPlayer player, BoardContract contract)
         {
             if (contract.State != BoardStates.Claimed || contract.ClaimedByUid != player.PlayerUID) return;
@@ -475,6 +515,7 @@ namespace ArcanumLib.Boards
             if (claimer != null)
                 Sapi.SendMessage(claimer, Options.NoticeChatGroup, Text("your-work-disputed", author.PlayerName, reason), EnumChatType.Notification);
             Sapi.Logger.Notification("[ArcanumLib] Board {0}: contract {1} disputed by {2}: {3}", Key, contract.Id, author.PlayerName, reason);
+            Disputed?.Invoke(new BoardContractEvent(this, contract, author) { Reason = reason });
             NotifyChanged();
             return null;
         }
@@ -484,8 +525,10 @@ namespace ArcanumLib.Boards
         {
             var contract = Find(contractId);
             if (contract == null || !BoardStates.IsAwaiting(contract.State)) return false;
+            string? reason = contract.GetData(DisputeKey);
             if (pay) AcceptWork(contract);
             else ForceCancel(contractId);
+            Resolved?.Invoke(new BoardContractEvent(this, contract, null) { Reason = reason, Paid = pay });
             return true;
         }
 
@@ -622,6 +665,12 @@ namespace ArcanumLib.Boards
             NotifyChanged();
             return true;
         }
+
+        /// <summary>
+        /// Gives a stack a goal kept for the contract back to its author: into the inventory when online, otherwise kept
+        /// for them like an escrow refund.
+        /// </summary>
+        public void ReturnToAuthor(BoardContract contract, ItemStack stack) => ReturnToAuthor(contract, stack.ToBytes());
 
         private void ReturnToAuthor(BoardContract contract, byte[] bytes)
         {

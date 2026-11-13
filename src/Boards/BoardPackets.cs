@@ -52,6 +52,44 @@ namespace ArcanumLib.Boards
         public string? Title;
         [ProtoMember(7)]
         public string? Description;
+
+        /// <summary>Amounts for the board's <see cref="IBoardPostableReward" />s.</summary>
+        [ProtoMember(8)]
+        public List<BoardRewardFieldValue> Rewards = new();
+    }
+
+    /// <summary>An amount field of a <see cref="IBoardPostableReward" /> in the post window.</summary>
+    [ProtoContract]
+    public class BoardRewardFieldInfo
+    {
+        [ProtoMember(1)]
+        public string Source = "";
+
+        /// <summary>Lang key of the label ("Оплата").</summary>
+        [ProtoMember(2)]
+        public string LabelKey = "";
+
+        /// <summary>What the amount is in, one per choice ("крон со счёта").</summary>
+        [ProtoMember(3)]
+        public List<string> Choices = new();
+        [ProtoMember(4)]
+        public List<string> ChoiceNames = new();
+
+        /// <summary>Most the author can give, per choice (their balance).</summary>
+        [ProtoMember(5)]
+        public List<long> Max = new();
+    }
+
+    /// <summary>The author's amount for one <see cref="IBoardPostableReward" />.</summary>
+    [ProtoContract]
+    public class BoardRewardFieldValue
+    {
+        [ProtoMember(1)]
+        public string Source = "";
+        [ProtoMember(2)]
+        public string? Choice;
+        [ProtoMember(3)]
+        public long Amount;
     }
 
     /// <summary>A goal players can post, as the post window shows it.</summary>
@@ -78,6 +116,10 @@ namespace ArcanumLib.Boards
         /// <summary>The free-text target is an item code (the window offers the held item).</summary>
         [ProtoMember(6)]
         public bool TargetIsItem;
+
+        /// <summary>Display names of <see cref="Targets" /> (same order); empty = names from the codes.</summary>
+        [ProtoMember(7)]
+        public List<string> TargetNames = new();
     }
 
     /// <summary>Server → client: the board's contracts.</summary>
@@ -134,6 +176,14 @@ namespace ArcanumLib.Boards
         public int MaxTitleLength;
         [ProtoMember(11)]
         public int MaxDescriptionLength;
+
+        /// <summary>Amount fields of the board's <see cref="IBoardPostableReward" />s for this author.</summary>
+        [ProtoMember(12)]
+        public List<BoardRewardFieldInfo> RewardFields = new();
+
+        /// <summary>A post needs a reward (items or an amount).</summary>
+        [ProtoMember(13)]
+        public bool RequireReward;
     }
 
     /// <summary>Server → client: outcome of an action.</summary>

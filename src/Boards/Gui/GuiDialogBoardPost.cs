@@ -79,6 +79,9 @@ namespace ArcanumLib.Boards.Gui
             string? keepDesc = SingleComposer?.GetTextArea("description")?.GetText();
             string? keepTarget = goalChanged ? null : SingleComposer?.GetTextInput("target")?.GetText();
             float? keepDemand = goalChanged ? null : SingleComposer?.GetNumberInput("demand")?.GetValue();
+            var keepRewards = new System.Collections.Generic.Dictionary<int, float>();
+            for (int i = 0; i < packet.RewardFields.Count; i++)
+                if (SingleComposer?.GetNumberInput("reward" + i) is { } input) keepRewards[i] = input.GetValue();
             goalChanged = false;
 
             var composer = capi.Gui.CreateCompo("arcanumlib-board-post", dialog)
@@ -116,7 +119,8 @@ namespace ArcanumLib.Boards.Gui
             if (goal != null && goal.Targets.Count > 0)
             {
                 var targets = goal.Targets.ToArray();
-                composer.AddDropDown(targets, targets.Select(TargetName).ToArray(), 0, (_, _) => { }, Field(y), "target");
+                var names = goal.TargetNames.Count == targets.Length ? goal.TargetNames.ToArray() : targets.Select(TargetName).ToArray();
+                composer.AddDropDown(targets, names, 0, (_, _) => { }, Field(y), "target");
                 y += RowH + Gap;
             }
             else if (goal?.TargetIsItem == true)
@@ -161,6 +165,27 @@ namespace ArcanumLib.Boards.Gui
             y += RowH * 3 + Gap;
 
             composer.AddStaticText(Lang.Get("arcanumlib:board-post-reward"), font, Label(y));
+            // Amount fields of reward sources (money from an account…), then the item slots.
+            for (int i = 0; i < packet.RewardFields.Count; i++)
+            {
+                var field = packet.RewardFields[i];
+                int fi = i;
+                if (i > 0) composer.AddStaticText(Lang.Get(field.LabelKey), font, Label(y));
+                composer.AddNumberInput(ElementBounds.Fixed(LabelW, y, 110, RowH), _ => UpdateRewardHint(fi), font, "reward" + i);
+                if (field.Choices.Count > 1)
+                    composer.AddDropDown(field.Choices.ToArray(), field.ChoiceNames.ToArray(), 0, (_, _) => UpdateRewardHint(fi),
+                        ElementBounds.Fixed(LabelW + 118, y, fieldW - 118, RowH), "rewardchoice" + i);
+                else
+                    composer.AddStaticText(field.ChoiceNames.FirstOrDefault() ?? "", font, ElementBounds.Fixed(LabelW + 118, y + 6, fieldW - 118, RowH));
+                y += RowH + 2;
+                composer.AddDynamicText("", dim, ElementBounds.Fixed(LabelW, y, fieldW, 18), "rewardhint" + i);
+                y += 18 + Gap;
+            }
+            if (packet.RewardFields.Count > 0)
+            {
+                composer.AddStaticText(Lang.Get("arcanumlib:board-post-and-items"), dim, ElementBounds.Fixed(LabelW, y, fieldW, 18));
+                y += 20;
+            }
             int cols = Math.Min(6, inventory.Count);
             int slotRows = (inventory.Count + cols - 1) / cols;
             composer.AddItemSlotGrid(inventory, SendInvPacket, cols, ElementBounds.Fixed(LabelW, y, fieldW, 50 * slotRows), "slots");
@@ -197,7 +222,29 @@ namespace ArcanumLib.Boards.Gui
             if (goal != null) title?.SetPlaceHolderText(Lang.Get(goal.NameKey));
             if (keepDesc != null) SingleComposer.GetTextArea("description")?.SetValue(keepDesc);
             SingleComposer.GetButton("submit").Enabled = packet.Goals.Count > 0 && packet.CooldownRemainingHours <= 0;
+            for (int i = 0; i < packet.RewardFields.Count; i++)
+            {
+                if (keepRewards.TryGetValue(i, out float v)) SingleComposer.GetNumberInput("reward" + i)?.SetValue(v);
+                UpdateRewardHint(i);
+            }
             UpdateTargetInfo();
+        }
+
+        private string? RewardChoice(int i)
+        {
+            var field = packet.RewardFields[i];
+            return field.Choices.Count > 1 ? SingleComposer?.GetDropDown("rewardchoice" + i)?.SelectedValue : field.Choices.FirstOrDefault();
+        }
+
+        private void UpdateRewardHint(int i)
+        {
+            var hint = SingleComposer?.GetDynamicText("rewardhint" + i);
+            if (hint == null) return;
+            var field = packet.RewardFields[i];
+            int c = Math.Max(0, field.Choices.IndexOf(RewardChoice(i) ?? ""));
+            long max = c < field.Max.Count ? field.Max[c] : 0;
+            long amount = (long)Math.Round(SingleComposer!.GetNumberInput("reward" + i)?.GetValue() ?? 0);
+            hint.SetNewText(amount > max ? Lang.Get("arcanumlib:board-post-reward-toomuch", max) : Lang.Get("arcanumlib:board-post-reward-have", max));
         }
 
         private bool noExpiry;
@@ -314,7 +361,13 @@ namespace ArcanumLib.Boards.Gui
                 Demand = goal.HasDemand ? (int)Math.Round(SingleComposer.GetNumberInput("demand").GetValue()) : 1,
                 ExpireDays = noExpiry ? 0 : SingleComposer.GetNumberInput("expire").GetValue(),
                 Title = SingleComposer.GetTextInput("title")?.GetText(),
-                Description = SingleComposer.GetTextArea("description")?.GetText()
+                Description = SingleComposer.GetTextArea("description")?.GetText(),
+                Rewards = packet.RewardFields.Select((f, i) => new BoardRewardFieldValue
+                {
+                    Source = f.Source,
+                    Choice = RewardChoice(i),
+                    Amount = (long)Math.Round(SingleComposer.GetNumberInput("reward" + i)?.GetValue() ?? 0)
+                }).Where(v => v.Amount > 0).ToList()
             });
             return true;
         }
