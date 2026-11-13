@@ -87,6 +87,10 @@ namespace ArcanumLib.Gui.Controls
 
         private void EnsureBounds()
         {
+            // The position is read every call: dragging an unpinned dialog moves the bounds
+            // without recomposing, and a cached position kept drawing at the old spot.
+            _absX = Bounds.absX;
+            _absY = Bounds.absY;
             if (_boundsCached) return;
             Bounds.CalcWorldBounds();
             _absX = Bounds.absX;
