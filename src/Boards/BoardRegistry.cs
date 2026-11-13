@@ -262,11 +262,14 @@ namespace ArcanumLib.Boards
             foreach (var goal in board.Goals.OfType<IPostableBoardGoal>())
             {
                 if (rules.AllowedKinds.Count > 0 && !rules.AllowedKinds.Contains(goal.Kind)) continue;
+                var targets = goal.TargetOptions(board, player).ToList();
+                var names = targets.Count > 0 ? goal.TargetOptionNames(board, player, targets) : null;
                 packet.Goals.Add(new BoardGoalInfo
                 {
                     Kind = goal.Kind,
                     NameKey = goal.NameKey,
-                    Targets = goal.TargetOptions(board, player).ToList(),
+                    Targets = targets,
+                    TargetNames = names != null && names.Count == targets.Count ? names.ToList() : new List<string>(),
                     HasDemand = goal.HasDemand,
                     ConfirmDays = goal.ConfirmDays,
                     TargetIsItem = goal.TargetIsItem

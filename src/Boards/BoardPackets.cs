@@ -116,6 +116,10 @@ namespace ArcanumLib.Boards
         /// <summary>The free-text target is an item code (the window offers the held item).</summary>
         [ProtoMember(6)]
         public bool TargetIsItem;
+
+        /// <summary>Display names of <see cref="Targets" /> (same order); empty = names from the codes.</summary>
+        [ProtoMember(7)]
+        public List<string> TargetNames = new();
     }
 
     /// <summary>Server → client: the board's contracts.</summary>

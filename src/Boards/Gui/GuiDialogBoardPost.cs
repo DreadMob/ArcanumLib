@@ -119,7 +119,8 @@ namespace ArcanumLib.Boards.Gui
             if (goal != null && goal.Targets.Count > 0)
             {
                 var targets = goal.Targets.ToArray();
-                composer.AddDropDown(targets, targets.Select(TargetName).ToArray(), 0, (_, _) => { }, Field(y), "target");
+                var names = goal.TargetNames.Count == targets.Length ? goal.TargetNames.ToArray() : targets.Select(TargetName).ToArray();
+                composer.AddDropDown(targets, names, 0, (_, _) => { }, Field(y), "target");
                 y += RowH + Gap;
             }
             else if (goal?.TargetIsItem == true)

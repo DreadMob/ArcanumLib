@@ -20,5 +20,11 @@ namespace ArcanumLib.Boards
 
         /// <summary>The free-text target is an item or block code: the window offers the held item and shows its name.</summary>
         bool TargetIsItem => false;
+
+        /// <summary>
+        /// Names of <see cref="TargetOptions" /> as this player sees them (same order), or null to name them from their
+        /// item codes. For targets that are ids (a parcel, a player).
+        /// </summary>
+        IReadOnlyList<string>? TargetOptionNames(ContractBoard board, IServerPlayer player, IReadOnlyList<string> options) => null;
     }
 }

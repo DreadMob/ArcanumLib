@@ -389,6 +389,16 @@ namespace ArcanumLib.Boards
         /// The goal reports it was completed outside <see cref="Complete" /> (an admin finished the tracked task):
         /// settle the contract so it does not stay claimed forever. Ignored while <see cref="Complete" /> runs for it.
         /// </summary>
+        public void OnGoalCompletedElsewhere(BoardContract contract)
+        {
+            if (contract.State != BoardStates.Claimed || contract.ClaimedByUid == null) return;
+            if (completionInFlight.Contains(contract.Id)) return;
+            var goal = GetGoal(contract.Kind);
+            if (goal == null) return;
+            Settle(FindOnline(contract.ClaimedByUid), contract, goal);
+        }
+
+        /// <summary>As <see cref="OnGoalCompletedElsewhere(BoardContract)" />, for a claimer known to be online.</summary>
         public void OnGoalCompletedElsewhere(IServerPlayer player, BoardContract contract)
         {
             if (contract.State != BoardStates.Claimed || contract.ClaimedByUid != player.PlayerUID) return;
@@ -655,6 +665,12 @@ namespace ArcanumLib.Boards
             NotifyChanged();
             return true;
         }
+
+        /// <summary>
+        /// Gives a stack a goal kept for the contract back to its author: into the inventory when online, otherwise kept
+        /// for them like an escrow refund.
+        /// </summary>
+        public void ReturnToAuthor(BoardContract contract, ItemStack stack) => ReturnToAuthor(contract, stack.ToBytes());
 
         private void ReturnToAuthor(BoardContract contract, byte[] bytes)
         {
