@@ -49,6 +49,8 @@ public class ArcanumLibModSystem : ModSystem
     public override void StartPre(ICoreAPI api)
     {
         api.RegisterBlockBehaviorClass(ArcanumLib.Blocks.BlockBehaviorFacePlayer.ClassName, typeof(ArcanumLib.Blocks.BlockBehaviorFacePlayer));
+        api.RegisterBlockClass(ArcanumLib.Boards.BlockContractBoard.ClassName, typeof(ArcanumLib.Boards.BlockContractBoard));
+        api.RegisterBlockEntityClass(ArcanumLib.Boards.BlockContractBoard.ClassName, typeof(ArcanumLib.Boards.BlockEntityContractBoard));
         if (!_groundPiles) { ArcanumLib.Blocks.GroundPiles.Apply(); _groundPiles = true; }
         if (_runtime != null) return;
 

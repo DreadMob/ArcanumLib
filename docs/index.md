@@ -60,6 +60,7 @@ Shared block, vehicle and player-data features driven from JSON.
 | [Machine claims]({{ site.baseurl }}{% link MachineClaims.md %}) | `MachineClaims.MayWork`: quiet land-claim test for machines in tick paths, throttled message to the driver. |
 | [Player animations]({{ site.baseurl }}{% link PlayerAnimations.md %}) | Custom player animations from `config/playeranimations/`, synced to every client. |
 | [Account transfer]({{ site.baseurl }}{% link PlayerTransfer.md %}) | `/arcanum transfer`: move a player's progress to another account through registered participants. |
+| [Contract boards]({{ site.baseurl }}{% link ContractBoards.md %}) | `ContractBoard`: player and server contracts with escrow, goals and reward sources as extensions, board block and windows, `/arcanum boards`. |
 | [Player trackers]({{ site.baseurl }}{% link PlayerTrackers.md %}) | Online player cache, zone, proximity and land-claim trackers. |
 
 ## Items & Equipment

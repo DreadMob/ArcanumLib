@@ -8,6 +8,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Added
 
+- `ArcanumLib.Boards` — contract boards: `ContractBoard` (post / accept / turn in / abandon / cancel / collect / expire, item escrow, events, lang prefix), goals as `IBoardGoal` registered by kind, extra rewards as `IBoardRewardSource`, `BoardRegistry` (boards stored in the world save, expiry ticks, `/arcanum transfer` participant, `arcanumlib:boards` channel), block `arcanumlib.ContractBoard` and the board / post windows, `/arcanum boards list | show | cancel`. Moved from the Quest Framework bounty board; `BoardContract` keeps its proto layout, so saved boards load unchanged.
 - `ArcanumLib.Common.MachineClaims.MayWork` — land-claim test for machines working in a tick path (quiet `TestAccess`, the refusal told to the driver/owner at most every 4 s; owner-offline block entities only in unclaimed land and own claims). Moved from AlegacySteamworks.
 - `ArcanumLib.Rendering.ChunkItemMeshes` / `BlockAtlasItemSource` — stack meshes for block-entity chunk meshes with block-atlas textures, cached by stack and handed out as copies. Moved from AlegacySteamworks; replaces ad-hoc texture sources in AlegacyCuriosities.
 - `ArcanumLib.Entities.SeatExit` — stands someone getting up from a block seat or bed on the nearest free floor around the block's footprint. Moved from AlegacyCuriosities.
