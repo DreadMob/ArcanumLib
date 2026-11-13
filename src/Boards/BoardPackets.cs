@@ -14,6 +14,8 @@ namespace ArcanumLib.Boards
         public const string Collect = "collect";
         public const string OpenPost = "openpost";
         public const string ClosePost = "closepost";
+        public const string Confirm = "confirm";
+        public const string Dispute = "dispute";
     }
 
     /// <summary>Client → server: an action on a board (contract id where the action needs one).</summary>
@@ -26,6 +28,10 @@ namespace ArcanumLib.Boards
         public string Action = "";
         [ProtoMember(3)]
         public string? ContractId;
+
+        /// <summary>Free text of the action (a dispute's reason).</summary>
+        [ProtoMember(4)]
+        public string? Text;
     }
 
     /// <summary>Client → server: post a contract with the stacks put into the post window's slots.</summary>
@@ -64,6 +70,14 @@ namespace ArcanumLib.Boards
         /// <summary>The goal has a count (otherwise demand is 1).</summary>
         [ProtoMember(4)]
         public bool HasDemand = true;
+
+        /// <summary>Days the author has to accept the work (0 = the goal checks itself).</summary>
+        [ProtoMember(5)]
+        public double ConfirmDays;
+
+        /// <summary>The free-text target is an item code (the window offers the held item).</summary>
+        [ProtoMember(6)]
+        public bool TargetIsItem;
     }
 
     /// <summary>Server → client: the board's contracts.</summary>

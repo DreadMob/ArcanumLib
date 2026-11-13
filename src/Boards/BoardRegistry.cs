@@ -197,6 +197,8 @@ namespace ArcanumLib.Boards
                 case BoardActions.Collect: error = board.Collect(player, msg.ContractId); info = "arcanumlib:board-collected"; break;
                 case BoardActions.OpenPost: OpenPost(player, board); return;
                 case BoardActions.ClosePost: ClosePost(player); return;
+                case BoardActions.Confirm: error = board.Confirm(player, msg.ContractId); info = "arcanumlib:board-confirmed"; break;
+                case BoardActions.Dispute: error = board.Dispute(player, msg.ContractId, msg.Text); info = "arcanumlib:board-disputed"; break;
                 default: return;
             }
             SendResult(player, board, error, info);
@@ -213,7 +215,7 @@ namespace ArcanumLib.Boards
                 NowTotalDays = sapi!.World.Calendar.TotalDays,
                 LangPrefix = board.Options.LangPrefix,
                 Goals = board.Goals.OfType<IPostableBoardGoal>()
-                    .Select(g => new BoardGoalInfo { Kind = g.Kind, NameKey = g.NameKey, HasDemand = g.HasDemand }).ToList()
+                    .Select(g => new BoardGoalInfo { Kind = g.Kind, NameKey = g.NameKey, HasDemand = g.HasDemand, ConfirmDays = g.ConfirmDays, TargetIsItem = g.TargetIsItem }).ToList()
             };
             serverChannel!.SendPacket(packet, player);
         }
@@ -257,7 +259,9 @@ namespace ArcanumLib.Boards
                     Kind = goal.Kind,
                     NameKey = goal.NameKey,
                     Targets = goal.TargetOptions(board, player).ToList(),
-                    HasDemand = goal.HasDemand
+                    HasDemand = goal.HasDemand,
+                    ConfirmDays = goal.ConfirmDays,
+                    TargetIsItem = goal.TargetIsItem
                 });
             }
             serverChannel!.SendPacket(packet, player);
@@ -359,9 +363,9 @@ namespace ArcanumLib.Boards
         }
 
         /// <summary>Client: sends a board action.</summary>
-        public void SendAction(string boardKey, string action, string? contractId = null)
+        public void SendAction(string boardKey, string action, string? contractId = null, string? text = null)
         {
-            clientChannel?.SendPacket(new BoardActionMessage { BoardKey = boardKey, Action = action, ContractId = contractId });
+            clientChannel?.SendPacket(new BoardActionMessage { BoardKey = boardKey, Action = action, ContractId = contractId, Text = text });
         }
 
         /// <summary>Client: sends a post.</summary>

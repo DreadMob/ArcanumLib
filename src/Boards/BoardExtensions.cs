@@ -56,7 +56,13 @@ namespace ArcanumLib.Boards
         void OnReleased(ContractBoard board, string playerUid, IServerPlayer? player, BoardContract contract);
 
         /// <summary>A player contract is fulfilled: keep what it delivers for the author.</summary>
-        void OnFulfilled(ContractBoard board, IServerPlayer claimer, BoardContract contract);
+        void OnFulfilled(ContractBoard board, IServerPlayer? claimer, BoardContract contract);
+
+        /// <summary>
+        /// Days the author has to accept or dispute a player contract the claimer marked done; 0 = the goal checks
+        /// itself and settles at once. Silence counts as accepted.
+        /// </summary>
+        double ConfirmDays { get; }
     }
 
     /// <summary>Do-nothing defaults for <see cref="IBoardGoal" />.</summary>
@@ -73,7 +79,8 @@ namespace ArcanumLib.Boards
         public abstract bool IsCompletable(ContractBoard board, IServerPlayer player, BoardContract contract);
         public abstract bool TryComplete(ContractBoard board, IServerPlayer player, BoardContract contract, bool force);
         public virtual void OnReleased(ContractBoard board, string playerUid, IServerPlayer? player, BoardContract contract) { }
-        public virtual void OnFulfilled(ContractBoard board, IServerPlayer claimer, BoardContract contract) { }
+        public virtual void OnFulfilled(ContractBoard board, IServerPlayer? claimer, BoardContract contract) { }
+        public virtual double ConfirmDays => 0;
     }
 
     /// <summary>

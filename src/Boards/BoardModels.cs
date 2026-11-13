@@ -27,8 +27,20 @@ namespace ArcanumLib.Boards
         public const string Expired = "expired";
         public const string Cancelled = "cancelled";
 
+        /// <summary>
+        /// The claimer marked a goal the author confirms (<see cref="IBoardGoal.ConfirmDays" />) as done; the author
+        /// accepts the work or disputes it. Without an answer it counts as accepted after the confirm term.
+        /// </summary>
+        public const string Done = "done";
+
+        /// <summary>The author disputed the work; the reward stays reserved until an admin decides.</summary>
+        public const string Disputed = "disputed";
+
         /// <summary>Open or claimed: still counts as an active post of its author.</summary>
         public static bool IsActive(string? state) => state == Open || state == Claimed;
+
+        /// <summary>Done or disputed: handed in, waiting for the author or an admin.</summary>
+        public static bool IsAwaiting(string? state) => state == Done || state == Disputed;
     }
 
     /// <summary>
