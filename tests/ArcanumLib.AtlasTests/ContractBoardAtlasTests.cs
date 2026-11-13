@@ -53,6 +53,74 @@ public class ContractBoardAtlasTests : AtlasScenarioBase
         public bool Holds(ContractBoard board, BoardContract contract) => false;
     }
 
+    /// <summary>A money-like reward the author types in: reserves from a wallet, gives back on release.</summary>
+    private sealed class WalletSource : IBoardPostableReward
+    {
+        public string Id { get; init; } = "wallet";
+        public long Wallet = 100, Held;
+        public bool Fail;
+        public int Released;
+        public BoardRewardFieldInfo? Field(ContractBoard board, IServerPlayer author) => new() { LabelKey = "wallet", Choices = { "coin" }, ChoiceNames = { "coin" }, Max = { Wallet } };
+        public string? Reserve(ContractBoard board, IServerPlayer author, BoardContract draft, string? choice, long amount)
+        {
+            if (Fail || amount > Wallet) return "wallet-error";
+            Wallet -= amount;
+            Held += amount;
+            draft.Rewards.Add(new BoardRewardEntry { Kind = Id, Code = choice, Amount = amount });
+            return null;
+        }
+        public void Pay(ContractBoard board, BoardContract contract, IServerPlayer claimer) => Held = 0;
+        public void Release(ContractBoard board, BoardContract contract) { Wallet += Held; Held = 0; Released++; }
+        public bool Holds(ContractBoard board, BoardContract contract) => Held > 0;
+    }
+
+    [AtlasScenario]
+    public async Task Postable_Reward_Stands_In_For_Escrow_And_Is_Given_Back_When_A_Later_Step_Fails()
+    {
+        var (board, goal, _) = NewBoard();
+        var wallet = new WalletSource();
+        var second = new WalletSource { Id = "second", Fail = true };
+        board.RewardSources.Add(wallet);
+        board.RewardSources.Add(second);
+        var author = (await World.JoinPlayer("boardauthor9")).Player;
+        var claimer = (await World.JoinPlayer("boardclaimer9")).Player;
+
+        // no items and no amount: nothing to pay with
+        Assert.Equal(board.LangKey("error-escrow-empty"), board.Post(author, Draft(), null));
+        // an unknown source is refused before anything is taken
+        Assert.Equal(board.LangKey("error-reward"), board.Post(author, Draft(), null,
+            rewards: new[] { new BoardRewardFieldValue { Source = "nope", Amount = 5 } }));
+        // the second source fails: the first one's reservation goes back, nothing is posted
+        Assert.Equal("wallet-error", board.Post(author, Draft(), null, rewards: new[]
+        {
+            new BoardRewardFieldValue { Source = "wallet", Choice = "coin", Amount = 30 },
+            new BoardRewardFieldValue { Source = "second", Amount = 1 }
+        }));
+        Assert.Equal(100, wallet.Wallet);
+        Assert.Equal(1, wallet.Released);
+        Assert.Empty(board.State.Contracts);
+
+        // an amount alone is a reward; cancelling gives it back
+        Assert.Null(board.Post(author, Draft(), null, rewards: new[] { new BoardRewardFieldValue { Source = "wallet", Choice = "coin", Amount = 40 } }));
+        var c = board.State.Contracts.Single();
+        Assert.Equal(60, wallet.Wallet);
+        Assert.Equal(40, Assert.Single(c.Rewards).Amount);
+        Assert.Null(board.Cancel(author, c.Id));
+        Assert.Equal(100, wallet.Wallet);
+
+        // paid when the claimer collects
+        goal.Done = true;
+        Assert.Null(board.Post(author, Draft(), null, rewards: new[] { new BoardRewardFieldValue { Source = "wallet", Amount = 25 } }));
+        c = board.State.Contracts.Single();
+        Assert.Null(board.Accept(claimer, c.Id));
+        Assert.Null(board.TurnIn(claimer, c.Id));
+        Assert.NotNull(board.Find(c.Id));
+        Assert.Null(board.Collect(claimer, c.Id));
+        Assert.Equal(0, wallet.Held);
+        Assert.Equal(75, wallet.Wallet);
+        Assert.Empty(board.State.Contracts);
+    }
+
     private (ContractBoard board, FlagGoal goal, CountingSource source) NewBoard(BoardOptions? options = null)
     {
         var board = Registry.Create("test:" + Guid.NewGuid().ToString("N"), options ?? new BoardOptions { PostRules = { MaxActivePostsPerPlayer = 0 } });
@@ -321,6 +389,9 @@ public class ContractBoardAtlasTests : AtlasScenarioBase
         goal.Done = true;
         var author = (await World.JoinPlayer("boardauthor8")).Player;
         var claimer = (await World.JoinPlayer("boardclaimer8")).Player;
+        var disputes = new List<string>();
+        board.Disputed += e => disputes.Add("disputed:" + e.Reason + ":" + e.Player?.PlayerName);
+        board.Resolved += e => disputes.Add("resolved:" + e.Reason + ":" + e.Paid);
 
         // Accepted by the author.
         Assert.Null(board.Post(author, Draft(), Escrow(author, 2)));
@@ -361,5 +432,6 @@ public class ContractBoardAtlasTests : AtlasScenarioBase
         Assert.DoesNotContain(board.State.Contracts, c => c.Id == disputed.Id);
         Assert.Equal(1, source.Released);
         Assert.Equal(0, source.Paid);
+        Assert.Equal(new[] { "disputed:the roof still leaks:boardauthor8", "resolved:the roof still leaks:False" }, disputes);
     }
 }

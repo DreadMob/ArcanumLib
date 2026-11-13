@@ -101,6 +101,27 @@ namespace ArcanumLib.Boards
         bool Holds(ContractBoard board, BoardContract contract);
     }
 
+    /// <summary>
+    /// A reward source the author fills in the post window (money from an account, points…): the window shows one
+    /// amount field for it, and <see cref="Reserve" /> takes the amount when the post goes up. What it reserved is given
+    /// back by <see cref="IBoardRewardSource.Release" /> and paid by <see cref="IBoardRewardSource.Pay" /> as usual.
+    /// </summary>
+    public interface IBoardPostableReward : IBoardRewardSource
+    {
+        /// <summary>Stable id the window sends back with the amount.</summary>
+        string Id { get; }
+
+        /// <summary>The field as this author sees it, or null to hide it (nothing to offer).</summary>
+        BoardRewardFieldInfo? Field(ContractBoard board, IServerPlayer author);
+
+        /// <summary>
+        /// Takes <paramref name="amount" /> of <paramref name="choice" /> for the draft and lists it in
+        /// <c>draft.Rewards</c>. Runs after every check, right before the escrow; returns an error lang key or null.
+        /// When a later step fails the board calls <see cref="IBoardRewardSource.Release" />.
+        /// </summary>
+        string? Reserve(ContractBoard board, IServerPlayer author, BoardContract draft, string? choice, long amount);
+    }
+
     /// <summary>What happened to a contract, for <see cref="ContractBoard" /> events.</summary>
     public sealed class BoardContractEvent
     {
@@ -112,6 +133,12 @@ namespace ArcanumLib.Boards
 
         /// <summary>For posts: the escrowed stacks as "name ×count, …", read before they were taken.</summary>
         public string? EscrowSummary { get; init; }
+
+        /// <summary>For disputes and their settlement: the author's reason.</summary>
+        public string? Reason { get; init; }
+
+        /// <summary>For settlements: true = the claimer was paid, false = the author got the reward back.</summary>
+        public bool Paid { get; init; }
 
         public BoardContractEvent(ContractBoard board, BoardContract contract, IServerPlayer? player)
         {
@@ -143,7 +170,7 @@ namespace ArcanumLib.Boards
         public double PostCooldownHours { get; set; }
         public int RewardSlotCount { get; set; } = 4;
 
-        /// <summary>A post must put at least one stack into escrow.</summary>
+        /// <summary>A post must put at least one stack into escrow (or an amount into a <see cref="IBoardPostableReward" />).</summary>
         public bool RequireEscrow { get; set; } = true;
 
         /// <summary>Players may post on the board at all (the ArcanumLib window shows its post button).</summary>

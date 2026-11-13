@@ -21,6 +21,8 @@ nav_order: 44
 | `cancelled` | `Cancel` (author, open only), `ForceCancel` (admin) | Escrow back to the author, reward sources release. |
 | `expired` | `SweepExpiry` once `ExpireTotalDays` passed | Like cancel; a claimer's tracking is dropped even when offline. |
 
+Events: `Posted`, `Accepted`, `Abandoned`, `Completed` (also after an accepted service), `Collected`, `Cancelled`, `Expired`, `Disputed` (`e.Reason`) and `Resolved` (`e.Reason`, `e.Paid`) for a tribunal or moderation log.
+
 A refund for an offline author goes to `BoardOptions.OfflineRefund`; boards created by the registry keep it and hand it out when the author joins.
 
 ## Creating a board
@@ -72,6 +74,8 @@ Other hooks: `ValidateAccept`, `OnAccepted`, `OnLoaded` (re-attach tracking of c
 ## Reward sources
 
 Escrowed items are built in. Anything else implements `IBoardRewardSource`: `Pay` when the claimer gets the reward (server contracts: on completion; player contracts: on collect), `Release` on cancel / expiry, `Holds` while it still owes something. Reserve at post time in the goal's `ValidatePost`/`OnPosted` or on the `Posted` event, and list the reward on the contract as a `BoardRewardEntry { Kind, Code, Amount }` so windows can show it (lang key `<Kind>-reward`, args amount and code).
+
+A reward the author types in (money from an account, points) implements `IBoardPostableReward` on top: `Field` describes the amount field the post window shows (label, choices such as currencies, the most per choice; null hides it), and `Reserve(board, author, draft, choice, amount)` takes it after every check, right before the escrow, and lists it on the draft. A post with only such an amount counts as having a reward (`RequireEscrow`). If a later step fails, the board calls `Release` on what was already reserved. Code posts pass the amounts as `Post(..., rewards: [new BoardRewardFieldValue { Source = id, Choice, Amount }])`. Example: `AlegacyEconomy/Orders/AccountReward.cs` (money held in a treasury account).
 
 ## Block and windows
 

@@ -105,5 +105,8 @@
  "board-your-work-accepted": "Your work was accepted — collect the reward at the board.",
  "board-your-work-disputed": "{0} disputed your work: \"{1}\". A moderator will decide.",
  "board-error-not-done": "This order is not waiting for the author's answer.",
- "board-error-dispute-reason": "Write what is wrong with the work."
+ "board-error-dispute-reason": "Write what is wrong with the work.",
+ "board-post-and-items": "and/or items:",
+ "board-post-reward-have": "you have {0}",
+ "board-post-reward-toomuch": "not enough: you have {0}"
 }

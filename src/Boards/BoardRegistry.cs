@@ -249,8 +249,16 @@ namespace ArcanumLib.Boards
                 ExpireDaysDefault = rules.ExpireDaysDefault,
                 CooldownRemainingHours = board.PostCooldownRemainingHours(player.PlayerUID, rules.PostCooldownHours),
                 MaxTitleLength = rules.MaxTitleLength,
-                MaxDescriptionLength = rules.MaxDescriptionLength
+                MaxDescriptionLength = rules.MaxDescriptionLength,
+                RequireReward = rules.RequireEscrow
             };
+            foreach (var source in board.RewardSources.OfType<IBoardPostableReward>())
+            {
+                var field = source.Field(board, player);
+                if (field == null) continue;
+                field.Source = source.Id;
+                packet.RewardFields.Add(field);
+            }
             foreach (var goal in board.Goals.OfType<IPostableBoardGoal>())
             {
                 if (rules.AllowedKinds.Count > 0 && !rules.AllowedKinds.Contains(goal.Kind)) continue;
@@ -293,7 +301,7 @@ namespace ArcanumLib.Boards
 
             string? error = goal == null
                 ? board.LangKey("error-kind-not-allowed")
-                : board.Post(player, draft, inv, board.Options.PostRules.ClampExpireDays(msg.ExpireDays));
+                : board.Post(player, draft, inv, board.Options.PostRules.ClampExpireDays(msg.ExpireDays), rewards: msg.Rewards);
             if (error == null)
             {
                 openPostBoards.Remove(invId);
