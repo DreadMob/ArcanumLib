@@ -86,7 +86,9 @@ namespace ArcanumLib.Boards.Gui
 
             var composer = capi.Gui.CreateCompo("arcanumlib-board-post", dialog)
                 .AddShadedDialogBG(bg)
-                .AddDialogTitleBar(Lang.Get("arcanumlib:board-post-title"), () => TryClose());
+                .AddDialogTitleBar(Lang.Get("arcanumlib:board-post-title"), () => TryClose())
+                // the background sizes itself to what is inside it: without children it throws on compose
+                .BeginChildElements(bg);
 
             double y = 40;
             ElementBounds Label(double at) => ElementBounds.Fixed(0, at + 6, LabelW, RowH);
@@ -211,6 +213,7 @@ namespace ArcanumLib.Boards.Gui
             composer.AddSmallButton(Lang.Get("arcanumlib:board-post-cancel"), () => TryClose(), ElementBounds.Fixed(0, y, (W - Gap) / 2, RowH));
             composer.AddSmallButton(Lang.Get("arcanumlib:board-post-submit"), OnSubmit, ElementBounds.Fixed((W + Gap) / 2, y, (W - Gap) / 2, RowH), EnumButtonStyle.Normal, "submit");
 
+            composer.EndChildElements();
             SingleComposer = composer.Compose();
             if (goal?.HasDemand != false) SingleComposer.GetNumberInput("demand").SetValue(keepDemand ?? 1);
             if (keepTarget != null) SingleComposer.GetTextInput("target")?.SetValue(keepTarget);

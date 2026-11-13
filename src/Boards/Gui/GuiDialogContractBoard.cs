@@ -102,7 +102,9 @@ namespace ArcanumLib.Boards.Gui
 
             var composer = capi.Gui.CreateCompo("arcanumlib-board-" + page.BoardKey, dialog)
                 .AddShadedDialogBG(bg)
-                .AddDialogTitleBar(Lang.Get(page.TitleKey), () => TryClose());
+                .AddDialogTitleBar(Lang.Get(page.TitleKey), () => TryClose())
+                // the background sizes itself to what is inside it: without children it throws on compose
+                .BeginChildElements(bg);
 
             double y = 40;
             AddFilters(composer, all, y);
@@ -138,6 +140,7 @@ namespace ArcanumLib.Boards.Gui
                 AddActions(composer, selected, dx, actionsY);
             }
 
+            composer.EndChildElements();
             SingleComposer = composer.Compose();
             SingleComposer.GetButton("prev").Enabled = pageIndex > 0;
             SingleComposer.GetButton("next").Enabled = pageIndex < pages - 1;
