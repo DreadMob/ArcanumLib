@@ -150,9 +150,10 @@ namespace ArcanumLib.Boards
         public BoardContract? FindClaimedBy(string? contractId, string playerUid) =>
             state.Contracts.Find(c => c.Id == contractId && c.State == BoardStates.Claimed && c.ClaimedByUid == playerUid);
 
-        /// <summary>Open or claimed player contracts of this author.</summary>
+        /// <summary>Open, claimed or awaiting-confirmation player contracts of this author.</summary>
         public int CountActivePosts(string authorUid) =>
-            state.Contracts.Count(c => c.Source == BoardSources.Player && c.AuthorUid == authorUid && BoardStates.IsActive(c.State));
+            state.Contracts.Count(c => c.Source == BoardSources.Player && c.AuthorUid == authorUid
+                && (BoardStates.IsActive(c.State) || BoardStates.IsAwaiting(c.State)));
 
         /// <summary>Contracts this player has claimed, optionally filtered.</summary>
         public int CountClaimed(string playerUid, System.Func<BoardContract, bool>? filter = null) =>
@@ -349,7 +350,8 @@ namespace ArcanumLib.Boards
             }
             if (!completed) return LangKey("error-not-completable");
 
-            Settle(player, contract, goal);
+            if (contract.Source == BoardSources.Player && goal.ConfirmDays > 0) MarkDone(player, contract, goal);
+            else Settle(player, contract, goal);
             return null;
         }
 
@@ -366,7 +368,7 @@ namespace ArcanumLib.Boards
             Settle(player, contract, goal);
         }
 
-        private void Settle(IServerPlayer player, BoardContract contract, IBoardGoal goal)
+        private void Settle(IServerPlayer? player, BoardContract contract, IBoardGoal goal)
         {
             if (contract.Source == BoardSources.Player)
             {
@@ -377,22 +379,114 @@ namespace ArcanumLib.Boards
             }
             else
             {
-                PayClaimer(contract, player);
+                if (player != null) PayClaimer(contract, player);
                 contract.State = BoardStates.Completed;
                 state.Contracts.Remove(contract);
             }
 
-            Sapi.SendMessage(player, Options.NoticeChatGroup, Text("completed"), EnumChatType.Notification);
+            if (player != null) Sapi.SendMessage(player, Options.NoticeChatGroup, Text("completed"), EnumChatType.Notification);
             Completed?.Invoke(new BoardContractEvent(this, contract, player));
             NotifyChanged();
         }
 
-        private void NotifyAuthor(IServerPlayer claimer, BoardContract contract, IBoardGoal goal)
+        private void NotifyAuthor(IServerPlayer? claimer, BoardContract contract, IBoardGoal goal)
         {
+            if (claimer == null) return;
             var author = contract.AuthorUid != null ? FindOnline(contract.AuthorUid) : null;
             if (author == null) return;
             string key = goal.DeliversToAuthor ? "your-contract-fulfilled" : "your-contract-completed";
             Sapi.SendMessage(author, Options.NoticeChatGroup, Text(key, claimer.PlayerName), EnumChatType.Notification);
+        }
+
+        // --------------------------------------------------------------------
+        //  Author confirmation (goals with ConfirmDays > 0)
+        // --------------------------------------------------------------------
+
+        /// <summary>Total days by which the author must answer a done contract (silence = accepted).</summary>
+        public const string ConfirmDueKey = "arcanumlib:confirmdue";
+
+        /// <summary>The author's reason for a dispute.</summary>
+        public const string DisputeKey = "arcanumlib:dispute";
+
+        private void MarkDone(IServerPlayer claimer, BoardContract contract, IBoardGoal goal)
+        {
+            double due = Sapi.World.Calendar.TotalDays + goal.ConfirmDays;
+            contract.State = BoardStates.Done;
+            contract.ExpireTotalDays = 0;
+            contract.SetData(ConfirmDueKey, due.ToString("R", System.Globalization.CultureInfo.InvariantCulture));
+
+            Sapi.SendMessage(claimer, Options.NoticeChatGroup, Text("marked-done"), EnumChatType.Notification);
+            var author = contract.AuthorUid != null ? FindOnline(contract.AuthorUid) : null;
+            if (author != null)
+                Sapi.SendMessage(author, Options.NoticeChatGroup, Text("your-contract-done", claimer.PlayerName), EnumChatType.Notification);
+            NotifyChanged();
+        }
+
+        /// <summary>Total days the author's answer is due by, or 0 when the contract is not waiting for it.</summary>
+        public static double ConfirmDue(BoardContract contract) =>
+            double.TryParse(contract.GetData(ConfirmDueKey), System.Globalization.NumberStyles.Float,
+                System.Globalization.CultureInfo.InvariantCulture, out double due) ? due : 0;
+
+        /// <summary>The author accepts the work: the claimer may collect the reward.</summary>
+        public string? Confirm(IServerPlayer author, string? contractId)
+        {
+            var contract = Find(contractId);
+            if (contract == null || !BoardStates.IsAwaiting(contract.State)) return LangKey("error-not-done");
+            if (contract.AuthorUid != author.PlayerUID) return LangKey("error-not-author");
+            AcceptWork(contract);
+            return null;
+        }
+
+        private void AcceptWork(BoardContract contract)
+        {
+            var goal = GetGoal(contract.Kind);
+            var claimer = contract.ClaimedByUid != null ? FindOnline(contract.ClaimedByUid) : null;
+            contract.SetData(ConfirmDueKey, null);
+            contract.SetData(DisputeKey, null);
+            if (goal == null)
+            {
+                contract.State = BoardStates.Fulfilled;
+                NotifyChanged();
+                return;
+            }
+            if (claimer != null)
+                Sapi.SendMessage(claimer, Options.NoticeChatGroup, Text("your-work-accepted"), EnumChatType.Notification);
+            Settle(claimer, contract, goal);
+        }
+
+        /// <summary>
+        /// The author disputes the work: the reward stays reserved until an admin decides
+        /// (<see cref="Resolve" />). The claimer is told the reason.
+        /// </summary>
+        public string? Dispute(IServerPlayer author, string? contractId, string? reason)
+        {
+            var contract = Find(contractId);
+            if (contract == null || contract.State != BoardStates.Done) return LangKey("error-not-done");
+            if (contract.AuthorUid != author.PlayerUID) return LangKey("error-not-author");
+            reason = reason?.Trim();
+            if (string.IsNullOrEmpty(reason)) return LangKey("error-dispute-reason");
+            if (reason.Length > 200) reason = reason.Substring(0, 200);
+
+            contract.State = BoardStates.Disputed;
+            contract.SetData(ConfirmDueKey, null);
+            contract.SetData(DisputeKey, reason);
+
+            var claimer = contract.ClaimedByUid != null ? FindOnline(contract.ClaimedByUid) : null;
+            if (claimer != null)
+                Sapi.SendMessage(claimer, Options.NoticeChatGroup, Text("your-work-disputed", author.PlayerName, reason), EnumChatType.Notification);
+            Sapi.Logger.Notification("[ArcanumLib] Board {0}: contract {1} disputed by {2}: {3}", Key, contract.Id, author.PlayerName, reason);
+            NotifyChanged();
+            return null;
+        }
+
+        /// <summary>Admin decision on a done or disputed contract: pay the claimer, or refund the author.</summary>
+        public bool Resolve(string contractId, bool pay)
+        {
+            var contract = Find(contractId);
+            if (contract == null || !BoardStates.IsAwaiting(contract.State)) return false;
+            if (pay) AcceptWork(contract);
+            else ForceCancel(contractId);
+            return true;
         }
 
         /// <summary>Pays the whole reward (escrow + reward sources) to the claimer.</summary>
@@ -537,10 +631,16 @@ namespace ArcanumLib.Boards
             else if (author == null) ReturnOffline(contract, bytes);
         }
 
-        /// <summary>Removes open and claimed contracts whose time ran out, returning their rewards.</summary>
+        /// <summary>
+        /// Removes open and claimed contracts whose time ran out, returning their rewards; done contracts the author
+        /// did not answer in time count as accepted.
+        /// </summary>
         public int SweepExpiry()
         {
             double now = Sapi.World.Calendar.TotalDays;
+            var unanswered = state.Contracts.FindAll(c => c.State == BoardStates.Done && ConfirmDue(c) is > 0 and var due && due <= now);
+            foreach (var contract in unanswered) AcceptWork(contract);
+
             var expired = state.Contracts.FindAll(c => c.ExpireTotalDays > 0 && c.ExpireTotalDays <= now && BoardStates.IsActive(c.State));
 
             foreach (var contract in expired)
@@ -558,7 +658,7 @@ namespace ArcanumLib.Boards
             }
 
             if (expired.Count > 0) NotifyChanged();
-            return expired.Count;
+            return expired.Count + unanswered.Count;
         }
 
         /// <summary>Hands out refunds and deliveries kept for this player while they were offline (own state only).</summary>

@@ -25,6 +25,8 @@ public class ContractBoardAtlasTests : AtlasScenarioBase
     {
         public bool Done;
         public bool Deliver;
+        public double Confirm;
+        public override double ConfirmDays => Confirm;
         public readonly List<string> Log = new();
         public override string Kind => "test";
         public override bool DeliversToAuthor => Deliver;
@@ -35,7 +37,7 @@ public class ContractBoardAtlasTests : AtlasScenarioBase
         public override bool IsCompletable(ContractBoard board, IServerPlayer player, BoardContract contract) => Done;
         public override bool TryComplete(ContractBoard board, IServerPlayer player, BoardContract contract, bool force) { Log.Add("complete"); return Done || force; }
         public override void OnReleased(ContractBoard board, string playerUid, IServerPlayer? player, BoardContract contract) => Log.Add("released:" + (player == null ? "offline" : "online"));
-        public override void OnFulfilled(ContractBoard board, IServerPlayer claimer, BoardContract contract)
+        public override void OnFulfilled(ContractBoard board, IServerPlayer? claimer, BoardContract contract)
         {
             if (!Deliver) return;
             var gear = board.Sapi.World.GetItem(new AssetLocation("game:gear-rusty"))!;
@@ -269,5 +271,95 @@ public class ContractBoardAtlasTests : AtlasScenarioBase
         Assert.Equal(EnumCommandStatus.Success, res!.Status);
         Assert.Empty(board.State.Contracts);
         Assert.Equal(1, source.Released);
+    }
+
+    [AtlasScenario]
+    public async Task Confirmed_Goal_Waits_For_The_Author_And_Silence_Counts_As_Accepted()
+    {
+        var (board, goal, source) = NewBoard();
+        goal.Confirm = 3;
+        goal.Done = true;
+        var author = (await World.JoinPlayer("boardauthor7")).Player;
+        var claimer = (await World.JoinPlayer("boardclaimer7")).Player;
+        var completed = new List<string>();
+        board.Completed += e => completed.Add(e.Player?.PlayerName ?? "none");
+
+        Assert.Null(board.Post(author, Draft(), Escrow(author, 4), expireInDays: 1));
+        var c = board.State.Contracts.Single();
+        Assert.Null(board.Accept(claimer, c.Id));
+        Assert.Null(board.TurnIn(claimer, c.Id));
+
+        Assert.Equal(BoardStates.Done, c.State);
+        Assert.Equal(0, c.ExpireTotalDays);   // the post's own run-out no longer applies
+        Assert.Equal(Sapi.World.Calendar.TotalDays + 3, ContractBoard.ConfirmDue(c), 2);
+        Assert.Equal(1, board.CountActivePosts(author.PlayerUID));
+        Assert.Empty(completed);
+        Assert.Equal(board.LangKey("error-not-fulfilled"), board.Collect(claimer, c.Id));
+        Assert.Equal(board.LangKey("error-not-author"), board.Confirm(claimer, c.Id));
+        Assert.Equal(0, board.SweepExpiry());
+
+        // The author does not answer in time.
+        c.SetData(ContractBoard.ConfirmDueKey, (Sapi.World.Calendar.TotalDays - 0.01).ToString(System.Globalization.CultureInfo.InvariantCulture));
+        Assert.Equal(1, board.SweepExpiry());
+        Assert.Equal(BoardStates.Fulfilled, c.State);
+        Assert.Null(c.GetData(ContractBoard.ConfirmDueKey));
+        Assert.Single(completed);
+
+        int before = CountGears(claimer);
+        Assert.Null(board.Collect(claimer, c.Id));
+        await World.Ticks(2);
+        Assert.Equal(before + 4, CountGears(claimer));
+        Assert.Equal(1, source.Paid);
+        Assert.Empty(board.State.Contracts);
+    }
+
+    [AtlasScenario]
+    public async Task Author_Accepts_Or_Disputes_And_An_Admin_Resolves_The_Dispute()
+    {
+        var (board, goal, source) = NewBoard();
+        goal.Confirm = 3;
+        goal.Done = true;
+        var author = (await World.JoinPlayer("boardauthor8")).Player;
+        var claimer = (await World.JoinPlayer("boardclaimer8")).Player;
+
+        // Accepted by the author.
+        Assert.Null(board.Post(author, Draft(), Escrow(author, 2)));
+        var accepted = board.State.Contracts.Single();
+        Assert.Null(board.Accept(claimer, accepted.Id));
+        Assert.Null(board.TurnIn(claimer, accepted.Id));
+        Assert.Null(board.Confirm(author, accepted.Id));
+        Assert.Equal(BoardStates.Fulfilled, accepted.State);
+        Assert.Equal(board.LangKey("error-not-done"), board.Confirm(author, accepted.Id));
+
+        // Disputed, then refunded by an admin.
+        Assert.Null(board.Post(author, Draft(), Escrow(author, 3)));
+        var disputed = board.State.Contracts.Single(c => c.State == BoardStates.Open);
+        Assert.Null(board.Accept(claimer, disputed.Id));
+        Assert.Null(board.TurnIn(claimer, disputed.Id));
+        Assert.Equal(board.LangKey("error-dispute-reason"), board.Dispute(author, disputed.Id, "  "));
+        Assert.Equal(board.LangKey("error-not-author"), board.Dispute(claimer, disputed.Id, "no"));
+        Assert.Null(board.Dispute(author, disputed.Id, "the roof still leaks"));
+        Assert.Equal(BoardStates.Disputed, disputed.State);
+        Assert.Equal("the roof still leaks", disputed.GetData(ContractBoard.DisputeKey));
+        Assert.Equal(board.LangKey("error-not-done"), board.Dispute(author, disputed.Id, "again"));
+
+        // A dispute never runs out by itself.
+        disputed.SetData(ContractBoard.ConfirmDueKey, "1");
+        Assert.Equal(0, board.SweepExpiry());
+        Assert.Equal(BoardStates.Disputed, disputed.State);
+
+        int before = CountGears(author);
+        TextCommandResult? res = null;
+        Sapi.ChatCommands.ExecuteUnparsed($"/arcanum boards resolve {board.Key} {disputed.Id} refund", new TextCommandCallingArgs
+        {
+            Caller = new Caller { Type = EnumCallerType.Console, CallerRole = "admin", CallerPrivileges = new[] { "*" }, FromChatGroupId = GlobalConstants.ConsoleGroup },
+        }, r => res = r);
+        await World.Until(() => res != null, timeoutTicks: 100);
+        Assert.Equal(EnumCommandStatus.Success, res!.Status);
+        await World.Ticks(2);
+        Assert.Equal(before + 3, CountGears(author));
+        Assert.DoesNotContain(board.State.Contracts, c => c.Id == disputed.Id);
+        Assert.Equal(1, source.Released);
+        Assert.Equal(0, source.Paid);
     }
 }

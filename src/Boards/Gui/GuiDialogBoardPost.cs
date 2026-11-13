@@ -1,6 +1,7 @@
 using System;
 using System.Globalization;
 using System.Linq;
+using ArcanumLib.Gui.Controls;
 using Vintagestory.API.Client;
 using Vintagestory.API.Common;
 using Vintagestory.API.Config;
@@ -13,7 +14,7 @@ namespace ArcanumLib.Boards.Gui
     /// </summary>
     public class GuiDialogBoardPost : GuiDialog
     {
-        private const double W = 460, RowH = 30, LabelW = 130, Gap = 8;
+        private const double W = 480, RowH = 30, LabelW = 120, Gap = 8;
 
         public static GuiDialogBoardPost? Current { get; private set; }
 
@@ -70,7 +71,15 @@ namespace ArcanumLib.Boards.Gui
             bg.BothSizing = ElementSizing.FitToChildren;
             var dialog = ElementStdBounds.AutosizedMainDialog.WithAlignment(EnumDialogArea.CenterMiddle);
             var font = CairoFont.WhiteSmallText();
+            var dim = CairoFont.WhiteDetailText().WithColor(new double[] { 0.75, 0.7, 0.62, 1 });
             double fieldW = W - LabelW;
+
+            // Keep what was typed when the goal changes.
+            string? keepTitle = SingleComposer?.GetTextInput("title")?.GetText();
+            string? keepDesc = SingleComposer?.GetTextArea("description")?.GetText();
+            string? keepTarget = goalChanged ? null : SingleComposer?.GetTextInput("target")?.GetText();
+            float? keepDemand = goalChanged ? null : SingleComposer?.GetNumberInput("demand")?.GetValue();
+            goalChanged = false;
 
             var composer = capi.Gui.CreateCompo("arcanumlib-board-post", dialog)
                 .AddShadedDialogBG(bg)
@@ -80,38 +89,67 @@ namespace ArcanumLib.Boards.Gui
             ElementBounds Label(double at) => ElementBounds.Fixed(0, at + 6, LabelW, RowH);
             ElementBounds Field(double at) => ElementBounds.Fixed(LabelW, at, fieldW, RowH);
 
-            composer.AddStaticText(Lang.Get("arcanumlib:board-post-goal"), font, Label(y));
-            var kinds = packet.Goals.Select(g => g.Kind).ToArray();
-            var names = packet.Goals.Select(g => Lang.Get(g.NameKey)).ToArray();
-            composer.AddDropDown(kinds, names, Math.Max(0, goalIndex), (code, _) =>
+            // Goal: toggle buttons while they fit, a list otherwise.
+            if (packet.Goals.Count is > 1 and <= 4)
             {
-                goalIndex = Array.IndexOf(kinds, code);
-                Compose();
-            }, Field(y), "goal");
-            y += RowH + Gap;
+                double bw = (W - Gap * (packet.Goals.Count - 1)) / packet.Goals.Count;
+                for (int i = 0; i < packet.Goals.Count; i++)
+                {
+                    int index = i;
+                    composer.AddSmallButton(Lang.Get(packet.Goals[i].NameKey), () => { SelectGoal(index); return true; },
+                        ElementBounds.Fixed(i * (bw + Gap), y, bw, RowH), i == goalIndex ? EnumButtonStyle.MainMenu : EnumButtonStyle.Normal, "goal" + i);
+                }
+                y += RowH + Gap * 2;
+            }
+            else if (packet.Goals.Count > 4)
+            {
+                composer.AddStaticText(Lang.Get("arcanumlib:board-post-goal"), font, Label(y));
+                var kinds = packet.Goals.Select(g => g.Kind).ToArray();
+                composer.AddDropDown(kinds, packet.Goals.Select(g => Lang.Get(g.NameKey)).ToArray(), Math.Max(0, goalIndex),
+                    (code, _) => SelectGoal(Array.IndexOf(kinds, code)), Field(y), "goal");
+                y += RowH + Gap;
+            }
 
             var goal = Goal;
-            composer.AddStaticText(Lang.Get("arcanumlib:board-post-target"), font, Label(y));
+            string targetLabel = goal != null && Lang.HasTranslation(goal.NameKey + "-target") ? Lang.Get(goal.NameKey + "-target") : Lang.Get("arcanumlib:board-post-target");
+            composer.AddStaticText(targetLabel, font, Label(y));
             if (goal != null && goal.Targets.Count > 0)
             {
                 var targets = goal.Targets.ToArray();
                 composer.AddDropDown(targets, targets.Select(TargetName).ToArray(), 0, (_, _) => { }, Field(y), "target");
+                y += RowH + Gap;
+            }
+            else if (goal?.TargetIsItem == true)
+            {
+                const double handW = 90;
+                composer.AddTextInput(ElementBounds.Fixed(LabelW, y, fieldW - handW - Gap, RowH), OnTargetTyped, font, "target");
+                composer.AddSmallButton(Lang.Get("arcanumlib:board-post-fromhand"), OnFromHand, ElementBounds.Fixed(W - handW, y, handW, RowH), EnumButtonStyle.Normal, "fromhand");
+                y += RowH + 2;
+                composer.AddDynamicText("", dim, ElementBounds.Fixed(LabelW, y, fieldW, 20), "targetinfo");
+                y += 20 + Gap;
             }
             else
             {
                 composer.AddTextInput(Field(y), null, font, "target");
+                y += RowH + Gap;
             }
-            y += RowH + Gap;
 
             if (goal?.HasDemand != false)
             {
                 composer.AddStaticText(Lang.Get("arcanumlib:board-post-demand"), font, Label(y));
-                composer.AddNumberInput(Field(y), null, font, "demand");
+                composer.AddNumberInput(ElementBounds.Fixed(LabelW, y, 110, RowH), null, font, "demand");
                 y += RowH + Gap;
             }
 
-            composer.AddStaticText(Lang.Get("arcanumlib:board-post-expire", packet.ExpireDaysMin, packet.ExpireDaysMax), font, Label(y));
-            composer.AddNumberInput(Field(y), null, font, "expire");
+            // Run-out: "[7] days [∞] 1–30"; ∞ = no run-out (0), the field is then off.
+            composer.AddStaticText(Lang.Get("arcanumlib:board-post-expirelabel"), font, Label(y));
+            composer.AddNumberInput(ElementBounds.Fixed(LabelW, y, 80, RowH), null, font, "expire");
+            composer.AddStaticText(Lang.Get("arcanumlib:board-post-days"), font, ElementBounds.Fixed(LabelW + 88, y + 6, 50, RowH));
+            // The game font has no ∞: the Arcanum button draws it as a shape.
+            composer.AddArcanumButton("∞", () => { ToggleNoExpiry(); return true; }, ElementBounds.Fixed(LabelW + 140, y, 36, RowH),
+                noExpiry ? ArcanumButtonStyle.Primary : ArcanumButtonStyle.Default, "noexpiry");
+            composer.AddHoverText(Lang.Get("arcanumlib:board-post-noexpiry"), font, 220, ElementBounds.Fixed(LabelW + 140, y, 36, RowH));
+            composer.AddStaticText($"{packet.ExpireDaysMin:0.#}–{packet.ExpireDaysMax:0.#}", dim, ElementBounds.Fixed(LabelW + 186, y + 8, 80, RowH));
             y += RowH + Gap;
 
             composer.AddStaticText(Lang.Get("arcanumlib:board-post-titlefield"), font, Label(y));
@@ -123,12 +161,25 @@ namespace ArcanumLib.Boards.Gui
             y += RowH * 3 + Gap;
 
             composer.AddStaticText(Lang.Get("arcanumlib:board-post-reward"), font, Label(y));
-            composer.AddItemSlotGrid(inventory, SendInvPacket, Math.Min(6, inventory.Count), ElementBounds.Fixed(LabelW, y, fieldW, 50), "slots");
-            y += 50 + 20 * ((inventory.Count - 1) / 6) + Gap;
+            int cols = Math.Min(6, inventory.Count);
+            int slotRows = (inventory.Count + cols - 1) / cols;
+            composer.AddItemSlotGrid(inventory, SendInvPacket, cols, ElementBounds.Fixed(LabelW, y, fieldW, 50 * slotRows), "slots");
+            y += 52 * slotRows + 2;
+            composer.AddStaticText(Lang.Get("arcanumlib:board-post-escrow"), dim, ElementBounds.Fixed(LabelW, y, fieldW, 36));
+            y += 36 + Gap;
+
+            if (goal != null && goal.ConfirmDays > 0)
+            {
+                var box = ElementBounds.Fixed(0, y, W, 72);
+                composer.AddInset(box, 2, 0.75f);
+                composer.AddStaticText(Lang.Get("arcanumlib:board-post-confirm-hint", DaysText(goal.ConfirmDays)), font, ElementBounds.Fixed(8, y + 6, W - 16, 64));
+                y += 72 + Gap;
+            }
 
             if (packet.CooldownRemainingHours > 0)
             {
-                composer.AddStaticText(Lang.Get("arcanumlib:board-post-cooldown", packet.CooldownRemainingHours.ToString("0.#")), font, ElementBounds.Fixed(0, y, W, RowH));
+                composer.AddStaticText(Lang.Get("arcanumlib:board-post-cooldown", packet.CooldownRemainingHours.ToString("0.#")),
+                    font.Clone().WithColor(new double[] { 0.9, 0.5, 0.4, 1 }), ElementBounds.Fixed(0, y, W, RowH));
                 y += RowH;
             }
 
@@ -136,11 +187,104 @@ namespace ArcanumLib.Boards.Gui
             composer.AddSmallButton(Lang.Get("arcanumlib:board-post-submit"), OnSubmit, ElementBounds.Fixed((W + Gap) / 2, y, (W - Gap) / 2, RowH), EnumButtonStyle.Normal, "submit");
 
             SingleComposer = composer.Compose();
-            if (goal?.HasDemand != false) SingleComposer.GetNumberInput("demand").SetValue(1);
-            SingleComposer.GetNumberInput("expire").SetValue((float)packet.ExpireDaysDefault);
-            SingleComposer.GetTextInput("title")?.SetMaxLength(Math.Max(1, packet.MaxTitleLength));
-            SingleComposer.GetButton("submit").Enabled = packet.Goals.Count > 0;
+            if (goal?.HasDemand != false) SingleComposer.GetNumberInput("demand").SetValue(keepDemand ?? 1);
+            if (keepTarget != null) SingleComposer.GetTextInput("target")?.SetValue(keepTarget);
+            SingleComposer.GetNumberInput("expire").SetValue((float)(expireDays ?? packet.ExpireDaysDefault));
+            UpdateExpire();
+            var title = SingleComposer.GetTextInput("title");
+            title?.SetMaxLength(Math.Max(1, packet.MaxTitleLength));
+            if (keepTitle != null) title?.SetValue(keepTitle);
+            if (goal != null) title?.SetPlaceHolderText(Lang.Get(goal.NameKey));
+            if (keepDesc != null) SingleComposer.GetTextArea("description")?.SetValue(keepDesc);
+            SingleComposer.GetButton("submit").Enabled = packet.Goals.Count > 0 && packet.CooldownRemainingHours <= 0;
+            UpdateTargetInfo();
         }
+
+        private bool noExpiry;
+        private bool goalChanged;
+        private double? expireDays;
+        private string? pickedCode;
+
+        private void SelectGoal(int index)
+        {
+            if (index < 0 || index == goalIndex) return;
+            if (SingleComposer?.GetNumberInput("expire") is { } e && !noExpiry) expireDays = e.GetValue();
+            goalIndex = index;
+            goalChanged = true;
+            pickedCode = null;
+            Compose();
+        }
+
+        private void ToggleNoExpiry()
+        {
+            if (!noExpiry && SingleComposer?.GetNumberInput("expire") is { } e) expireDays = e.GetValue();
+            noExpiry = !noExpiry;
+            Compose();
+        }
+
+        private void UpdateExpire()
+        {
+            var input = SingleComposer?.GetNumberInput("expire");
+            if (input != null) input.Enabled = !noExpiry;
+        }
+
+        private bool OnFromHand()
+        {
+            var stack = capi.World.Player.InventoryManager.ActiveHotbarSlot?.Itemstack;
+            if (stack == null)
+            {
+                SingleComposer.GetDynamicText("targetinfo")?.SetNewText(Lang.Get("arcanumlib:board-post-hand-empty"));
+                return true;
+            }
+            pickedCode = stack.Collectible.Code.ToString();
+            SingleComposer.GetTextInput("target")?.SetValue(stack.GetName());
+            UpdateTargetInfo();
+            return true;
+        }
+
+        private void OnTargetTyped(string text)
+        {
+            if (pickedCode != null && text != TargetName(pickedCode)) pickedCode = null;
+            UpdateTargetInfo();
+        }
+
+        private void UpdateTargetInfo()
+        {
+            var info = SingleComposer?.GetDynamicText("targetinfo");
+            if (info == null) return;
+            string text = SingleComposer!.GetTextInput("target")?.GetText() ?? "";
+            string? code = ResolveItemCode(text);
+            info.SetNewText(string.IsNullOrWhiteSpace(text) ? Lang.Get("arcanumlib:board-post-target-hint")
+                : code != null ? Lang.Get("arcanumlib:board-post-target-found", TargetName(code))
+                : Lang.Get("arcanumlib:board-post-target-unknown"));
+        }
+
+        /// <summary>The item code for what was typed: the held item picked, a code, or an exact item name.</summary>
+        private string? ResolveItemCode(string text)
+        {
+            text = text.Trim();
+            if (text.Length == 0) return null;
+            if (pickedCode != null) return pickedCode;
+            if (text.Contains(':') || text.Contains('*'))
+            {
+                if (text.Contains('*')) return text;
+                var loc = new AssetLocation(text);
+                return capi.World.GetItem(loc) != null || capi.World.GetBlock(loc) != null ? loc.ToString() : null;
+            }
+            foreach (var obj in capi.World.Collectibles)
+            {
+                if (obj?.Code == null) continue;
+                string name;
+                try { name = new ItemStack(obj).GetName(); }
+                catch { continue; }
+                if (string.Equals(name, text, StringComparison.OrdinalIgnoreCase)) return obj.Code.ToString();
+            }
+            return null;
+        }
+
+        private static string DaysText(double days) => days == Math.Floor(days)
+            ? Lang.Get("arcanumlib:board-days", (int)days)
+            : Lang.Get("arcanumlib:board-hours", (int)Math.Round(days * 24));
 
         private void SendInvPacket(object packetObj) => capi.Network.SendPacketClient(packetObj);
 
@@ -157,9 +301,10 @@ namespace ArcanumLib.Boards.Gui
             var goal = Goal;
             if (goal == null) return true;
 
+            string? typed = SingleComposer.GetTextInput("target")?.GetText();
             string? target = goal.Targets.Count > 0
                 ? SingleComposer.GetDropDown("target")?.SelectedValue
-                : SingleComposer.GetTextInput("target")?.GetText();
+                : goal.TargetIsItem ? ResolveItemCode(typed ?? "") ?? typed : typed;
 
             capi.ModLoader.GetModSystem<BoardRegistry>()?.SendPost(new BoardPostMessage
             {
@@ -167,7 +312,7 @@ namespace ArcanumLib.Boards.Gui
                 Kind = goal.Kind,
                 TargetCode = target,
                 Demand = goal.HasDemand ? (int)Math.Round(SingleComposer.GetNumberInput("demand").GetValue()) : 1,
-                ExpireDays = SingleComposer.GetNumberInput("expire").GetValue(),
+                ExpireDays = noExpiry ? 0 : SingleComposer.GetNumberInput("expire").GetValue(),
                 Title = SingleComposer.GetTextInput("title")?.GetText(),
                 Description = SingleComposer.GetTextArea("description")?.GetText()
             });

@@ -17,5 +17,8 @@ namespace ArcanumLib.Boards
 
         /// <summary>Targets the player may pick from; empty = free text the goal checks in <see cref="IBoardGoal.ValidatePost" />.</summary>
         IReadOnlyList<string> TargetOptions(ContractBoard board, IServerPlayer player);
+
+        /// <summary>The free-text target is an item or block code: the window offers the held item and shows its name.</summary>
+        bool TargetIsItem => false;
     }
 }
