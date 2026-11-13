@@ -264,7 +264,9 @@ public static class GroundPiles
 
     private static readonly MethodInfo GetDefaultMesh = AccessTools.Method(typeof(BlockEntityDisplay), "getDefaultMesh");
     private static readonly MethodInfo ApplyTransforms = AccessTools.Method(typeof(BlockEntityDisplay), "applyDefaultTranforms");
-    private static readonly MethodInfo MeshKey = AccessTools.Method(typeof(BlockEntityGroundStorage), "getMeshCacheKey");
+    // Declared on the display: invoked on a shelf, ground storage's own override would throw "does not match target
+    // type" and the shelf drew nothing; virtual dispatch still reaches that override for piles.
+    internal static readonly MethodInfo MeshKey = AccessTools.DeclaredMethod(typeof(BlockEntityDisplay), "getMeshCacheKey");
     private static readonly MethodInfo MeshCacheGetter = AccessTools.PropertyGetter(typeof(BlockEntityDisplay), "MeshCache");
 
     private static bool HasDisplayedShape(ItemStack stack) => stack.Collectible.Attributes["displayedShape"].Exists;

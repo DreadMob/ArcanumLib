@@ -49,6 +49,23 @@ public class GroundPilesTests
             Assert.Equal(typeof(BlockEntityDisplay), AccessTools.Method(typeof(GroundPiles), name).GetParameters()[0].ParameterType);
     }
 
+    /// <summary>The mesh hook reads the cache key of any display. Bound to ground storage's override it threw on every
+    /// shelf and display case ("does not match target type"), so patterns put there were invisible.</summary>
+    [Theory]
+    [InlineData(typeof(BlockEntityShelf))]
+    [InlineData(typeof(BlockEntityDisplayCase))]
+    public void Mesh_Key_Is_Read_On_Shelves_And_Cases(System.Type display)
+    {
+        var be = System.Runtime.CompilerServices.RuntimeHelpers.GetUninitializedObject(display);
+        var item = new Vintagestory.API.Common.Item { Code = new Vintagestory.API.Common.AssetLocation("alegacyattire", "pattern-herbdoc") };
+        var slot = new Vintagestory.API.Common.DummySlot(new Vintagestory.API.Common.ItemStack(item));
+        Assert.Equal("alegacyattire:pattern-herbdoc", GroundPiles.MeshKey.Invoke(be, new object[] { slot }));
+    }
+
+    [Fact]
+    public void Mesh_Key_Still_Reaches_The_Ground_Storage_Override() =>
+        Assert.Equal(GroundPiles.MeshKey, AccessTools.Method(typeof(BlockEntityGroundStorage), "getMeshCacheKey").GetBaseDefinition());
+
     [Fact]
     public void Fan_Turns_Cover_Every_Slot() => Assert.True(GroundPiles.FanYaw.Length >= GroundPiles.MaxSlots);
 
