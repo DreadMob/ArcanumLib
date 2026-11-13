@@ -155,8 +155,10 @@ namespace ArcanumLib.PlayerAnimations
 
             if (!string.IsNullOrWhiteSpace(start) && metas.TryGetValue(start, out var meta))
             {
-                anim.StopAnimation(start);   // restart one-shots from frame 0
+                anim.StopAnimation(start);
                 anim.StartAnimation(meta.Clone());
+                // a stop and start in one frame leave the clip running where it was: back to frame 0 by hand
+                if (anim.Animator?.GetAnimationState(meta.Animation) is { Active: true } st) { st.CurrentFrame = 0f; st.Iterations = 0; }
             }
         }
     }
