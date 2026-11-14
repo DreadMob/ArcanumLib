@@ -231,7 +231,7 @@ namespace ArcanumLib.Boards
                 draft.State = BoardStates.Open;
                 draft.ClaimedByUid = null;
                 draft.ClaimedByName = null;
-                draft.ExpireTotalDays = expireInDays > 0 ? draft.CreatedTotalDays + expireInDays : 0;
+                draft.ExpireTotalDays = expireInDays > 0 ? draft.CreatedTotalDays + CalendarDays(expireInDays) : 0;
 
                 foreach (var (value, source) in toReserve)
                 {
@@ -451,7 +451,7 @@ namespace ArcanumLib.Boards
 
         private void MarkDone(IServerPlayer claimer, BoardContract contract, IBoardGoal goal)
         {
-            double due = Sapi.World.Calendar.TotalDays + goal.ConfirmDays;
+            double due = Sapi.World.Calendar.TotalDays + CalendarDays(goal.ConfirmDays);
             contract.State = BoardStates.Done;
             contract.ExpireTotalDays = 0;
             contract.SetData(ConfirmDueKey, due.ToString("R", System.Globalization.CultureInfo.InvariantCulture));
@@ -461,6 +461,20 @@ namespace ArcanumLib.Boards
             if (author != null)
                 Sapi.SendMessage(author, Options.NoticeChatGroup, Text("your-contract-done", claimer.PlayerName), EnumChatType.Notification);
             NotifyChanged();
+        }
+
+        /// <summary>Calendar days in one of the board's days (<see cref="BoardOptions.RealDays" />).</summary>
+        public double DayScale => Options.RealDays ? CalendarDaysPerRealDay(Sapi.World.Calendar) : 1;
+
+        /// <summary>A span in the board's days as calendar days.</summary>
+        public double CalendarDays(double days) => days * DayScale;
+
+        /// <summary>Calendar days that pass in one real day at the world's current speed of time.</summary>
+        public static double CalendarDaysPerRealDay(IGameCalendar calendar)
+        {
+            double perSecond = calendar.SpeedOfTime * calendar.CalendarSpeedMul;
+            double perDay = 86400.0 * perSecond / (Math.Max(1, calendar.HoursPerDay) * 3600.0);
+            return perDay > 0 ? perDay : 1;
         }
 
         /// <summary>Total days the author's answer is due by, or 0 when the contract is not waiting for it.</summary>

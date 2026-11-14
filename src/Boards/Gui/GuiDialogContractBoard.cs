@@ -186,8 +186,8 @@ namespace ArcanumLib.Boards.Gui
         {
             if (c.State == BoardStates.Disputed) return Lang.Get("arcanumlib:board-row-disputed");
             if (c.State == BoardStates.Done)
-                return Lang.Get("arcanumlib:board-row-answer-in", DaysHours(ContractBoard.ConfirmDue(c) - page.NowTotalDays));
-            if (c.ExpireTotalDays > 0) return Lang.Get("arcanumlib:board-row-days", Math.Max(0, c.ExpireTotalDays - page.NowTotalDays).ToString("0.#"));
+                return Lang.Get("arcanumlib:board-row-answer-in", DaysHours(Left(ContractBoard.ConfirmDue(c))));
+            if (c.ExpireTotalDays > 0) return Lang.Get("arcanumlib:board-row-days", Math.Max(0, Left(c.ExpireTotalDays)).ToString("0.#"));
             return Lang.Get("arcanumlib:board-row-noexpiry");
         }
 
@@ -239,7 +239,7 @@ namespace ArcanumLib.Boards.Gui
         {
             bool author = c.AuthorUid == MyUid, claimer = c.ClaimedByUid == MyUid;
             string days = DaysHours(GoalInfo(c.Kind)?.ConfirmDays ?? 0);
-            string left = "<strong>" + DaysHours(ContractBoard.ConfirmDue(c) - page.NowTotalDays) + "</strong>";
+            string left = "<strong>" + DaysHours(Left(ContractBoard.ConfirmDue(c))) + "</strong>";
             string? reason = c.GetData(ContractBoard.DisputeKey);
             return c.State switch
             {
@@ -296,6 +296,9 @@ namespace ArcanumLib.Boards.Gui
             }
         }
 
+        /// <summary>Board days (real or calendar, see the page's scale) until a calendar moment.</summary>
+        private double Left(double totalDays) => (totalDays - page.NowTotalDays) / (page.DayScale > 0 ? page.DayScale : 1);
+
         /// <summary>"2 дн. 14 ч" from a span in days.</summary>
         private static string DaysHours(double days)
         {
@@ -350,7 +353,7 @@ namespace ArcanumLib.Boards.Gui
             if (!string.IsNullOrEmpty(c.ClaimedByName))
                 sb.Append(Escape(Lang.Get("arcanumlib:board-detail-claimer", c.ClaimedByUid == MyUid ? Lang.Get("arcanumlib:board-you") : c.ClaimedByName!))).Append("<br>");
             if (c.ExpireTotalDays > 0 && BoardStates.IsActive(c.State))
-                sb.Append(Escape(Lang.Get("arcanumlib:board-detail-expires", Math.Max(0, c.ExpireTotalDays - page.NowTotalDays).ToString("0.#")))).Append("<br>");
+                sb.Append(Escape(Lang.Get("arcanumlib:board-detail-expires", Math.Max(0, Left(c.ExpireTotalDays)).ToString("0.#")))).Append("<br>");
 
             var rewards = (c.Rewards ?? new List<BoardRewardEntry>()).Select(RewardText).Where(t => t != null).ToList();
             if (rewards.Count > 0)

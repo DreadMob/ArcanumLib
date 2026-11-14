@@ -256,6 +256,7 @@ namespace ArcanumLib.Boards
                 Contracts = board.State.Contracts.ToList(),
                 CanPost = board.Options.PostRules.AllowPlayerPosts && board.Goals.OfType<IPostableBoardGoal>().Any(),
                 NowTotalDays = sapi!.World.Calendar.TotalDays,
+                DayScale = board.DayScale,
                 LangPrefix = board.Options.LangPrefix,
                 Goals = board.Goals.OfType<IPostableBoardGoal>()
                     .Select(g => new BoardGoalInfo { Kind = g.Kind, NameKey = g.NameKey, HasDemand = g.HasDemand, ConfirmDays = g.ConfirmDays, TargetIsItem = g.TargetIsItem }).ToList()

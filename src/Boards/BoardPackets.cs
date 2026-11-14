@@ -148,6 +148,10 @@ namespace ArcanumLib.Boards
         /// <summary>Names of the board's goals (no targets), for contract titles.</summary>
         [ProtoMember(7)]
         public List<BoardGoalInfo> Goals = new();
+
+        /// <summary>Calendar days in one shown day (real-day boards); 0 from older servers = 1.</summary>
+        [ProtoMember(8)]
+        public double DayScale;
     }
 
     /// <summary>Server → client: open the post window over the server's escrow inventory.</summary>

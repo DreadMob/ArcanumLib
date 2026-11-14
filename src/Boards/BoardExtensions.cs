@@ -230,5 +230,12 @@ namespace ArcanumLib.Boards
 
         /// <summary>Chat group of the board's notices to players.</summary>
         public int NoticeChatGroup { get; set; } = Vintagestory.API.Config.GlobalConstants.InfoLogChatGroup;
+
+        /// <summary>
+        /// Run-out times and <see cref="IBoardGoal.ConfirmDays" /> are real days, not calendar days (one calendar day
+        /// is ~48 real minutes, and sleeping skips nights). Stored as calendar days all the same; the window shows
+        /// them as real time.
+        /// </summary>
+        public bool RealDays { get; set; }
     }
 }
