@@ -215,6 +215,12 @@ namespace ArcanumLib.Boards
 
         /// <summary>playerUid → calendar total days of their last post (post cooldown).</summary>
         Dictionary<string, double> LastPostTotalDays { get; }
+
+        /// <summary>
+        /// Further cooldowns of goals (see <see cref="BoardPlayerTargets" />): key → calendar total days it was set.
+        /// Keys are '|'-separated parts; parts equal to a player uid move with <c>/arcanum transfer</c>.
+        /// </summary>
+        Dictionary<string, double> Cooldowns { get; }
     }
 
     /// <summary>The ready-made board state for boards owned by <see cref="BoardRegistry" />.</summary>
@@ -238,6 +244,9 @@ namespace ArcanumLib.Boards
         [ProtoMember(6)]
         public int Version = 1;
 
+        [ProtoMember(7)]
+        public Dictionary<string, double> Cooldowns { get; set; } = new();
+
         /// <summary>Fills collections a save from an older version left null.</summary>
         public BoardState Normalize()
         {
@@ -245,6 +254,7 @@ namespace ArcanumLib.Boards
             EscrowStacksByContract ??= new();
             LastPostTotalDays ??= new();
             PendingReturnsByUid ??= new();
+            Cooldowns ??= new();
             foreach (var c in Contracts) c.Rewards ??= new();
             return this;
         }

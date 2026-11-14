@@ -73,7 +73,7 @@ namespace ArcanumLib.Boards
             tickId = api.Event.RegisterGameTickListener(_ => { foreach (var o in owned.Values) o.Board.SweepExpiry(); }, 30000);
 
             BoardCommands.Register(api, this);
-            PlayerDataTransfer.Register("arcanumlib:boards", TransferOwned);
+            PlayerDataTransfer.Register("arcanumlib:boards", TransferBoards);
         }
 
         /// <summary>
@@ -155,27 +155,70 @@ namespace ArcanumLib.Boards
             if (inv != null) ReturnItems(player, inv, close: false);
         }
 
-        private void TransferOwned(PlayerTransferContext ctx)
+        private void TransferBoards(PlayerTransferContext ctx)
         {
             int moved = 0;
-            foreach (var entry in owned.Values)
-            {
-                if (entry.Board.State is not BoardState st) continue;
-                foreach (var c in st.Contracts)
-                {
-                    if (c.AuthorUid == ctx.FromUid) { c.AuthorUid = ctx.ToUid; c.AuthorName = ctx.ToName; moved++; }
-                    if (c.ClaimedByUid == ctx.FromUid) { c.ClaimedByUid = ctx.ToUid; c.ClaimedByName = ctx.ToName; moved++; }
-                    if (c.TargetPlayerUid == ctx.FromUid) { c.TargetPlayerUid = ctx.ToUid; c.TargetPlayerName = ctx.ToName; }
-                }
-                if (st.LastPostTotalDays.Remove(ctx.FromUid, out double last))
-                    st.LastPostTotalDays[ctx.ToUid] = Math.Max(last, st.LastPostTotalDays.TryGetValue(ctx.ToUid, out var t) ? t : 0);
-                if (st.PendingReturnsByUid.Remove(ctx.FromUid, out var returns))
-                {
-                    if (!st.PendingReturnsByUid.TryGetValue(ctx.ToUid, out var to)) st.PendingReturnsByUid[ctx.ToUid] = to = new List<byte[]>();
-                    to.AddRange(returns);
-                }
-            }
+            foreach (var board in boards.Values) moved += MovePlayer(board, ctx.FromUid, ctx.ToUid, ctx.ToName);
             if (moved > 0) ctx.Note("arcanumlib:boards", $"{moved} contract role(s) moved");
+        }
+
+        /// <summary>
+        /// Moves a player's part of a board to another account: authorship, claims (or, for goals whose claim does not
+        /// move, the contract back on the board), the target of contracts aimed at them, post time, cooldowns and
+        /// offline returns. Every registered board takes part, also those a mod keeps itself. Returns the roles moved.
+        /// </summary>
+        public static int MovePlayer(ContractBoard board, string fromUid, string toUid, string? toName)
+        {
+            var st = board.State;
+            int moved = 0;
+            foreach (var c in st.Contracts)
+            {
+                if (c.AuthorUid == fromUid) { c.AuthorUid = toUid; c.AuthorName = toName; moved++; }
+                if (c.TargetPlayerUid == fromUid) { c.TargetPlayerUid = toUid; c.TargetPlayerName = toName; }
+                if (c.ClaimedByUid != fromUid) continue;
+
+                var goal = board.GetGoal(c.Kind);
+                if (c.State == BoardStates.Claimed && goal?.ClaimMovesWithAccount == false)
+                {
+                    goal.OnReleased(board, fromUid, board.FindOnline(fromUid), c);
+                    c.State = BoardStates.Open;
+                    c.ClaimedByUid = null;
+                    c.ClaimedByName = null;
+                    c.ClaimedTotalDays = 0;
+                }
+                else
+                {
+                    c.ClaimedByUid = toUid;
+                    c.ClaimedByName = toName;
+                }
+                moved++;
+            }
+            if (st.LastPostTotalDays.Remove(fromUid, out double last))
+                st.LastPostTotalDays[toUid] = Math.Max(last, st.LastPostTotalDays.TryGetValue(toUid, out var t) ? t : 0);
+            MoveCooldowns(st.Cooldowns, fromUid, toUid);
+            if (st is BoardState own && own.PendingReturnsByUid.Remove(fromUid, out var returns))
+            {
+                if (!own.PendingReturnsByUid.TryGetValue(toUid, out var to)) own.PendingReturnsByUid[toUid] = to = new List<byte[]>();
+                to.AddRange(returns);
+            }
+            if (moved > 0) board.NotifyChanged();
+            return moved;
+        }
+
+        /// <summary>Renames cooldown keys whose '|'-parts name the old uid; the later time wins on a clash.</summary>
+        public static void MoveCooldowns(Dictionary<string, double> cooldowns, string fromUid, string toUid)
+        {
+            if (cooldowns == null || cooldowns.Count == 0) return;
+            foreach (var key in cooldowns.Keys.ToList())
+            {
+                var parts = key.Split('|');
+                if (!parts.Contains(fromUid)) continue;
+                for (int i = 0; i < parts.Length; i++) if (parts[i] == fromUid) parts[i] = toUid;
+                string renamed = string.Join("|", parts);
+                double value = cooldowns[key];
+                cooldowns.Remove(key);
+                cooldowns[renamed] = cooldowns.TryGetValue(renamed, out double other) ? Math.Max(other, value) : value;
+            }
         }
 
         // ---- server network ----

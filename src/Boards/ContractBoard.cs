@@ -273,6 +273,7 @@ namespace ArcanumLib.Boards
         private string? ValidateByRules(IServerPlayer author, BoardContract draft, IInventory? escrowInv, bool hasOtherReward)
         {
             var rules = Options.PostRules;
+            if (!rules.AllowPlayerPosts) return LangKey("error-posts-disabled");
             if (rules.AllowedKinds.Count > 0 && !rules.AllowedKinds.Contains(draft.Kind ?? ""))
                 return LangKey("error-kind-not-allowed");
             if (draft.Demand < 1 || (rules.MaxDemand > 0 && draft.Demand > rules.MaxDemand))

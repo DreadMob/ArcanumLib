@@ -210,4 +210,35 @@ public class BoardModelsTests
         c.State = BoardStates.Fulfilled;
         Assert.False(c.IsClaimedBy("b"));
     }
+
+    [Fact]
+    public void Cooldowns_Follow_An_Account_Transfer_And_Keep_The_Later_Time()
+    {
+        var cooldowns = new Dictionary<string, double>
+        {
+            [BoardPlayerTargets.AuthorKey("kill", "old")] = 10,
+            [BoardPlayerTargets.PairKey("kill", "old", "victim")] = 12,
+            [BoardPlayerTargets.AuthorKey("kill", "new")] = 15,
+            [BoardPlayerTargets.TargetKey("kill", "oldish")] = 3,
+        };
+
+        BoardRegistry.MoveCooldowns(cooldowns, "old", "new");
+
+        Assert.Equal(15, cooldowns[BoardPlayerTargets.AuthorKey("kill", "new")]);
+        Assert.Equal(12, cooldowns[BoardPlayerTargets.PairKey("kill", "new", "victim")]);
+        Assert.Equal(3, cooldowns[BoardPlayerTargets.TargetKey("kill", "oldish")]);
+        Assert.Equal(3, cooldowns.Count);
+    }
+
+    [Fact]
+    public void Board_State_Keeps_Cooldowns_Through_A_Save()
+    {
+        var state = new BoardState();
+        state.Cooldowns["kill|author|u"] = 4;
+        using var ms = new MemoryStream();
+        Serializer.Serialize(ms, state);
+        ms.Position = 0;
+        var back = Serializer.Deserialize<BoardState>(ms).Normalize();
+        Assert.Equal(4, back.Cooldowns["kill|author|u"]);
+    }
 }
