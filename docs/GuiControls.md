@@ -19,7 +19,7 @@ Themed input controls, ornaments and item slots in `ArcanumLib.Gui.Controls`, pl
 | `AddArcanumSlider(onNewValue, bounds, key, unitName)` | `GetArcanumSlider` | `SetValues(value, min, max, step, unitSuffix)`; `ReadoutWidth` puts the value beside the track instead of above its right end. |
 | `AddArcanumDropdown(values, names, selectedIndex, onSelected, bounds, font, key, palette)` | `GetArcanumDropdown` | `SelectedValue`, `SelectedIndex`, `SetSelectedIndex`, `SetSelectedValue`. The list opens as its own dialog in the right spot at any GUI scale. |
 | `AddArcanumTabStrip(names, selected, onTab, bounds, key)` | `GetArcanumTabStrip` | Tab labels share one baseline. |
-| `AddArcanumTextInput(bounds, onChanged, font, key, maxLength)`, `AddArcanumTextArea(...)` | `GetArcanumTextInput` | `GetText`, `SetValue(text, caretToEnd)`. While focused it keeps every key, so typing does not walk the player. |
+| `AddArcanumTextInput(bounds, onChanged, font, key, maxLength)`, `AddArcanumTextArea(...)` | `GetArcanumTextInput` | `GetText`, `SetValue(text, caretToEnd)`, `Placeholder`, `Error` (red rim). While focused it keeps every key, so typing does not walk the player. |
 | `AddArcanumProgressBar(bounds, initial, key)` | `GetArcanumProgressBar` | `SetValue(0…1)`, `ShowLabel`. |
 | `AddTooltip(targetBounds or element, text, key, font)` | `GetTooltip` | Hover tooltip; `ArcanumTooltip.Set(composer, key, text)` updates it. |
 
@@ -49,6 +49,10 @@ SingleComposer.GetArcanumSlider("volume")!.SetValues(cfg.Volume, 0, 100, 5, "%")
 
 - `ArcanumGuiDialog` — recompose on the main thread (`Recompose()` is safe from any thread); override `DialogPalette` to install a palette only for the duration of each compose and render call, so overlapping dialogs never leak their theme into each other.
 - `BrassDialog` / `BrassTheme` — the brass-and-walnut skin (dark iron, walnut, brass rims and rivets, parchment text) shared by the steam-age mods; `BrassTheme.DrawRecessedWell` for sunk housings.
+
+## Painting outside the game
+
+`ArcanumButton.Paint`, `ArcanumCard.Paint`, `ArcanumTabStrip.Paint`, `ArcanumCheckbox.Paint`, `ArcanumTextInput.PaintFrame`/`PaintText`, `ArcanumDialogBackground.Paint` and `GuiElementRivetFrame.Paint` are the code the controls draw with, as static methods on a Cairo context in device pixels. Tests use them to render a window to PNG without the game (AlegacyEconomy's window renders do). An `ArcanumButton` label wider than the button shrinks to 75 % and is then cut with "…"; `FontSize` sets its size.
 
 ## Theme helpers
 
