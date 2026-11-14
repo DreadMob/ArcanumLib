@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using ArcanumLib.Gui.Controls;
 using Vintagestory.API.Client;
 using Vintagestory.API.Common;
 using Vintagestory.API.Config;
@@ -87,6 +88,16 @@ namespace ArcanumLib.Boards.Gui
 
         private void Compose()
         {
+            using (BoardWindows.Scope(page.BoardKey)) ComposeThemed();
+        }
+
+        public override void OnRenderGUI(float deltaTime)
+        {
+            using (BoardWindows.Scope(page.BoardKey)) base.OnRenderGUI(deltaTime);
+        }
+
+        private void ComposeThemed()
+        {
             var all = Visible();
             var contracts = all.Where(PassesFilter).ToList();
             int pages = Math.Max(1, (contracts.Count + RowsPerPage - 1) / RowsPerPage);
@@ -101,7 +112,7 @@ namespace ArcanumLib.Boards.Gui
             var dialog = ElementStdBounds.AutosizedMainDialog.WithAlignment(EnumDialogArea.CenterMiddle);
 
             var composer = capi.Gui.CreateCompo("arcanumlib-board-" + page.BoardKey, dialog)
-                .AddShadedDialogBG(bg)
+                .AddArcanumDialogBackground(bg)
                 .AddDialogTitleBar(Lang.Get(page.TitleKey), () => TryClose())
                 // the background sizes itself to what is inside it: without children it throws on compose
                 .BeginChildElements(bg);
@@ -117,15 +128,15 @@ namespace ArcanumLib.Boards.Gui
                 composer.AddBoardRows(ElementBounds.Fixed(0, y, ListW, listH), rows, RowH, RowGap, id => { selectedId = id; disputing = false; Compose(); }, "rows");
 
             double pagerY = y + listH + Gap;
-            composer.AddSmallButton("<", () => { pageIndex--; Compose(); return true; }, ElementBounds.Fixed(0, pagerY, 40, BtnH), EnumButtonStyle.Normal, "prev");
+            composer.AddArcanumButton("<", () => { pageIndex--; Compose(); return true; }, ElementBounds.Fixed(0, pagerY, 40, BtnH), ArcanumButtonStyle.Default, "prev");
             composer.AddStaticText($"{pageIndex + 1} / {pages}", CairoFont.WhiteSmallText().WithOrientation(EnumTextOrientation.Center),
                 ElementBounds.Fixed(50, pagerY + 6, ListW - 100, BtnH));
-            composer.AddSmallButton(">", () => { pageIndex++; Compose(); return true; }, ElementBounds.Fixed(ListW - 40, pagerY, 40, BtnH), EnumButtonStyle.Normal, "next");
+            composer.AddArcanumButton(">", () => { pageIndex++; Compose(); return true; }, ElementBounds.Fixed(ListW - 40, pagerY, 40, BtnH), ArcanumButtonStyle.Default, "next");
             double bottomY = pagerY + BtnH + Gap;
             if (page.CanPost)
             {
-                composer.AddSmallButton(Lang.Get("arcanumlib:board-post"), () => { Registry?.SendAction(page.BoardKey, BoardActions.OpenPost); return true; },
-                    ElementBounds.Fixed(0, bottomY, ListW, BtnH), EnumButtonStyle.Normal, "post");
+                composer.AddArcanumButton(Lang.Get("arcanumlib:board-post"), () => { Registry?.SendAction(page.BoardKey, BoardActions.OpenPost); return true; },
+                    ElementBounds.Fixed(0, bottomY, ListW, BtnH), ArcanumButtonStyle.Default, "post");
             }
 
             double dx = ListW + 2 * Gap;
@@ -142,8 +153,8 @@ namespace ArcanumLib.Boards.Gui
 
             composer.EndChildElements();
             SingleComposer = composer.Compose();
-            SingleComposer.GetButton("prev").Enabled = pageIndex > 0;
-            SingleComposer.GetButton("next").Enabled = pageIndex < pages - 1;
+            if (SingleComposer.GetElement("prev") is ArcanumButton prev) prev.Enabled = pageIndex > 0;
+            if (SingleComposer.GetElement("next") is ArcanumButton next) next.Enabled = pageIndex < pages - 1;
         }
 
         private void AddFilters(GuiComposer composer, List<BoardContract> all, double y)
@@ -159,8 +170,8 @@ namespace ArcanumLib.Boards.Gui
             for (int i = 0; i < filters.Count; i++)
             {
                 var (value, text) = filters[i];
-                composer.AddSmallButton(text, () => { filter = value; pageIndex = 0; selectedId = null; disputing = false; Compose(); return true; },
-                    ElementBounds.Fixed(i * (w + 4), y, w, BtnH), filter == value ? EnumButtonStyle.MainMenu : EnumButtonStyle.Normal, "filter" + i);
+                composer.AddArcanumButton(text, () => { filter = value; pageIndex = 0; selectedId = null; disputing = false; Compose(); return true; },
+                    ElementBounds.Fixed(i * (w + 4), y, w, BtnH), filter == value ? ArcanumButtonStyle.Primary : ArcanumButtonStyle.Default, "filter" + i);
             }
         }
 
@@ -229,7 +240,7 @@ namespace ArcanumLib.Boards.Gui
             if (info != null)
             {
                 var box = ElementBounds.Fixed(x, sy + 54, DetailW, 100);
-                composer.AddInset(box, 2, 0.75f);
+                composer.AddArcanumCard(box, drawOrnament: false);
                 composer.AddRichtext(info, CairoFont.WhiteSmallText(), ElementBounds.Fixed(x + 8, sy + 60, DetailW - 16, 88));
             }
         }
@@ -272,11 +283,11 @@ namespace ArcanumLib.Boards.Gui
             {
                 if (disputing)
                 {
-                    composer.AddTextInput(ElementBounds.Fixed(x, y - BtnH - Gap, DetailW, BtnH), null, CairoFont.WhiteSmallText(), "reason");
+                    composer.AddArcanumTextInput(ElementBounds.Fixed(x, y - BtnH - Gap, DetailW, BtnH), null, CairoFont.WhiteSmallText(), "reason");
                     actions.Add(("arcanumlib:board-post-cancel", () => { disputing = false; Compose(); return true; }));
                     actions.Add(("arcanumlib:board-dispute-send", () =>
                     {
-                        Registry?.SendAction(page.BoardKey, BoardActions.Dispute, id, SingleComposer.GetTextInput("reason")?.GetText());
+                        Registry?.SendAction(page.BoardKey, BoardActions.Dispute, id, SingleComposer.GetArcanumTextInput("reason")?.GetText());
                         return true;
                     }));
                 }
@@ -292,7 +303,7 @@ namespace ArcanumLib.Boards.Gui
             for (int i = 0; i < actions.Count; i++)
             {
                 var (text, onClick) = actions[i];
-                composer.AddSmallButton(Lang.Get(text), () => onClick(), ElementBounds.Fixed(x + i * (w + Gap), y, w, BtnH), EnumButtonStyle.Normal, "act" + i);
+                composer.AddArcanumButton(Lang.Get(text), () => onClick(), ElementBounds.Fixed(x + i * (w + Gap), y, w, BtnH), ArcanumButtonStyle.Default, "act" + i);
             }
         }
 

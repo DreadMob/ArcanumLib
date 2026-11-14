@@ -67,6 +67,16 @@ namespace ArcanumLib.Boards.Gui
 
         private void Compose()
         {
+            using (BoardWindows.Scope(packet.BoardKey)) ComposeThemed();
+        }
+
+        public override void OnRenderGUI(float deltaTime)
+        {
+            using (BoardWindows.Scope(packet.BoardKey)) base.OnRenderGUI(deltaTime);
+        }
+
+        private void ComposeThemed()
+        {
             var bg = ElementBounds.Fill.WithFixedPadding(GuiStyle.ElementToDialogPadding);
             bg.BothSizing = ElementSizing.FitToChildren;
             var dialog = ElementStdBounds.AutosizedMainDialog.WithAlignment(EnumDialogArea.CenterMiddle);
@@ -85,7 +95,7 @@ namespace ArcanumLib.Boards.Gui
             goalChanged = false;
 
             var composer = capi.Gui.CreateCompo("arcanumlib-board-post", dialog)
-                .AddShadedDialogBG(bg)
+                .AddArcanumDialogBackground(bg)
                 .AddDialogTitleBar(Lang.Get("arcanumlib:board-post-title"), () => TryClose())
                 // the background sizes itself to what is inside it: without children it throws on compose
                 .BeginChildElements(bg);
@@ -101,8 +111,8 @@ namespace ArcanumLib.Boards.Gui
                 for (int i = 0; i < packet.Goals.Count; i++)
                 {
                     int index = i;
-                    composer.AddSmallButton(Lang.Get(packet.Goals[i].NameKey), () => { SelectGoal(index); return true; },
-                        ElementBounds.Fixed(i * (bw + Gap), y, bw, RowH), i == goalIndex ? EnumButtonStyle.MainMenu : EnumButtonStyle.Normal, "goal" + i);
+                    composer.AddArcanumButton(Lang.Get(packet.Goals[i].NameKey), () => { SelectGoal(index); return true; },
+                        ElementBounds.Fixed(i * (bw + Gap), y, bw, RowH), i == goalIndex ? ArcanumButtonStyle.Primary : ArcanumButtonStyle.Default, "goal" + i);
                 }
                 y += RowH + Gap * 2;
             }
@@ -129,7 +139,7 @@ namespace ArcanumLib.Boards.Gui
             {
                 const double handW = 90;
                 composer.AddTextInput(ElementBounds.Fixed(LabelW, y, fieldW - handW - Gap, RowH), OnTargetTyped, font, "target");
-                composer.AddSmallButton(Lang.Get("arcanumlib:board-post-fromhand"), OnFromHand, ElementBounds.Fixed(W - handW, y, handW, RowH), EnumButtonStyle.Normal, "fromhand");
+                composer.AddArcanumButton(Lang.Get("arcanumlib:board-post-fromhand"), OnFromHand, ElementBounds.Fixed(W - handW, y, handW, RowH), ArcanumButtonStyle.Default, "fromhand");
                 y += RowH + 2;
                 composer.AddDynamicText("", dim, ElementBounds.Fixed(LabelW, y, fieldW, 20), "targetinfo");
                 y += 20 + Gap;
@@ -198,7 +208,7 @@ namespace ArcanumLib.Boards.Gui
             if (goal != null && goal.ConfirmDays > 0)
             {
                 var box = ElementBounds.Fixed(0, y, W, 72);
-                composer.AddInset(box, 2, 0.75f);
+                composer.AddArcanumCard(box, drawOrnament: false);
                 composer.AddStaticText(Lang.Get("arcanumlib:board-post-confirm-hint", DaysText(goal.ConfirmDays)), font, ElementBounds.Fixed(8, y + 6, W - 16, 64));
                 y += 72 + Gap;
             }
@@ -210,8 +220,8 @@ namespace ArcanumLib.Boards.Gui
                 y += RowH;
             }
 
-            composer.AddSmallButton(Lang.Get("arcanumlib:board-post-cancel"), () => TryClose(), ElementBounds.Fixed(0, y, (W - Gap) / 2, RowH));
-            composer.AddSmallButton(Lang.Get("arcanumlib:board-post-submit"), OnSubmit, ElementBounds.Fixed((W + Gap) / 2, y, (W - Gap) / 2, RowH), EnumButtonStyle.Normal, "submit");
+            composer.AddArcanumButton(Lang.Get("arcanumlib:board-post-cancel"), () => TryClose(), ElementBounds.Fixed(0, y, (W - Gap) / 2, RowH));
+            composer.AddArcanumButton(Lang.Get("arcanumlib:board-post-submit"), OnSubmit, ElementBounds.Fixed((W + Gap) / 2, y, (W - Gap) / 2, RowH), ArcanumButtonStyle.Primary, "submit");
 
             composer.EndChildElements();
             SingleComposer = composer.Compose();
@@ -224,7 +234,7 @@ namespace ArcanumLib.Boards.Gui
             if (keepTitle != null) title?.SetValue(keepTitle);
             if (goal != null) title?.SetPlaceHolderText(Lang.Get(goal.NameKey));
             if (keepDesc != null) SingleComposer.GetTextArea("description")?.SetValue(keepDesc);
-            SingleComposer.GetButton("submit").Enabled = packet.Goals.Count > 0 && packet.CooldownRemainingHours <= 0;
+            if (SingleComposer.GetElement("submit") is ArcanumButton submit) submit.Enabled = packet.Goals.Count > 0 && packet.CooldownRemainingHours <= 0;
             for (int i = 0; i < packet.RewardFields.Count; i++)
             {
                 if (keepRewards.TryGetValue(i, out float v)) SingleComposer.GetNumberInput("reward" + i)?.SetValue(v);
