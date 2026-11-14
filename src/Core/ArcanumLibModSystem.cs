@@ -91,6 +91,7 @@ public class ArcanumLibModSystem : ModSystem
         CustomTabIconRenderer.RegisterGenericIcons();
         GroundStorageCullFacesPatch.Apply();
         DisplayCullFacesPatch.Apply();
+        ArcanumLib.Entities.SeatBodyLock.Apply();
         _runtime.Initialize();
     }
 
@@ -185,6 +186,7 @@ public class ArcanumLibModSystem : ModSystem
     {
         GroundStorageCullFacesPatch.Dispose();
         DisplayCullFacesPatch.Dispose();
+        ArcanumLib.Entities.SeatBodyLock.Dispose();
         if (_groundPiles) { ArcanumLib.Blocks.GroundPiles.Dispose(); _groundPiles = false; }
         // GL textures: freed here, on the client's main thread (the lifecycle may run on the server thread)
         if (_clientSide) { Gui.ArcanumTexturePool.DisposeAll(); _clientSide = false; }
