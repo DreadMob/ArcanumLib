@@ -54,18 +54,37 @@ public class ArcanumCard : GuiElement
     {
         Bounds.CalcWorldBounds();
 
-        double r = GuiElement.scaled(ArcanumGuiTheme.Radius.Medium);
         double x = Bounds.drawX;
         double y = Bounds.drawY;
-        double w = Bounds.OuterWidth;
-        double h = Bounds.OuterHeight;
+        Paint(ctx, x, y, Bounds.OuterWidth, Bounds.OuterHeight, _fill, _border, _accent, _drawInnerBorder, _drawOrnament);
+
+        // Custom content drawn relative to the card origin.
+        if (_drawContent != null)
+        {
+            ctx.Save();
+            ctx.Translate(x, y);
+            _drawContent(ctx, Bounds);
+            ctx.Restore();
+        }
+    }
+
+    /// <summary>
+    /// Paints a card at (x, y) in device pixels — the code the control composes with, for renders outside the game.
+    /// Null colours take the defaults of the constructor.
+    /// </summary>
+    public static void Paint(Context ctx, double x, double y, double w, double h, RGBA? fill = null, RGBA? border = null,
+        RGBA? accent = null, bool innerBorder = true, bool ornament = true)
+    {
+        var fillC = fill ?? ArcanumGuiTheme.SurfaceCard.WithAlpha(0.45);
+        var borderC = border ?? ArcanumGuiTheme.BorderShadow.WithAlpha(0.55);
+        double r = GuiElement.scaled(ArcanumGuiTheme.Radius.Medium);
 
         // Card fill and outer border.
-        ArcanumGuiTheme.FillRoundedRect(ctx, x, y, w, h, r, _fill);
-        ArcanumGuiTheme.StrokeRoundedRect(ctx, x + 0.5, y + 0.5, w - 1, h - 1, r, _border, GuiElement.scaled(1.0));
+        ArcanumGuiTheme.FillRoundedRect(ctx, x, y, w, h, r, fillC);
+        ArcanumGuiTheme.StrokeRoundedRect(ctx, x + 0.5, y + 0.5, w - 1, h - 1, r, borderC, GuiElement.scaled(1.0));
 
         // Optional inner silver border.
-        if (_drawInnerBorder)
+        if (innerBorder)
         {
             double inset = GuiElement.scaled(2.0);
             ArcanumGuiTheme.StrokeRoundedRect(ctx,
@@ -77,30 +96,21 @@ public class ArcanumCard : GuiElement
         }
 
         // Optional status accent strip on the left.
-        if (_accent.HasValue)
+        if (accent.HasValue)
         {
             ArcanumGuiTheme.FillRoundedRect(ctx,
                 x + GuiElement.scaled(8.0), y + GuiElement.scaled(12.0),
                 GuiElement.scaled(3.0), h - GuiElement.scaled(24.0),
                 GuiElement.scaled(1.5),
-                _accent.Value.WithAlpha(0.95));
+                accent.Value.WithAlpha(0.95));
         }
 
         // Optional corner ornament.
-        if (_drawOrnament)
+        if (ornament)
         {
             ArcanumGuiTheme.DrawCornerOrnament(ctx, x, y, w, h,
                 GuiElement.scaled(8.0),
                 ArcanumGuiTheme.BorderSilver.WithAlpha(0.65));
-        }
-
-        // Custom content drawn relative to the card origin.
-        if (_drawContent != null)
-        {
-            ctx.Save();
-            ctx.Translate(x, y);
-            _drawContent(ctx, Bounds);
-            ctx.Restore();
         }
     }
 }

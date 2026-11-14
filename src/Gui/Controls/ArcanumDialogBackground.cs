@@ -37,13 +37,16 @@ public class ArcanumDialogBackground : GuiElement
     {
         Bounds.CalcWorldBounds();
 
+        Paint(ctx, Bounds.bgDrawX, Bounds.bgDrawY, Bounds.OuterWidth, Bounds.OuterHeight, withTitlebar, drawAccentStrip);
+    }
+
+    /// <summary>
+    /// Paints the background at (x, y) in device pixels — the code the element composes with, for renders outside the game.
+    /// </summary>
+    public static void Paint(Context ctx, double x, double y, double w, double h, bool withTitlebar = true, bool drawAccentStrip = true)
+    {
         double titleH = withTitlebar ? scaled(GuiStyle.TitleBarHeight) : 0.0;
         double radius = scaled(ArcanumGuiTheme.Radius.Medium);
-
-        double x = Bounds.bgDrawX;
-        double y = Bounds.bgDrawY;
-        double w = Bounds.OuterWidth;
-        double h = Bounds.OuterHeight;
 
         // Outer shadow.
         ArcanumGuiTheme.DrawSoftShadow(ctx, x, y, w, h, radius, scaled(20.0), 0.55);

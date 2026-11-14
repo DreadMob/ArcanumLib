@@ -66,6 +66,77 @@ public class ArcanumTextInput : GuiElement
     /// <summary>Current text.</summary>
     public string GetText() => text;
 
+    /// <summary>Grey hint shown while the field is empty and not focused.</summary>
+    public string Placeholder
+    {
+        get => placeholder;
+        set { placeholder = value ?? ""; cacheKey = null; }
+    }
+    private string placeholder = "";
+
+    /// <summary>Red rim: the typed text is not accepted.</summary>
+    public bool Error
+    {
+        get => error;
+        set { if (error != value) { error = value; cacheKey = null; } }
+    }
+    private bool error;
+
+    /// <summary>Recessed well with its rim, at (0,0) in device pixels (also for renders outside the game).</summary>
+    public static void PaintFrame(Context ctx, double w, double h, bool focused, bool hovered, bool error = false)
+    {
+        var p = ArcanumGuiTheme.Palette;
+        double r = scaled(ArcanumGuiTheme.Radius.Small);
+
+        // Recessed well — darker than cards, brass rim.
+        ArcanumGuiTheme.FillRoundedRectVerticalGradient(ctx, 0, 0, w, h, r,
+            p.SurfaceDeepest, p.SurfaceBase);
+        var rim = error ? p.StatusFailed.WithAlpha(0.9)
+                 : focused ? p.Accent.WithAlpha(0.75)
+                 : hovered ? p.BorderStrong : p.BorderDefault;
+        ArcanumGuiTheme.StrokeRoundedRect(ctx, 0.5, 0.5, w - 1, h - 1, r, rim, scaled(error ? 1.5 : 1.0));
+    }
+
+    private static void ClipField(Context ctx, double w, double h)
+    {
+        double r = scaled(ArcanumGuiTheme.Radius.Small);
+        ArcanumGuiTheme.RoundedRectPath(ctx, 1, 1, w - 2, h - 2, r - 1);
+        ctx.Clip();
+    }
+
+    /// <summary>The field's text (or the placeholder while it is empty), clipped to the field; for renders outside the game.</summary>
+    public static void PaintText(Context ctx, double w, double h, string text, string placeholder = "", bool multiline = false)
+    {
+        var p = ArcanumGuiTheme.Palette;
+        ctx.Save();
+        ClipField(ctx, w, h);
+        ctx.SelectFontFace("Sans", FontSlant.Normal, FontWeight.Normal);
+        ctx.SetFontSize(scaled(11));
+        double lineH = scaled(14);
+        bool hint = text.Length == 0 && placeholder.Length > 0;
+        var c = hint ? p.TextMuted : p.TextPrimary;
+        ctx.SetSourceRGBA(c.R, c.G, c.B, hint ? 0.8 : 0.95);
+        if (hint) text = placeholder;
+        if (multiline)
+        {
+            var lines = text.Split('\n');
+            double ty = scaled(5) + scaled(11);
+            foreach (var line in lines)
+            {
+                ctx.MoveTo(scaled(6), ty);
+                ctx.ShowText(line);
+                ty += lineH;
+                if (ty > h) break;
+            }
+        }
+        else
+        {
+            ctx.MoveTo(scaled(6), h / 2 + scaled(4));
+            ctx.ShowText(text);
+        }
+        ctx.Restore();
+    }
+
     /// <summary>Set text without firing the change callback.</summary>
     public void SetValue(string newText)
     {
@@ -301,7 +372,7 @@ public class ArcanumTextInput : GuiElement
     private void RegenerateIfNeeded()
     {
         if (Bounds == null || api?.Render == null) return;
-        string key = $"{text}|{hovered}|{HasFocus}|{selStart}:{selEnd}|{(int)Bounds.OuterWidth}x{(int)Bounds.OuterHeight}";
+        string key = $"{text}|{hovered}|{HasFocus}|{selStart}:{selEnd}|{Error}|{Placeholder}|{(int)Bounds.OuterWidth}x{(int)Bounds.OuterHeight}";
         if (string.Equals(cacheKey, key, StringComparison.Ordinal) && tex.TextureId > 0) return;
         cacheKey = key;
 
@@ -312,42 +383,13 @@ public class ArcanumTextInput : GuiElement
         {
             surface = new ImageSurface(Format.Argb32, w, h);
             ctx = new Context(surface);
-            var p = ArcanumGuiTheme.Palette;
-            double r = scaled(ArcanumGuiTheme.Radius.Small);
-
-            // Recessed well — darker than cards, brass rim.
-            ArcanumGuiTheme.FillRoundedRectVerticalGradient(ctx, 0, 0, w, h, r,
-                p.SurfaceDeepest, p.SurfaceBase);
-            var rim = HasFocus ? p.Accent.WithAlpha(0.75)
-                     : hovered ? p.BorderStrong : p.BorderDefault;
-            ArcanumGuiTheme.StrokeRoundedRect(ctx, 0.5, 0.5, w - 1, h - 1, r, rim, scaled(1.0));
-
-            // Text — clip to the field.
+            PaintFrame(ctx, w, h, HasFocus, hovered, Error);
             ctx.Save();
-            ArcanumGuiTheme.RoundedRectPath(ctx, 1, 1, w - 2, h - 2, r - 1);
-            ctx.Clip();
+            ClipField(ctx, w, h);
             ctx.SelectFontFace("Sans", FontSlant.Normal, FontWeight.Normal);
             ctx.SetFontSize(scaled(11));
-            double lineH = scaled(14);
-            DrawSelectionHighlight(ctx, h, lineH);
-            ctx.SetSourceRGBA(p.TextPrimary.R, p.TextPrimary.G, p.TextPrimary.B, 0.95);
-            if (multiline)
-            {
-                var lines = text.Split('\n');
-                double ty = scaled(5) + scaled(11);
-                foreach (var line in lines)
-                {
-                    ctx.MoveTo(scaled(6), ty);
-                    ctx.ShowText(line);
-                    ty += lineH;
-                    if (ty > h) break;
-                }
-            }
-            else
-            {
-                ctx.MoveTo(scaled(6), h / 2 + scaled(4));
-                ctx.ShowText(text);
-            }
+            DrawSelectionHighlight(ctx, h, scaled(14));
+            PaintText(ctx, w, h, text, HasFocus ? "" : Placeholder, multiline);
             ctx.Restore();
 
             generateTexture(surface, ref tex);

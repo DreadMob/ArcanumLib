@@ -152,65 +152,7 @@ public class ArcanumTabStrip : GuiElement
         {
             surface = new ImageSurface(Format.Argb32, w, h);
             ctx = new Context(surface);
-            var p = ArcanumGuiTheme.Palette;
-            double dim = enabled ? 1.0 : 0.45;
-            double r = scaled(ArcanumGuiTheme.Radius.Small);
-            double gap = scaled(2);
-
-            // Baseline under the whole strip; the tab plates sit on top of it.
-            ctx.SetSourceRGBA(p.BorderDefault.R, p.BorderDefault.G, p.BorderDefault.B, p.BorderDefault.A * dim);
-            ctx.LineWidth = scaled(1.0);
-            ctx.MoveTo(0, h - 0.5);
-            ctx.LineTo(w, h - 0.5);
-            ctx.Stroke();
-
-            double tabW = names.Length > 0 ? w / (double)names.Length : w;
-            for (int i = 0; i < names.Length; i++)
-            {
-                double tx = i * tabW + gap / 2;
-                double tw = Math.Max(1, tabW - gap);
-                bool active = i == selectedIndex;
-                bool hov = i == hoveredIndex;
-                bool prs = i == pressedIndex;
-
-                if (active)
-                {
-                    // Accent-lit brass plate for the selected tab.
-                    ArcanumGuiTheme.FillRoundedRectVerticalGradient(ctx, tx, 0, tw, h, r,
-                        p.AccentDim.Lerp(p.Accent, prs ? 0.75 : 0.55).WithAlpha(dim),
-                        p.AccentDim.Lerp(p.Accent, 0.30).WithAlpha(dim));
-                    ArcanumGuiTheme.StrokeRoundedRect(ctx, tx + 0.5, 0.5, tw - 1, h - 1, r,
-                        p.Accent.WithAlpha(0.9 * dim), scaled(1.0));
-                    ArcanumGuiTheme.DrawInnerHighlight(ctx, tx + 1, 1, tw - 2, h - 2, Math.Max(0.5, r - 1), 0.12 * dim);
-                }
-                else
-                {
-                    // Dark recessed plate for inactive tabs.
-                    var top = hov ? p.SurfaceBase.Lerp(p.SurfaceElevated, 0.5) : p.SurfaceDeepest;
-                    var bottom = hov ? p.SurfaceElevated : p.SurfaceBase;
-                    ArcanumGuiTheme.FillRoundedRectVerticalGradient(ctx, tx, 0, tw, h, r,
-                        top.WithAlpha(top.A * dim), bottom.WithAlpha(bottom.A * dim));
-                    ArcanumGuiTheme.StrokeRoundedRect(ctx, tx + 0.5, 0.5, tw - 1, h - 1, r,
-                        (hov ? p.BorderStrong : p.BorderDefault).WithAlpha(dim), scaled(0.8));
-                }
-
-                // Tab label, clipped to its cell.
-                ctx.Save();
-                ctx.Rectangle(tx, 0, tw, h);
-                ctx.Clip();
-                ctx.SelectFontFace("Sans", FontSlant.Normal, active ? FontWeight.Bold : FontWeight.Normal);
-                ctx.SetFontSize(scaled(11));
-                var ext = ctx.TextExtents(names[i]);
-                var tc = active ? p.TextPrimary : hov ? p.TextPrimary : p.TextSecondary;
-                ctx.SetSourceRGBA(tc.R, tc.G, tc.B, tc.A * dim);
-                // Baseline from the font, not each label's ink: centring by ink
-                // put labels with and without descenders at different heights.
-                var fe = ctx.FontExtents;
-                ctx.MoveTo(tx + (tw - ext.Width) / 2.0 - ext.XBearing,
-                           (h + fe.Ascent - fe.Descent) / 2.0);
-                ctx.ShowText(names[i]);
-                ctx.Restore();
-            }
+            Paint(ctx, w, h, names, selectedIndex, hoveredIndex, pressedIndex, enabled);
 
             generateTexture(surface, ref tex);
         }
@@ -221,6 +163,72 @@ public class ArcanumTabStrip : GuiElement
             api?.Logger?.Warning("[ArcanumTabStrip] Texture generation failed: {0}", ex);
         }
         finally { ctx?.Dispose(); surface?.Dispose(); }
+    }
+
+    /// <summary>
+    /// Paints the strip at (0,0) in device pixels — the code the control bakes its texture with, for renders outside the game.
+    /// </summary>
+    public static void Paint(Context ctx, double w, double h, string[] names, int selectedIndex, int hoveredIndex = -1, int pressedIndex = -1, bool enabled = true)
+    {
+        var p = ArcanumGuiTheme.Palette;
+        double dim = enabled ? 1.0 : 0.45;
+        double r = scaled(ArcanumGuiTheme.Radius.Small);
+        double gap = scaled(2);
+
+        // Baseline under the whole strip; the tab plates sit on top of it.
+        ctx.SetSourceRGBA(p.BorderDefault.R, p.BorderDefault.G, p.BorderDefault.B, p.BorderDefault.A * dim);
+        ctx.LineWidth = scaled(1.0);
+        ctx.MoveTo(0, h - 0.5);
+        ctx.LineTo(w, h - 0.5);
+        ctx.Stroke();
+
+        double tabW = names.Length > 0 ? w / (double)names.Length : w;
+        for (int i = 0; i < names.Length; i++)
+        {
+            double tx = i * tabW + gap / 2;
+            double tw = Math.Max(1, tabW - gap);
+            bool active = i == selectedIndex;
+            bool hov = i == hoveredIndex;
+            bool prs = i == pressedIndex;
+
+            if (active)
+            {
+                // Accent-lit brass plate for the selected tab.
+                ArcanumGuiTheme.FillRoundedRectVerticalGradient(ctx, tx, 0, tw, h, r,
+                    p.AccentDim.Lerp(p.Accent, prs ? 0.75 : 0.55).WithAlpha(dim),
+                    p.AccentDim.Lerp(p.Accent, 0.30).WithAlpha(dim));
+                ArcanumGuiTheme.StrokeRoundedRect(ctx, tx + 0.5, 0.5, tw - 1, h - 1, r,
+                    p.Accent.WithAlpha(0.9 * dim), scaled(1.0));
+                ArcanumGuiTheme.DrawInnerHighlight(ctx, tx + 1, 1, tw - 2, h - 2, Math.Max(0.5, r - 1), 0.12 * dim);
+            }
+            else
+            {
+                // Dark recessed plate for inactive tabs.
+                var top = hov ? p.SurfaceBase.Lerp(p.SurfaceElevated, 0.5) : p.SurfaceDeepest;
+                var bottom = hov ? p.SurfaceElevated : p.SurfaceBase;
+                ArcanumGuiTheme.FillRoundedRectVerticalGradient(ctx, tx, 0, tw, h, r,
+                    top.WithAlpha(top.A * dim), bottom.WithAlpha(bottom.A * dim));
+                ArcanumGuiTheme.StrokeRoundedRect(ctx, tx + 0.5, 0.5, tw - 1, h - 1, r,
+                    (hov ? p.BorderStrong : p.BorderDefault).WithAlpha(dim), scaled(0.8));
+            }
+
+            // Tab label, clipped to its cell.
+            ctx.Save();
+            ctx.Rectangle(tx, 0, tw, h);
+            ctx.Clip();
+            ctx.SelectFontFace("Sans", FontSlant.Normal, active ? FontWeight.Bold : FontWeight.Normal);
+            ctx.SetFontSize(scaled(11));
+            var ext = ctx.TextExtents(names[i]);
+            var tc = active ? p.TextPrimary : hov ? p.TextPrimary : p.TextSecondary;
+            ctx.SetSourceRGBA(tc.R, tc.G, tc.B, tc.A * dim);
+            // Baseline from the font, not each label's ink: centring by ink
+            // put labels with and without descenders at different heights.
+            var fe = ctx.FontExtents;
+            ctx.MoveTo(tx + (tw - ext.Width) / 2.0 - ext.XBearing,
+                       (h + fe.Ascent - fe.Descent) / 2.0);
+            ctx.ShowText(names[i]);
+            ctx.Restore();
+        }
     }
 
     /// <inheritdoc />

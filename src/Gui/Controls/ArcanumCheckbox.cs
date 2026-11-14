@@ -122,67 +122,7 @@ public class ArcanumCheckbox : GuiElement
         {
             surface = new ImageSurface(Format.Argb32, w, h);
             ctx = new Context(surface);
-            var p = ArcanumGuiTheme.Palette;
-            double dim = enabled ? 1.0 : 0.45;
-
-            // Recessed square box, vertically centered on the left edge.
-            double box = Math.Min(h, scaled(18));
-            double bx = scaled(1);
-            double by = (h - box) / 2.0;
-            double br = scaled(3);
-            double inset = pressed ? scaled(1) : 0;
-
-            ArcanumGuiTheme.FillRoundedRectVerticalGradient(ctx, bx + inset, by + inset, box - inset * 2, box - inset * 2, br,
-                p.SurfaceDeepest.WithAlpha(p.SurfaceDeepest.A * dim),
-                p.SurfaceBase.WithAlpha(p.SurfaceBase.A * dim));
-            var rim = isChecked ? p.Accent.WithAlpha(0.8)
-                    : hovered ? p.BorderStrong : p.BorderDefault;
-            ArcanumGuiTheme.StrokeRoundedRect(ctx, bx + inset + 0.5, by + inset + 0.5,
-                box - inset * 2 - 1, box - inset * 2 - 1, br, rim.WithAlpha(rim.A * dim), scaled(1.0));
-
-            if (isChecked)
-            {
-                // Soft accent glow inside the box.
-                double pad = scaled(2.5);
-                ArcanumGuiTheme.FillRoundedRect(ctx, bx + pad, by + pad, box - pad * 2, box - pad * 2,
-                    Math.Max(0.5, br - 1), p.Accent.WithAlpha(0.22 * dim));
-
-                // Check mark — dark underlay for contrast, bright brass stroke on top.
-                ctx.LineCap = LineCap.Round;
-                ctx.LineJoin = LineJoin.Round;
-                void CheckPath()
-                {
-                    ctx.NewPath();
-                    ctx.MoveTo(bx + box * 0.22, by + box * 0.55);
-                    ctx.LineTo(bx + box * 0.44, by + box * 0.74);
-                    ctx.LineTo(bx + box * 0.80, by + box * 0.26);
-                }
-                CheckPath();
-                ctx.SetSourceRGBA(p.BorderShadow.R, p.BorderShadow.G, p.BorderShadow.B, 0.85 * dim);
-                ctx.LineWidth = scaled(3.0);
-                ctx.Stroke();
-                CheckPath();
-                ctx.SetSourceRGBA(p.AccentBright.R, p.AccentBright.G, p.AccentBright.B, dim);
-                ctx.LineWidth = scaled(2.0);
-                ctx.Stroke();
-            }
-
-            // Optional label to the right of the box.
-            if (label.Length > 0)
-            {
-                double lx = bx + box + scaled(7);
-                ctx.Save();
-                ctx.Rectangle(lx, 0, Math.Max(0, w - lx), h);
-                ctx.Clip();
-                ctx.SelectFontFace("Sans", FontSlant.Normal, FontWeight.Normal);
-                ctx.SetFontSize(scaled(11));
-                var ext = ctx.TextExtents(label);
-                var tc = enabled ? p.TextPrimary : p.TextMuted;
-                ctx.SetSourceRGBA(tc.R, tc.G, tc.B, tc.A * dim);
-                ctx.MoveTo(lx, (h - ext.Height) / 2.0 - ext.YBearing);
-                ctx.ShowText(label);
-                ctx.Restore();
-            }
+            Paint(ctx, w, h, label, isChecked, enabled, hovered, pressed);
 
             generateTexture(surface, ref tex);
         }
@@ -193,6 +133,72 @@ public class ArcanumCheckbox : GuiElement
             api?.Logger?.Warning("[ArcanumCheckbox] Texture generation failed: {0}", ex);
         }
         finally { ctx?.Dispose(); surface?.Dispose(); }
+    }
+
+    /// <summary>Paints the box and its label at (0,0) in device pixels — the code the control bakes with, for renders outside the game.</summary>
+    public static void Paint(Context ctx, double w, double h, string label, bool isChecked, bool enabled = true, bool hovered = false, bool pressed = false)
+    {
+        var p = ArcanumGuiTheme.Palette;
+        double dim = enabled ? 1.0 : 0.45;
+
+        // Recessed square box, vertically centered on the left edge.
+        double box = Math.Min(h, scaled(18));
+        double bx = scaled(1);
+        double by = (h - box) / 2.0;
+        double br = scaled(3);
+        double inset = pressed ? scaled(1) : 0;
+
+        ArcanumGuiTheme.FillRoundedRectVerticalGradient(ctx, bx + inset, by + inset, box - inset * 2, box - inset * 2, br,
+            p.SurfaceDeepest.WithAlpha(p.SurfaceDeepest.A * dim),
+            p.SurfaceBase.WithAlpha(p.SurfaceBase.A * dim));
+        var rim = isChecked ? p.Accent.WithAlpha(0.8)
+                : hovered ? p.BorderStrong : p.BorderDefault;
+        ArcanumGuiTheme.StrokeRoundedRect(ctx, bx + inset + 0.5, by + inset + 0.5,
+            box - inset * 2 - 1, box - inset * 2 - 1, br, rim.WithAlpha(rim.A * dim), scaled(1.0));
+
+        if (isChecked)
+        {
+            // Soft accent glow inside the box.
+            double pad = scaled(2.5);
+            ArcanumGuiTheme.FillRoundedRect(ctx, bx + pad, by + pad, box - pad * 2, box - pad * 2,
+                Math.Max(0.5, br - 1), p.Accent.WithAlpha(0.22 * dim));
+
+            // Check mark — dark underlay for contrast, bright brass stroke on top.
+            ctx.LineCap = LineCap.Round;
+            ctx.LineJoin = LineJoin.Round;
+            void CheckPath()
+            {
+                ctx.NewPath();
+                ctx.MoveTo(bx + box * 0.22, by + box * 0.55);
+                ctx.LineTo(bx + box * 0.44, by + box * 0.74);
+                ctx.LineTo(bx + box * 0.80, by + box * 0.26);
+            }
+            CheckPath();
+            ctx.SetSourceRGBA(p.BorderShadow.R, p.BorderShadow.G, p.BorderShadow.B, 0.85 * dim);
+            ctx.LineWidth = scaled(3.0);
+            ctx.Stroke();
+            CheckPath();
+            ctx.SetSourceRGBA(p.AccentBright.R, p.AccentBright.G, p.AccentBright.B, dim);
+            ctx.LineWidth = scaled(2.0);
+            ctx.Stroke();
+        }
+
+        // Optional label to the right of the box.
+        if (label.Length > 0)
+        {
+            double lx = bx + box + scaled(7);
+            ctx.Save();
+            ctx.Rectangle(lx, 0, Math.Max(0, w - lx), h);
+            ctx.Clip();
+            ctx.SelectFontFace("Sans", FontSlant.Normal, FontWeight.Normal);
+            ctx.SetFontSize(scaled(11));
+            var ext = ctx.TextExtents(label);
+            var tc = enabled ? p.TextPrimary : p.TextMuted;
+            ctx.SetSourceRGBA(tc.R, tc.G, tc.B, tc.A * dim);
+            ctx.MoveTo(lx, (h - ext.Height) / 2.0 - ext.YBearing);
+            ctx.ShowText(label);
+            ctx.Restore();
+        }
     }
 
     /// <inheritdoc />

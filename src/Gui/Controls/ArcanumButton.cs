@@ -160,7 +160,7 @@ public class ArcanumButton : GuiElement
         if (api?.Render == null) return;
         if (cachedTexture == null) cachedTexture = new LoadedTexture(api!);
 
-        string newKey = $"{enabled}|{hovered}|{pressed}|{(int)Bounds.OuterWidth}|{(int)Bounds.OuterHeight}";
+        string newKey = $"{enabled}|{hovered}|{pressed}|{FontSize}|{(int)Bounds.OuterWidth}|{(int)Bounds.OuterHeight}";
         if (string.Equals(cacheKey, newKey, StringComparison.Ordinal) && cachedTexture?.TextureId > 0) return;
 
         cacheKey = newKey;
@@ -176,28 +176,8 @@ public class ArcanumButton : GuiElement
             surface = new ImageSurface(Format.Argb32, width, height);
             ctx = new Context(surface);
 
-            ctx.SetSourceRGBA(0, 0, 0, 0);
-            ctx.Paint();
-
-            double r = scaled(ArcanumGuiTheme.Radius.Medium);
             (RGBA fill, RGBA border, RGBA textColor) = GetStyleColors();
-
-            // Body fill. Hover is conveyed by the brighter fill and border.
-            ArcanumGuiTheme.FillRoundedRect(ctx, 0, 0, width, height, r, fill);
-
-            // Border.
-            ArcanumGuiTheme.StrokeRoundedRect(ctx, 0, 0, width, height, r, border, scaled(1.0));
-
-            // Top inner highlight.
-            ArcanumGuiTheme.DrawInnerHighlight(ctx, 1, 1, width - 2, height - 2, r - 1, 0.08);
-
-            // Label.
-            ctx.SetSourceRGBA(textColor.R, textColor.G, textColor.B, enabled ? 1.0 : 0.45);
-            ctx.SelectFontFace("Sans", FontSlant.Normal, FontWeight.Bold);
-            ctx.SetFontSize(scaled(14.5));
-            var ext = ArcanumLib.Gui.Theme.GlyphText.Extents(ctx, text);
-            ctx.MoveTo((width - ext.Width) / 2.0 - ext.XBearing, (height - ext.Height) / 2.0 - ext.YBearing);
-            ArcanumLib.Gui.Theme.GlyphText.Show(ctx, text);
+            PaintBody(ctx, width, height, text, fill, border, textColor, enabled, FontSize);
 
             generateTexture(surface, ref cachedTexture);
             GuiTextureTracker.Regen(nameof(ArcanumButton));
@@ -216,6 +196,60 @@ public class ArcanumButton : GuiElement
         }
     }
 
+    /// <summary>
+    /// Paints a button of one of the standard styles into <paramref name="ctx"/> at (0,0), in device pixels — the same
+    /// code the control bakes its texture with, so renders outside the game look like the game.
+    /// </summary>
+    public static void Paint(Context ctx, double width, double height, string text, ArcanumButtonStyle style,
+        bool enabled = true, bool hovered = false, double fontSize = DefaultFontSize)
+    {
+        var (fill, border, textColor) = StyleColors(style, enabled, hovered);
+        PaintBody(ctx, width, height, text, fill, border, textColor, enabled, fontSize);
+    }
+
+    /// <summary>Label size before the GUI scale; a label wider than the button shrinks to fit, then gets "…".</summary>
+    public const double DefaultFontSize = 14.5;
+
+    /// <summary>Label size of this button before the GUI scale.</summary>
+    public double FontSize { get; set; } = DefaultFontSize;
+
+    private static void PaintBody(Context ctx, double width, double height, string text, RGBA fill, RGBA border, RGBA textColor, bool enabled, double fontSize)
+    {
+        double r = scaled(ArcanumGuiTheme.Radius.Medium);
+
+        // Body fill. Hover is conveyed by the brighter fill and border.
+        ArcanumGuiTheme.FillRoundedRect(ctx, 0, 0, width, height, r, fill);
+
+        // Border.
+        ArcanumGuiTheme.StrokeRoundedRect(ctx, 0, 0, width, height, r, border, scaled(1.0));
+
+        // Top inner highlight.
+        ArcanumGuiTheme.DrawInnerHighlight(ctx, 1, 1, width - 2, height - 2, r - 1, 0.08);
+
+        // Label: shrinks down to 75 % to fit, then is cut with an ellipsis.
+        ctx.SetSourceRGBA(textColor.R, textColor.G, textColor.B, enabled ? 1.0 : 0.45);
+        ctx.SelectFontFace("Sans", FontSlant.Normal, FontWeight.Bold);
+        double room = width - scaled(10);
+        double size = scaled(fontSize);
+        ctx.SetFontSize(size);
+        var ext = GlyphText.Extents(ctx, text);
+        if (ext.Width > room && ext.Width > 0)
+        {
+            size = Math.Max(size * 0.75, size * room / ext.Width);
+            ctx.SetFontSize(size);
+            ext = GlyphText.Extents(ctx, text);
+        }
+        if (ext.Width > room && text.Length > 1)
+        {
+            int keep = text.Length;
+            while (keep > 1 && GlyphText.Extents(ctx, text[..keep].TrimEnd() + "…").Width > room) keep--;
+            text = text[..keep].TrimEnd() + "…";
+            ext = GlyphText.Extents(ctx, text);
+        }
+        ctx.MoveTo((width - ext.Width) / 2.0 - ext.XBearing, (height - ext.Height) / 2.0 - ext.YBearing);
+        GlyphText.Show(ctx, text);
+    }
+
     private (RGBA fill, RGBA border, RGBA textColor) GetStyleColors()
     {
         if (customStyle)
@@ -227,7 +261,11 @@ public class ArcanumButton : GuiElement
             }
             return (fill, fill.WithAlpha(0.85), ArcanumGuiTheme.TextPrimary);
         }
+        return StyleColors(style, enabled, hovered);
+    }
 
+    private static (RGBA fill, RGBA border, RGBA textColor) StyleColors(ArcanumButtonStyle style, bool enabled, bool hovered)
+    {
         const float disabledAlpha = 0.35f;
         switch (style)
         {

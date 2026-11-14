@@ -31,9 +31,13 @@ public class GuiElementRivetFrame : GuiElement
     public override void ComposeElements(Context ctx, ImageSurface surface)
     {
         Bounds.CalcWorldBounds();
+        Paint(ctx, Bounds.bgDrawX, Bounds.bgDrawY, Bounds.OuterWidth, Bounds.OuterHeight, inset, includeCorners);
+    }
+
+    /// <summary>Paints the rivet rows at (x, y) in device pixels, for renders outside the game.</summary>
+    public static void Paint(Context ctx, double x, double y, double w, double h, double inset = 10, bool includeCorners = true)
+    {
         var p = ArcanumGuiTheme.Palette;
-        double x = Bounds.bgDrawX, y = Bounds.bgDrawY;
-        double w = Bounds.OuterWidth, h = Bounds.OuterHeight;
         double r = scaled(2.2), off = scaled(inset);
 
         ArcanumGuiTheme.DrawRivetRow(ctx, x + off * 2, y + off, w - off * 4, r, 0, p.BorderSilver.WithAlpha(0.55));
