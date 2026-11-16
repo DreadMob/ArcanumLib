@@ -452,15 +452,13 @@ namespace ArcanumLib.Boards
         /// <summary>Set while the author has not been online since the work was marked done: their days have not started.</summary>
         public const string ConfirmUnseenKey = "arcanumlib:confirmunseen";
 
-        /// <summary>An author who never comes back answers at the latest after this many confirm spans (the reward must not wait forever).</summary>
-        public const double AbsentAuthorSpans = 3;
-
         private void MarkDone(IServerPlayer claimer, BoardContract contract, IBoardGoal goal)
         {
             var author = contract.AuthorUid != null ? FindOnline(contract.AuthorUid) : null;
             // silence counts as accepted only once the author could have seen it: an offline author's days start when
-            // they join (DeliverPendingReturns), with a cap for one who never does
-            double due = Sapi.World.Calendar.TotalDays + CalendarDays(goal.ConfirmDays * (author != null ? 1 : AbsentAuthorSpans));
+            // they join (DeliverPendingReturns), with a cap for one who never does (the reward must not wait forever)
+            double days = author != null ? goal.ConfirmDays : Math.Max(goal.ConfirmDays, goal.AbsentConfirmDays);
+            double due = Sapi.World.Calendar.TotalDays + CalendarDays(days);
             contract.State = BoardStates.Done;
             contract.ExpireTotalDays = 0;
             contract.SetData(ConfirmDueKey, due.ToString("R", System.Globalization.CultureInfo.InvariantCulture));

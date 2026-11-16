@@ -65,6 +65,12 @@ namespace ArcanumLib.Boards
         double ConfirmDays { get; }
 
         /// <summary>
+        /// Latest answer of an author who is offline when the work is marked done, in real days from then; their
+        /// <see cref="ConfirmDays" /> start at their next login. Not below <see cref="ConfirmDays" />.
+        /// </summary>
+        double AbsentConfirmDays => ConfirmDays * 3;
+
+        /// <summary>
         /// A claim moves to the new account on <c>/arcanum transfer</c>. False for goals that track the claim on the
         /// player (a quest in their journal): the contract goes back on the board instead.
         /// </summary>
@@ -87,6 +93,7 @@ namespace ArcanumLib.Boards
         public virtual void OnReleased(ContractBoard board, string playerUid, IServerPlayer? player, BoardContract contract) { }
         public virtual void OnFulfilled(ContractBoard board, IServerPlayer? claimer, BoardContract contract) { }
         public virtual double ConfirmDays => 0;
+        public virtual double AbsentConfirmDays => ConfirmDays * 3;
         public virtual bool ClaimMovesWithAccount => true;
     }
 
