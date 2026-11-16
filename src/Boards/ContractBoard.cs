@@ -449,18 +449,45 @@ namespace ArcanumLib.Boards
         /// <summary>The author's reason for a dispute.</summary>
         public const string DisputeKey = "arcanumlib:dispute";
 
+        /// <summary>Set while the author has not been online since the work was marked done: their days have not started.</summary>
+        public const string ConfirmUnseenKey = "arcanumlib:confirmunseen";
+
+        /// <summary>An author who never comes back answers at the latest after this many confirm spans (the reward must not wait forever).</summary>
+        public const double AbsentAuthorSpans = 3;
+
         private void MarkDone(IServerPlayer claimer, BoardContract contract, IBoardGoal goal)
         {
-            double due = Sapi.World.Calendar.TotalDays + CalendarDays(goal.ConfirmDays);
+            var author = contract.AuthorUid != null ? FindOnline(contract.AuthorUid) : null;
+            // silence counts as accepted only once the author could have seen it: an offline author's days start when
+            // they join (DeliverPendingReturns), with a cap for one who never does
+            double due = Sapi.World.Calendar.TotalDays + CalendarDays(goal.ConfirmDays * (author != null ? 1 : AbsentAuthorSpans));
             contract.State = BoardStates.Done;
             contract.ExpireTotalDays = 0;
             contract.SetData(ConfirmDueKey, due.ToString("R", System.Globalization.CultureInfo.InvariantCulture));
+            contract.SetData(ConfirmUnseenKey, author != null ? null : "1");
 
             Sapi.SendMessage(claimer, Options.NoticeChatGroup, Text("marked-done"), EnumChatType.Notification);
-            var author = contract.AuthorUid != null ? FindOnline(contract.AuthorUid) : null;
             if (author != null)
                 Sapi.SendMessage(author, Options.NoticeChatGroup, Text("your-contract-done", claimer.PlayerName), EnumChatType.Notification);
             NotifyChanged();
+        }
+
+        /// <summary>The author joined: work marked done while they were away gets its full span to answer from now.</summary>
+        private void StartUnseenConfirms(IServerPlayer author)
+        {
+            bool changed = false;
+            foreach (var c in state.Contracts)
+            {
+                if (c.State != BoardStates.Done || c.AuthorUid != author.PlayerUID || c.GetData(ConfirmUnseenKey) == null) continue;
+                double span = CalendarDays(GetGoal(c.Kind)?.ConfirmDays ?? 0);
+                double due = Sapi.World.Calendar.TotalDays + span;
+                c.SetData(ConfirmDueKey, due.ToString("R", System.Globalization.CultureInfo.InvariantCulture));
+                c.SetData(ConfirmUnseenKey, null);
+                string claimer = c.ClaimedByUid != null ? Sapi.PlayerData.GetPlayerDataByUid(c.ClaimedByUid)?.LastKnownPlayername ?? "?" : "?";
+                Sapi.SendMessage(author, Options.NoticeChatGroup, Text("your-contract-done", claimer), EnumChatType.Notification);
+                changed = true;
+            }
+            if (changed) NotifyChanged();
         }
 
         /// <summary>Calendar days in one of the board's days (<see cref="BoardOptions.RealDays" />).</summary>
@@ -728,6 +755,7 @@ namespace ArcanumLib.Boards
         /// <summary>Hands out refunds and deliveries kept for this player while they were offline (own state only).</summary>
         public int DeliverPendingReturns(IServerPlayer player)
         {
+            StartUnseenConfirms(player);
             if (state is not BoardState own || !own.PendingReturnsByUid.TryGetValue(player.PlayerUID, out var list)) return 0;
             own.PendingReturnsByUid.Remove(player.PlayerUID);
             int given = 0;
