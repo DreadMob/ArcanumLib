@@ -4,6 +4,7 @@ using ArcanumLib.Gui.Theme;
 using Cairo;
 using Vintagestory.API.Client;
 using Vintagestory.API.Common;
+using Vintagestory.API.Config;
 
 namespace ArcanumLib.Gui.Controls;
 
@@ -101,6 +102,20 @@ public class ArcanumButton : GuiElement
         this.customBgColor = bgColor;
         cachedTexture = new LoadedTexture(capi);
         GuiTextureTracker.Register(nameof(ArcanumButton));
+    }
+
+    /// <summary>
+    /// Bounds of zero width/height (vanilla small-button style: <c>FixedSize(0, 0).WithFixedPadding(…)</c>) take the size
+    /// of the label, so such call sites keep working after a swap from <c>AddSmallButton</c>.
+    /// </summary>
+    public override void BeforeCalcBounds()
+    {
+        base.BeforeCalcBounds();
+        if (Bounds.fixedWidth > 0 && Bounds.fixedHeight > 0) return;
+        var font = new CairoFont { Fontname = "sans-serif", UnscaledFontsize = FontSize, FontWeight = FontWeight.Bold };
+        double w = font.GetTextExtents(text).Width / RuntimeEnv.GUIScale;
+        if (Bounds.fixedWidth <= 0) Bounds.fixedWidth = Math.Ceiling(w) + 12;
+        if (Bounds.fixedHeight <= 0) Bounds.fixedHeight = Math.Ceiling(FontSize) + 10;
     }
 
     /// <summary>Skips composition; the button texture is generated on first render.</summary>
